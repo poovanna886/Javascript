@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modern Storm Prediction</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <style>
+      #map {
+        width: 100%;
+        height: 100vh;
+      }
+      .modal {
+        transition: opacity 0.3s ease;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-white font-sans">
+    <!-- Modal -->
+    <div
+      id="cityModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white text-gray-800 p-8 rounded-lg shadow-xl w-96 animate__animated animate__zoomIn"
+      >
+        <h2 class="text-2xl mb-4">Enter City</h2>
+        <input
+          id="cityInput"
+          class="w-full p-2 mb-4 border border-gray-300 rounded"
+          placeholder="City Name"
+        />
+        <button
+          id="submitCity"
+          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <div class="container mx-auto p-4 hidden" id="mainContent">
+      <h1 class="text-4xl mb-4 text-center">
+        Storm Prediction for <span id="cityName"></span>
+      </h1>
+      <div id="map" class="rounded-lg overflow-hidden"></div>
+      <input
+        id="day-slider"
+        type="range"
+        min="1"
+        max="7"
+        value="1"
+        class="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer mt-6"
+      />
+      <p class="text-lg mt-2 text-center">
+        Day: <span id="selected-day">1</span>
+      </p>
+    </div>
+
+    <script>
+      const map = L.map('map').setView([37.8, -96], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+      }).addTo(map);
+
+      let heatLayer;
+      let stormData;
+
+      // Fetch data
+      fetch('stormData.json')
+        .then((response) => response.json())
+        .then((data) => {
+          stormData = data.data;
+          document.getElementById('cityModal').classList.add('hidden');
+          document.getElementById('mainContent').classList.remove('hidden');
+        });
+
+      // Function to update heatmap with animation
+      function updateHeatMap(day) {
+        if (heatLayer) map.removeLayer(heatLayer);
+        const newHeatData = stormData[day - 1].map((point) => [
+          point[0],
+          point[1],
+          point[2],
+        ]);
+
+        heatLayer = L.heatLayer(newHeatData, {
+          radius: 25,
+          blur: 15,
+          maxZoom: 1,
+          gradient: { 0.4: 'blue', 0.65: 'lime', 0.8: 'yellow', 1: 'red' },
+        }).addTo(map);
+
+        // Simple fade in animation
+        heatLayer._canvas.style.opacity = '0';
+        setTimeout(() => {
+          heatLayer._canvas.style.transition = 'opacity 0.5s';
+          heatLayer._canvas.style.opacity = '1';
+        }, 10);
+      }
+
+      // Event listeners
+      document
+        .getElementById('submitCity')
+        .addEventListener('click', function () {
+          const city = document.getElementById('cityInput').value;
+          document.getElementById('cityName').textContent =
+            city || 'Unknown City';
+          document
+            .getElementById('cityModal')
+            .classList.add('animate__zoomOut');
+          setTimeout(() => {
+            document.getElementById('cityModal').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+          }, 300);
+        });
+
+      document
+        .getElementById('day-slider')
+        .addEventListener('input', function (e) {
+          updateHeatMap(e.target.value);
+          document.getElementById('selected-day').innerText = e.target.value;
+        });
+
+      // Initial heatmap
+      updateHeatMap(1);
+    </script>
+  </body>
+</html>

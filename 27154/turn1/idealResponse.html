@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Storm Prediction Map</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <style>
+      #map {
+        width: 100%;
+        height: 600px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .slider {
+        appearance: none;
+        width: 100%;
+        height: 8px;
+        background: #d1d5db;
+        outline: none;
+        opacity: 0.9;
+        transition: opacity 0.15s ease-in-out;
+      }
+      .slider:hover {
+        opacity: 1;
+      }
+      .slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #4a5568;
+        cursor: pointer;
+        border-radius: 50%;
+      }
+      .slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: #4a5568;
+        cursor: pointer;
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto p-6 mt-8 bg-white shadow-lg rounded-lg">
+      <h1 class="text-4xl font-bold text-center mb-6 text-gray-800">
+        Storm Prediction for Next 7 Days
+      </h1>
+      <div id="map" class="mb-6"></div>
+      <div class="flex flex-col items-center">
+        <input
+          id="day-slider"
+          type="range"
+          min="1"
+          max="7"
+          value="1"
+          class="slider w-full max-w-lg mt-4"
+        />
+        <p class="text-lg mt-4 text-gray-700">
+          Day: <span id="selected-day" class="font-semibold">1</span>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      const map = L.map('map').setView([37.8, -96], 4);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+        subdomains: ['a', 'b', 'c'],
+      }).addTo(map);
+
+      const heatData = Array(7)
+        .fill(0)
+        .map(() => {
+          return Array(100)
+            .fill(0)
+            .map(() => [
+              37 + (Math.random() * 10 - 5),
+              -96 + (Math.random() * 20 - 10),
+              Math.random() * 0.8,
+            ]);
+        });
+
+      let heatLayer;
+      function updateHeatMap(day) {
+        if (heatLayer) {
+          map.removeLayer(heatLayer);
+        }
+        heatLayer = L.heatLayer(heatData[day - 1], {
+          radius: 25,
+          blur: 15,
+          maxZoom: 1,
+          gradient: { 0.4: 'blue', 0.65: 'yellow', 1: 'red' },
+        }).addTo(map);
+      }
+
+      document
+        .getElementById('day-slider')
+        .addEventListener('input', function (e) {
+          const day = e.target.value;
+          document.getElementById('selected-day').innerText = day;
+          updateHeatMap(day);
+        });
+
+      updateHeatMap(1);
+    </script>
+  </body>
+</html>
