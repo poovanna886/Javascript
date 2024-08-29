@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Pressure Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    <style>
+        #bp-display div {
+            transition: background-color 0.3s ease;
+        }
+        .dark-mode-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 50px;
+            height: 30px;
+            border-radius: 15px;
+            padding: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .dark-mode-toggle .slider {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            transition: transform 0.3s;
+        }
+        .dark-mode-toggle.active .slider {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition duration-300 ease-in-out">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+        <!-- Dark Mode Toggle -->
+        <div class="fixed top-4 right-4 z-10">
+            <div class="dark-mode-toggle bg-gray-300 dark:bg-gray-600" onclick="toggleDarkMode()">
+                <div class="slider"></div>
+            </div>
+        </div>
+
+        <!-- Blood Pressure Display -->
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4 md:p-6 lg:p-8 mb-4 md:mb-6 lg:mb-8">
+            <div id="bp-display" class="flex flex-wrap justify-center md:justify-around items-center mb-4">
+                <div class="text-center mb-2 md:mb-0">
+                    <div id="bp-systolic" class="text-3xl md:text-4xl font-bold">---</div>
+                    <div class="text-xs md:text-sm text-gray-500 dark:text-gray-400">Systolic</div>
+                </div>
+                <div class="text-center mb-2 md:mb-0">
+                    <div id="bp-diastolic" class="text-3xl md:text-4xl font-bold">---</div>
+                    <div class="text-xs md:text-sm text-gray-500 dark:text-gray-400">Diastolic</div>
+                </div>
+                <div class="text-center mb-2 md:mb-0">
+                    <div id="bp-pulse" class="text-3xl md:text-4xl font-bold">---</div>
+                    <div class="text-xs md:text-sm text-gray-500 dark:text-gray-400">Pulse</div>
+                </div>
+                <div class="text-center">
+                    <div id="bp-status" class="text-lg md:text-xl font-semibold py-1 md:py-2 px-2 md:px-4 rounded-full bg-gray-200 dark:bg-gray-700 dark:text-gray-200">---</div>
+                    <div id="bp-time" class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">---</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="w-full mb-6">
+            <canvas id="bp-chart"></canvas>
+        </div>
+
+        <!-- Date Range Selector -->
+        <div class="flex justify-center mb-4">
+            <select id="date-range" class="px-3 py-2 border rounded-lg text-gray-700 dark:text-gray-300 dark:bg-gray-700 shadow-sm">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last month</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        const body = document.body;
+
+        // Dark Mode Toggle Function
+        const toggleDarkMode = () => {
+            document.documentElement.classList.toggle('dark');
+            document.querySelector('.dark-mode-toggle').classList.toggle('active');
+
+            // Save user's preference for dark mode
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        };
+
+        // Check for dark mode preference on load
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.documentElement.classList.add('dark');
+            document.querySelector('.dark-mode-toggle').classList.add('active');
+        }
+
+        // Chart Configuration
+        const dummyData = {
+            labels: ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday', 'Today'],
+            datasets: [
+                {
+                    label: 'Systolic',
+                    data: [110, 115, 120, 125, 130, 135, 130, 128],
+                    backgroundColor: 'rgba(99, 132, 255, 0.2)',
+                    borderColor: 'rgba(99, 132, 255, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                },
+                {
+                    label: 'Diastolic',
+                    data: [70, 75, 78, 80, 85, 88, 85, 82],
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                },
+            ],
+        };
+
+        const ctx = document.getElementById('bp-chart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: dummyData,
+            options: {
+                responsive: true,  // Ensures the chart is responsive
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 60,
+                        max: 150,
+                        title: {
+                            display: true,
+                            text: 'Pressure (mmHg)',
+                        },
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date',
+                        },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                },
+            },
+        });
+
+        function updateDisplay(bpReading) {
+            const statusColors = {
+                low: 'bg-blue-500 text-white',
+                normal: 'bg-green-500 text-white',
+                elevated: 'bg-yellow-500 text-gray-900',
+                hypertension: 'bg-red-500 text-white',
+            };
+            const statusText = {
+                low: 'Low',
+                normal: 'Normal',
+                elevated: 'Elevated',
+                hypertension: 'Hypertension',
+            };
+            const [systolic, diastolic] = bpReading.data.slice(-1)[0].split('/');
+            const pulse = 70; // Dummy pulse value
+            const bpStatus = getBloodPressureStatus(systolic, diastolic);
+
+            document.getElementById('bp-systolic').innerText = `${systolic} mmHg`;
+            document.getElementById('bp-diastolic').innerText = `${diastolic} mmHg`;
+            document.getElementById('bp-pulse').innerText = `${pulse} bpm`;
+            document.getElementById('bp-status').innerText = statusText[bpStatus];
+            document.getElementById('bp-time').innerText = `Measured at: ${new Date().toLocaleTimeString()}`;
+            document.getElementById('bp-display').className = `flex justify-around items-center mb-6 p-6 rounded-lg shadow-md ${statusColors[bpStatus]}`;
+        }
+
+        function getBloodPressureStatus(systolic, diastolic) {
+            systolic = parseInt(systolic, 10);
+            diastolic = parseInt(diastolic, 10);
+            if (systolic < 90 || diastolic < 60) return 'low';
+            if (systolic < 120 && diastolic < 80) return 'normal';
+            if (systolic < 140 || diastolic < 90) return 'elevated';
+            return 'hypertension';
+        }
+
+        updateDisplay({
+            data: dummyData.datasets[0].data.map(
+                (value, index) => `${value}/${dummyData.datasets[1].data[index]}`
+            ),
+        });
+
+        document.getElementById('date-range').addEventListener('change', function () {
+            const days = parseInt(this.value, 10);
+            const labels = Array.from({ length: days }, (_, i) => `${days - i} days ago`);
+            const systolicData = Array.from({ length: days }, () => Math.floor(Math.random() * (140 - 110 + 1)) + 110);
+            const diastolicData = Array.from({ length: days }, () => Math.floor(Math.random() * (90 - 70 + 1)) + 70);
+            dummyData.labels = labels;
+            dummyData.datasets[0].data = systolicData;
+            dummyData.datasets[1].data = diastolicData;
+            chart.update();
+            updateDisplay({
+                data: systolicData.map((value, index) => `${value}/${diastolicData[index]}`)
+            });
+        });
+    </script>
+</body>
+</html>

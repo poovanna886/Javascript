@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Pressure Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #bp-display div {
+            transition: background-color 0.3s ease;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-4">
+    <div class="container mx-auto p-6 bg-white dark:bg-gray-700 rounded-lg shadow-lg">
+        <!-- Dark Mode Switch -->
+        <div class="flex justify-end mb-4">
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <!-- Blood Pressure Display -->
+        <div id="bp-display" class="flex flex-col sm:flex-row justify-around items-center mb-6 p-6 bg-gray-50 dark:bg-gray-600 rounded-lg shadow-md">
+            <!-- Content for blood pressure display remains similar -->
+            <div
+            id="bp-display"
+            class="flex justify-around items-center mb-6 p-6 bg-gray-50 rounded-lg shadow-md"
+          >
+            <div class="text-center">
+              <div id="bp-systolic" class="text-4xl font-bold">---</div>
+              <div class="text-sm text-gray-500">Systolic</div>
+            </div>
+            <div class="text-center">
+              <div id="bp-diastolic" class="text-4xl font-bold">---</div>
+              <div class="text-sm text-gray-500">Diastolic</div>
+            </div>
+            <div class="text-center">
+              <div id="bp-pulse" class="text-4xl font-bold">---</div>
+              <div class="text-sm text-gray-500">Pulse</div>
+            </div>
+            <div class="text-center">
+              <div
+                id="bp-status"
+                class="text-lg font-semibold py-2 px-4 rounded-full bg-gray-200"
+              >
+                ---
+              </div>
+              <div id="bp-time" class="text-sm text-gray-500 mt-2">---</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div class="w-full mb-6">
+            <canvas id="bp-chart" class="bg-white dark:bg-gray-700"></canvas>
+        </div>
+
+        <!-- Date Range Selector -->
+        <div class="flex justify-center mb-4">
+            <select id="date-range" class="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-600 shadow-sm">
+                <!-- Options remain the same -->
+               
+                <option value="7">Last 7 days</option>
+                <option value="30">Last month</option>
+              
+            </select>
+        </div>
+    </div>
+
+    <script>
+        // Existing JavaScript for chart and data manipulation
+        // ...
+        
+
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+
+        // Check if dark mode preference is saved in localStorage
+        if (localStorage.getItem('darkMode') === 'true') {
+            html.classList.add('dark');
+            darkModeToggle.checked = true;
+        }
+
+        darkModeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                html.classList.add('dark');
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                html.classList.remove('dark');
+                localStorage.setItem('darkMode', 'false');
+            }
+        });
+
+        // Your existing script for updating display, chart, etc.
+        // ...
+        const dummyData = {
+        labels: [
+          '7 days ago',
+          '6 days ago',
+          '5 days ago',
+          '4 days ago',
+          '3 days ago',
+          '2 days ago',
+          'Yesterday',
+          'Today',
+        ],
+        datasets: [
+          {
+            label: 'Systolic',
+            data: [110, 115, 120, 125, 130, 135, 130, 128],
+            backgroundColor: 'rgba(99, 132, 255, 0.2)',
+            borderColor: 'rgba(99, 132, 255, 1)',
+            borderWidth: 2,
+            fill: true,
+          },
+          {
+            label: 'Diastolic',
+            data: [70, 75, 78, 80, 85, 88, 85, 82],
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2,
+            fill: true,
+          },
+        ],
+      };
+
+      const ctx = document.getElementById('bp-chart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: dummyData,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 60,
+              max: 150,
+              title: {
+                display: true,
+                text: 'Pressure (mmHg)',
+              },
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Date',
+              },
+            },
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+            },
+          },
+        },
+      });
+
+      function updateDisplay(bpReading) {
+        const statusColors = {
+          low: 'bg-blue-500 text-white',
+          normal: 'bg-green-500 text-white',
+          elevated: 'bg-yellow-500 text-gray-900',
+          hypertension: 'bg-red-500 text-white',
+        };
+        const statusText = {
+          low: 'Low',
+          normal: 'Normal',
+          elevated: 'Elevated',
+          hypertension: 'Hypertension',
+        };
+        const [systolic, diastolic] = bpReading.data.slice(-1)[0].split('/');
+        const pulse = 70; // Dummy pulse value
+        const bpStatus = getBloodPressureStatus(systolic, diastolic);
+
+        document.getElementById('bp-systolic').innerText = `${systolic} mmHg`;
+        document.getElementById('bp-diastolic').innerText = `${diastolic} mmHg`;
+        document.getElementById('bp-pulse').innerText = `${pulse} bpm`;
+        document.getElementById('bp-status').innerText = statusText[bpStatus];
+        document.getElementById(
+          'bp-time'
+        ).innerText = `Measured at: ${new Date().toLocaleTimeString()}`;
+        document.getElementById(
+          'bp-display'
+        ).className = `flex justify-around items-center mb-6 p-6 rounded-lg shadow-md ${statusColors[bpStatus]}`;
+      }
+
+      function getBloodPressureStatus(systolic, diastolic) {
+        systolic = parseInt(systolic, 10);
+        diastolic = parseInt(diastolic, 10);
+        if (systolic < 90 || diastolic < 60) return 'low';
+        if (systolic < 120 && diastolic < 80) return 'normal';
+        if (systolic < 140 || diastolic < 90) return 'elevated';
+        return 'hypertension';
+      }
+
+      updateDisplay({
+        data: dummyData.datasets[0].data.map(
+          (value, index) => `${value}/${dummyData.datasets[1].data[index]}`
+        ),
+      });
+
+      document
+        .getElementById('date-range')
+        .addEventListener('change', function () {
+          const days = parseInt(this.value, 10);
+          const labels = Array.from(
+            { length: days },
+            (_, i) => `${days - i} days ago`
+          );
+          const systolicData = Array.from(
+            { length: days },
+            () => Math.floor(Math.random() * (140 - 110 + 1)) + 110
+          );
+          const diastolicData = Array.from(
+            { length: days },
+            () => Math.floor(Math.random() * (90 - 70 + 1)) + 70
+          );
+          dummyData.labels = labels;
+          dummyData.datasets[0].data = systolicData;
+          dummyData.datasets[1].data = diastolicData;
+          chart.update();
+          updateDisplay({
+            data: systolicData.map(
+              (value, index) => `${value}/${diastolicData[index]}`
+            ),
+          });
+        });
+
+    </script>
+</body>
+</html>
