@@ -1,0 +1,63 @@
+// Function to add sports cards on the home page
+function addSportsCards() {
+    const sports = ['Soccer', 'Basketball', 'Tennis', 'Swimming', 'Running', 'Cycling', 'Gymnastics', 'Hockey', 'Volleyball', 'Boxing'];
+    const contentDiv = document.querySelector('.content');
+    sports.forEach(sport => {
+        const cardHTML = `
+            <div class="col s12 m6 l4">
+                <div class="card">
+                    <div class="card-image">
+                        <i class="material-icons">directions_${sport.toLowerCase()}</i>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-title">${sport}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        contentDiv.innerHTML += cardHTML;
+    });
+}
+
+// Function to render dashboard
+function renderDashboard() {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dataBody = document.getElementById('training-data');
+    days.forEach(day => {
+        const row = `
+            <tr>
+                <td>${day}</td>
+                <td contenteditable="true">0</td>
+            </tr>
+        `;
+        dataBody.innerHTML += row;
+    });
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    // Chart initialization code here
+}
+
+// Function to manage goals
+function addGoal() {
+    const input = document.getElementById('goal-input');
+    const goalsContainer = document.getElementById('goals-container');
+    const goalCard = `
+        <div class="card" ondblclick="toggleStrike(this)">
+            <div class="card-content">
+                <p>${input.value}</p>
+            </div>
+        </div>
+    `;
+    goalsContainer.innerHTML += goalCard;
+    input.value = ''; // Clear the input
+}
+
+function toggleStrike(element) {
+    element.classList.toggle('strikethrough');
+}
+
+// Event listeners and initial page setup
+document.addEventListener('DOMContentLoaded', function() {
+    addSportsCards(); // Add this line to render sports cards on home page load
+    // Further initialization based on current page or user interaction
+});

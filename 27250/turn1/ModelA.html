@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Improvement App</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .sidebar { height: 100vh; width: 200px; position: fixed; background-color: #333; }
+        .sidebar a { padding: 15px; text-decoration: none; font-size: 18px; color: white; display: block; }
+        .main-content { margin-left: 200px; padding: 20px; }
+        .cards { display: flex; flex-wrap: wrap; gap: 20px; }
+        .card { width: 100px; height: 100px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .material-icons { font-size: 48px; }
+        #chart { width: 80%; height: 400px; }
+        .goal-card { background: #f9f9f9; border-left: 5px solid #4CAF50; padding: 10px; margin: 10px 0; }
+        .strikethrough { text-decoration: line-through; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <a href="#" onclick="showSection('home')">Home</a>
+    <a href="#" onclick="showSection('dashboard')">Dashboard</a>
+    <a href="#" onclick="showSection('goals')">Goals</a>
+</div>
+
+<div id="home" class="main-content" style="display: block;">
+    <h1>Choose Your Sport</h1>
+    <div class="cards">
+        <!-- Here you would loop through sports, for brevity I'll add one -->
+        <div class="card"><i class="material-icons">directions_run</i></div>
+    </div>
+</div>
+
+<div id="dashboard" class="main-content" style="display: none;">
+    <h1>Dashboard</h1>
+    <table border="1">
+        <tr><th>Day</th><th>Hours</th></tr>
+        <tr><td>Monday</td><td><input type="number" onchange="updateChart()"></td></tr>
+        <!-- Add more rows for each day -->
+    </table>
+    <canvas id="chart"></canvas>
+</div>
+
+<div id="goals" class="main-content" style="display: none;">
+    <h1>Set Your Goals</h1>
+    <input type="text" id="goalInput" placeholder="Enter your goal">
+    <button onclick="addGoal()">Add Goal</button>
+    <div id="goalList"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+<script>
+    function showSection(sectionId) {
+        document.querySelectorAll('.main-content').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(sectionId).style.display = 'block';
+    }
+
+    const sports = ['basketball', 'soccer', 'tennis', 'golf', 'swimming', 'cycling', 'running', 'yoga', 'boxing', 'hockey'];
+    const cardsDiv = document.querySelector('.cards');
+    sports.forEach(sport => {
+        const iconName = sport === 'running' ? 'directions_run' : sport; // Example mapping
+        cardsDiv.innerHTML += `<div class="card"><i class="material-icons">${iconName}</i></div>`;
+    });
+
+    function updateChart() {
+        // Logic to update chart based on table input would go here
+        const ctx = document.getElementById('chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Training Hours',
+                    data: [0, 0, 0, 0, 0, 0, 0], // Update with real data from inputs
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            },
+            options: {}
+        });
+    }
+
+    function addGoal() {
+        const input = document.getElementById('goalInput');
+        const goalList = document.getElementById('goalList');
+        const goalCard = document.createElement('div');
+        goalCard.className = 'goal-card';
+        goalCard.textContent = input.value;
+        goalCard.ondblclick = function() { 
+            this.classList.toggle('strikethrough'); 
+        };
+        goalList.appendChild(goalCard);
+        input.value = '';
+    }
+
+    // Initial chart setup
+    updateChart();
+</script>
+
+</body>
+</html>

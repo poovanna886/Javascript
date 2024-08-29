@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Improvement App</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .sidebar { height: 100vh; width: 200px; position: fixed; background-color: #333; }
+        .sidebar a { padding: 15px; text-decoration: none; font-size: 18px; color: white; display: block; transition: background 0.3s; }
+        .sidebar a:hover { background-color: #575757; }
+        .main-content { margin-left: 200px; padding: 20px; }
+        .cards { display: flex; flex-wrap: wrap; gap: 20px; }
+        .card { width: 100px; height: 100px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); transition: transform 0.3s; }
+        .card:hover { transform: scale(1.1); }
+        .material-icons { font-size: 48px; color: #555; }
+        #chart { width: 80%; height: 400px; margin: 20px auto; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background-color: white; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); }
+        table th, table td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        table th { background-color: #4CAF50; color: white; }
+        table tr:hover { background-color: #f2f2f2; }
+        input[type="number"] { width: auto; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        
+        /* Goals Page Styling */
+        #goals { background-color: #f0f0f0; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); }
+        #goalInput { width: calc(100% - 120px); padding: 10px; border-radius: 5px; border: 1px solid #ddd; margin-right: 10px; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
+        button:hover { background-color: #45a049; }
+        .goal-card { background: #ffffff; border-left: 5px solid #4CAF50; padding: 10px; margin: 10px 0; border-radius: 5px; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); font-size: 18px; }
+        .goal-card:hover { background-color: #f9f9f9; }
+        .goal-input-container { display: flex; align-items: center; margin-bottom: 20px; }
+        .strikethrough { text-decoration: line-through; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <a href="#" onclick="showSection('home')">Home</a>
+    <a href="#" onclick="showSection('dashboard')">Dashboard</a>
+    <a href="#" onclick="showSection('goals')">Goals</a>
+</div>
+
+<div id="home" class="main-content" style="display: block;">
+    <h1>Choose Your Sport</h1>
+    <div class="cards">
+        <div class="card" onclick="selectSport('basketball')"><i class="material-icons">sports_basketball</i></div>
+        <div class="card" onclick="selectSport('soccer')"><i class="material-icons">sports_soccer</i></div>
+        <div class="card" onclick="selectSport('tennis')"><i class="material-icons">sports_tennis</i></div>
+        <div class="card" onclick="selectSport('golf')"><i class="material-icons">sports_golf</i></div>
+        <div class="card" onclick="selectSport('pool')"><i class="material-icons">pool</i></div>
+        <div class="card" onclick="selectSport('cycling')"><i class="material-icons">directions_bike</i></div>
+        <div class="card" onclick="selectSport('running')"><i class="material-icons">directions_run</i></div>
+        <div class="card" onclick="selectSport('yoga')"><i class="material-icons">self_improvement</i></div>
+        <div class="card" onclick="selectSport('mma')"><i class="material-icons">sports_mma</i></div>
+        <div class="card" onclick="selectSport('hockey')"><i class="material-icons">sports_hockey</i></div>
+    </div>
+</div>
+
+<div id="dashboard" class="main-content" style="display: none;">
+    <h1>Dashboard</h1>
+    <table>
+        <thead>
+            <tr><th>Day</th><th>Training Hours</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Monday</td><td><input type="number" min="1" onchange="validateInput(this, 0)"></td></tr>
+            <tr><td>Tuesday</td><td><input type="number" min="1" onchange="validateInput(this, 1)"></td></tr>
+            <tr><td>Wednesday</td><td><input type="number" min="1" onchange="validateInput(this, 2)"></td></tr>
+            <tr><td>Thursday</td><td><input type="number" min="1" onchange="validateInput(this, 3)"></td></tr>
+            <tr><td>Friday</td><td><input type="number" min="1" onchange="validateInput(this, 4)"></td></tr>
+            <tr><td>Saturday</td><td><input type="number" min="1" onchange="validateInput(this, 5)"></td></tr>
+            <tr><td>Sunday</td><td><input type="number" min="1" onchange="validateInput(this, 6)"></td></tr>
+        </tbody>
+    </table>
+    <canvas id="chart"></canvas>
+</div>
+
+<div id="goals" class="main-content" style="display: none;">
+    <h1>Set Your Goals</h1>
+    <div class="goal-input-container">
+        <input type="text" id="goalInput" placeholder="Enter your goal">
+        <button onclick="addGoal()">Add Goal</button>
+    </div>
+    <div id="goalList"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+<script>
+    let chart;
+    let currentSport = '';
+    const trainingData = {}; // Store training data for all sports
+
+    function selectSport(sport) {
+        currentSport = sport;
+        if (!trainingData[currentSport]) {
+            trainingData[currentSport] = [0, 0, 0, 0, 0, 0, 0]; // Initialize if not existing
+        }
+        showSection('dashboard');
+        loadTrainingData();
+        loadGoals();
+    }
+
+    function showSection(sectionId) {
+        document.querySelectorAll('.main-content').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(sectionId).style.display = 'block';
+        if (sectionId === 'dashboard') {
+            initializeChart();
+        }
+    }
+
+    function validateInput(input, index) {
+        const value = parseInt(input.value);
+        if (value < 1 || isNaN(value)) {
+            input.value = '';
+            alert("Please enter a valid number greater than 0.");
+            return;
+        }
+        trainingData[currentSport][index] = value;
+        saveTrainingData();
+        updateChart();
+    }
+
+    function initializeChart() {
+        const ctx = document.getElementById('chart').getContext('2d');
+        if (!chart) {
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Training Hours',
+                        data: trainingData[currentSport],
+                        borderColor: 'blue',
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            stepSize: 1
+                        }
+                    }
+                }
+            });
+        } else {
+            chart.data.datasets[0].data = trainingData[currentSport];
+            chart.update();
+        }
+    }
+
+    function updateChart() {
+        if (chart) {
+            chart.data.datasets[0].data = trainingData[currentSport];
+            chart.update();
+        }
+    }
+
+    function addGoal() {
+        const input = document.getElementById('goalInput');
+        if (!input.value.trim()) {
+            alert("Please enter a goal.");
+            return;
+        }
+
+        const goalList = document.getElementById('goalList');
+        const goalCard = document.createElement('div');
+        goalCard.className = 'goal-card';
+        goalCard.textContent = input.value.trim();
+        goalCard.ondblclick = function() { 
+            this.classList.toggle('strikethrough'); 
+        };
+        goalList.appendChild(goalCard);
+        saveGoal(input.value.trim());
+        input.value = '';
+    }
+
+    function saveTrainingData() {
+        localStorage.setItem('trainingData', JSON.stringify(trainingData));
+    }
+
+    function loadTrainingData() {
+        const savedData = JSON.parse(localStorage.getItem('trainingData')) || {};
+        Object.assign(trainingData, savedData); // Merge loaded data with existing
+        if (trainingData[currentSport]) {
+            trainingData[currentSport].forEach((value, index) => {
+                document.querySelectorAll('input[type="number"]')[index].value = value;
+            });
+            updateChart();
+        }
+    }
+
+    function saveGoal(goal) {
+        let goals = JSON.parse(localStorage.getItem(currentSport + '_goals')) || [];
+        goals.push(goal);
+        localStorage.setItem(currentSport + '_goals', JSON.stringify(goals));
+    }
+
+    function loadGoals() {
+        const goalList = document.getElementById('goalList');
+        goalList.innerHTML = ''; // Clear current goals
+        const goals = JSON.parse(localStorage.getItem(currentSport + '_goals')) || [];
+        goals.forEach(goal => {
+            const goalCard = document.createElement('div');
+            goalCard.className = 'goal-card';
+            goalCard.textContent = goal;
+            goalCard.ondblclick = function() { 
+                this.classList.toggle('strikethrough'); 
+            };
+            goalList.appendChild(goalCard);
+        });
+    }
+</script>
+
+</body>
+</html>
