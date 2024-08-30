@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { background-color: #333; height: 100vh; padding-top: 20px; }
+        .nav-link { color: #fff; }
+        .nav-link:hover, .nav-link.active { background-color: #555; color: #fff; }
+        .card { margin-bottom: 20px; }
+        .chart-container { position: relative; height: 15vh; width: 30vw; }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <div class="sidebar">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link active" href="#" data-target="overview">Overview</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-target="processes">Processes</a></li>
+            </ul>
+        </div>
+        <div class="container-fluid p-4">
+            <div id="overview">
+                <!-- Cards with charts will go here -->
+            </div>
+            <div id="processes" style="display: none;">
+                <!-- Process list will go here -->
+            </div>
+        </div>
+    </div>
+    <script>
+        const charts = {};
+        const dataPoints = 30; // Number of data points to show on charts
+
+        function generateDummyData() {
+            return {
+                cpu: Math.random() * 100,
+                memory: Math.random() * 100,
+                disk: Math.random() * 100,
+                wifi: Math.random() * 100,
+                gpu: Math.random() * 100,
+                cores: Array.from({length: Math.floor(Math.random() * 8) + 1}, () => Math.random() * 100),
+                processes: Array.from({length: Math.floor(Math.random() * 5) + 1}, () => ({
+                    name: ['Node', 'Docker', 'Chrome', 'Firefox', 'VSCode'][Math.floor(Math.random() * 5)],
+                    cpu: Math.random() * 100,
+                    memory: Math.random() * 100,
+                    network: Math.random() * 100,
+                    gpu: Math.random() * 100
+                }))
+            };
+        }
+
+        function createChart(ctx, type) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: dataPoints}, (_, i) => i),
+                    datasets: [{
+                        label: type,
+                        data: Array.from({length: dataPoints}, () => 0),
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const types = ['cpu', 'memory', 'disk', 'wifi', 'gpu'];
+            const container = document.getElementById('overview');
+            types.forEach(type => {
+                const cardHtml = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">${type.toUpperCase()}</h5>
+                            <div class="chart-container">
+                                <canvas id="${type}Chart"></canvas>
+                            </div>
+                            <p>Usage: <span id="${type}Usage">0%</span></p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+                const ctx = document.getElementById(`${type}Chart`).getContext('2d');
+                charts[type] = createChart(ctx, type);
+            });
+
+            const processContainer = document.getElementById('processes');
+            processContainer.innerHTML = '<h2>Running Processes</h2><ul id="processList"></ul>';
+            
+            setInterval(() => {
+                const data = generateDummyData();
+                Object.keys(charts).forEach(key => {
+                    const chart = charts[key];
+                    chart.data.datasets[0].data.shift();
+                    chart.data.datasets[0].data.push(data[key]);
+                    document.getElementById(`${key}Usage`).innerText = `${data[key].toFixed(2)}%`;
+                    chart.update();
+                });
+
+                const processListHtml = data.processes.map(process => {
+                    return `<li>${process.name}: CPU ${process.cpu.toFixed(2)}%, Memory ${process.memory.toFixed(2)}%, Network ${process.network.toFixed(2)}%, GPU ${process.gpu.toFixed(2)}%</li>`;
+                }).join('');
+                document.getElementById('processList').innerHTML = processListHtml;
+            }, 2000);
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.querySelector('.nav-link.active').classList.remove('active');
+                    this.classList.add('active');
+                    const target = this.getAttribute('data-target');
+                    document.getElementById('overview').style.display = target === 'overview' ? 'block' : 'none';
+                    document.getElementById('processes').style.display = target === 'processes' ? 'block' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

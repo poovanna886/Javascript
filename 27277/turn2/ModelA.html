@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        body { font-family: 'Arial', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .card { opacity: 0; transform: translateY(20px); transition: all 0.5s ease-out; }
+        .card.show { opacity: 1; transform: translateY(0); }
+        .process-card { transition: background-color 0.3s, transform 0.2s; }
+        .process-card:hover { transform: scale(1.02); }
+        .dark-mode { background-color: #1a202c; color: #e2e8f0; }
+        .dark-mode .card, .dark-mode .process-card { background-color: #2d3748; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+
+<div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-blue-600 text-white dark:bg-gray-800">
+        <nav class="p-4">
+            <a href="#" class="block py-2.5 px-4 hover:bg-blue-700 dark:hover:bg-gray-700" onclick="showView('overview')">Overview</a>
+            <a href="#" class="block py-2.5 px-4 hover:bg-blue-700 dark:hover:bg-gray-700" onclick="showView('processes')">Processes</a>
+        </nav>
+        <button onclick="toggleDarkMode()" class="ml-4 mt-4 bg-blue-500 dark:bg-gray-700 text-white py-2 px-4 rounded">Toggle Dark Mode</button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 transition-all duration-300">
+        <div id="overview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Cards for charts will be dynamically added here -->
+        </div>
+        <div id="processes" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="processList">
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function showView(view) {
+        document.getElementById('overview').classList.toggle('hidden', view !== 'overview');
+        document.getElementById('processes').classList.toggle('hidden', view !== 'processes');
+    }
+
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Initialize charts and processes
+    document.addEventListener("DOMContentLoaded", function() {
+        const charts = [
+            { type: 'CPU', icon: 'fas fa-microchip', color: 'rgb(255, 99, 132)' },
+            { type: 'Memory', icon: 'fas fa-memory', color: 'rgb(54, 162, 235)' },
+            { type: 'Disk', icon: 'fas fa-hdd', color: 'rgb(255, 206, 86)' },
+            { type: 'Wifi', icon: 'fas fa-wifi', color: 'rgb(75, 192, 192)' },
+            { type: 'GPU', icon: 'fas fa-chart-bar', color: 'rgb(153, 102, 255)' }
+        ];
+
+        charts.forEach(chartInfo => {
+            const ctx = document.createElement('canvas');
+            const card = document.createElement('div');
+            card.className = 'card bg-white dark:bg-gray-800 rounded-lg overflow-hidden';
+            card.innerHTML = `
+                <h2 class="text-center">
+                    <i class="${chartInfo.icon}"></i> ${chartInfo.type}
+                </h2>
+                <div id="percent-${chartInfo.type.toLowerCase()}" class="text-center">Usage: 0%</div>
+                <canvas id="chart-${chartInfo.type.toLowerCase()}"></canvas>`;
+            document.getElementById('overview').appendChild(card);
+            setTimeout(() => card.classList.add('show'), 100); // Delay for smooth appearance
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(10).fill(''),
+                    datasets: [{
+                        label: `${chartInfo.type} Usage`,
+                        data: Array(10).fill(0),
+                        borderColor: chartInfo.color,
+                        fill: false
+                    }]
+                },
+                options: { animation: { duration: 0 } }
+            });
+            card.appendChild(ctx);
+
+            setInterval(() => {
+                chart.data.datasets[0].data.shift();
+                const newValue = getRandomInt(1, 100);
+                chart.data.datasets[0].data.push(newValue);
+                chart.update();
+                document.getElementById(`percent-${chartInfo.type.toLowerCase()}`).innerText = `Usage: ${newValue}%`;
+            }, 2000);
+        });
+
+        // Core usage and process list would follow similar patterns for initialization and updates
+        // ...
+          // Core Usage Display with Graphics
+    const coreUsageDiv = document.createElement('div');
+    coreUsageDiv.className = 'card bg-white rounded-lg overflow-hidden p-4';
+    coreUsageDiv.innerHTML = `<h2 class="text-center"><i class="fas fa-tachometer-alt"></i> Core Usage</h2>
+        <div class="core-usage">
+            ${Array(8).fill(0).map(() => '<div class="core-bar"></div>').join('')}
+        </div>`;
+    document.getElementById('overview').appendChild(coreUsageDiv);
+
+    setInterval(() => {
+        const coreBars = document.querySelectorAll('.core-bar');
+        coreBars.forEach(bar => bar.classList.remove('active'));
+        const activeCores = getRandomInt(1, 8);
+        for(let i = 0; i < activeCores; i++) {
+            coreBars[i].classList.add('active');
+        }
+    }, 2000);
+
+    // Process Page UI Enhancement
+    function updateProcesses() {
+        const processList = document.getElementById('processList');
+        processList.innerHTML = ''; // Clear previous entries
+
+        const processes = [
+            { name: 'Node', icon: '💻', cpu: getRandomInt(1, 50), memory: getRandomInt(100, 500) },
+            { name: 'Docker', icon: '🐳', cpu: getRandomInt(1, 50), memory: getRandomInt(100, 500) },
+            { name: 'Chrome', icon: '🌐', cpu: getRandomInt(1, 50), memory: getRandomInt(100, 500) },
+            { name: 'Firefox', icon: '🦊', cpu: getRandomInt(1, 50), memory: getRandomInt(100, 500) },
+            { name: 'VSCode', icon: '📝', cpu: getRandomInt(1, 50), memory: getRandomInt(100, 500) }
+        ];
+
+        processes.forEach(process => {
+            const card = document.createElement('div');
+            card.className = 'card bg-white rounded-lg overflow-hidden p-4 process-card';
+            card.innerHTML = `
+                <div class="process-icon">${process.icon}</div>
+                <div class="process-details">
+                    <h3 class="text-lg">${process.name}</h3>
+                    <div>CPU: ${process.cpu}%</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar" style="width: ${process.cpu}%;"></div>
+                    </div>
+                    <div>Memory: ${process.memory} MB</div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar" style="width: ${process.memory / 5}%;"></div>
+                    </div>
+                </div>`;
+            processList.appendChild(card);
+        });
+    }
+
+    setInterval(updateProcesses, 2000);
+
+        // Dark mode toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+    });
+</script>
+
+</body>
+</html>
