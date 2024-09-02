@@ -1,114 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Storm Prediction Map</title>
-    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <style>
-      #map {
-        width: 100%;
-        height: 600px;
-      }
-      .modal {
-        transition: opacity 0.5s;
-      }
+        #map {
+            width: 100%;
+            height: 700px;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+        }
+        .slider {
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+        .slider:hover {
+            opacity: 1;
+        }
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #04AA6D;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.dark-mode .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
     </style>
-  </head>
-  <body class="bg-gray-100 font-sans">
-    <!-- Modal -->
-    <div
-      id="modal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden"
-    >
-      <div
-        class="modal-container p-4 mx-auto max-w-md mt-20 bg-white rounded shadow-lg"
-      >
-        <h2 class="text-2xl mb-2">Enter City</h2>
-        <input
-          id="city-input"
-          type="text"
-          placeholder="City name"
-          class="w-full p-2 pl-10 text-sm text-gray-700"
-        />
-        <button
-          onclick="initMap()"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Show Map
-        </button>
-      </div>
+</head>
+<body class="bg-gray-50 dark:bg-gray-800 dark:text-white transition duration-300 ease-in-out">
+    <!-- Dark mode toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <label for="darkModeToggle" class="flex items-center cursor-pointer">
+            <div class="relative">
+                <input type="checkbox" id="darkModeToggle" class="sr-only">
+                <div class="w-10 h-5 bg-gray-300 dark:bg-gray-600 rounded-full shadow-inner"></div>
+                <div class="dot absolute w-6 h-6 bg-white rounded-full shadow -left-1 top-1 transition"></div>
+            </div>
+            <span class="ml-3 text-gray-700 dark:text-gray-200">Dark Mode</span>
+        </label>
     </div>
 
-    <div class="container mx-auto p-4 pt-6 md:p-6 hidden" id="map-container">
-      <h1 class="text-3xl mb-2">
-        Storm Prediction for <span id="city-name"></span>
-      </h1>
-      <div id="map" class="shadow-md rounded"></div>
-      <input
-        id="day-slider"
-        type="range"
-        min="1"
-        max="7"
-        value="1"
-        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-4"
-      />
-      <p class="text-lg mt-2">Day: <span id="selected-day">1</span></p>
+    <!-- Modal on load -->
+    <div id="modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center">
+        <div class="modal-backdrop absolute w-full h-full bg-white opacity-75 dark:bg-gray-900"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3">
+                    <p class="text-2xl font-bold">Enter City</p>
+                    <div class="modal-close cursor-pointer z-50">
+                        <svg class="fill-current text-gray-500" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                            <path d="M14.53 4.53l-10 10M14.53 14.53l-10-10"></path>
+                        </svg>
+                    </div>
+                </div>
+                <input type="text" id="cityInput" placeholder="City name" class="px-4 py-2 w-full border rounded">
+                <button onclick="setCity()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 pt-6 md:p-6">
+        <h1 class="text-3xl md:text-5xl font-bold text-center mb-4">Storm Prediction</h1>
+        <div id="map" class="mb-6"></div>
+        <div class="flex justify-center">
+            <input id="day-slider" type="range" min="1" max="7" value="1" class="slider">
+            <p class="ml-4">Day: <span id="selected-day" class="font-semibold">1</span></p>
+        </div>
     </div>
 
     <script>
-      document.getElementById('modal').classList.remove('hidden');
+        const map = L.map('map').setView([37.8, -96], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+            subdomains: ['a', 'b', 'c']
+        }).addTo(map);
 
-      function initMap() {
-        const cityName = document.getElementById('city-input').value;
-        document.getElementById('city-name').innerText = cityName;
-        document.getElementById('modal').classList.add('hidden');
-        document.getElementById('map-container').classList.remove('hidden');
-        fetch('data.json')
-          .then((response) => response.json())
-          .then((data) => {
-            const map = L.map('map').setView([37.8, -96], 4);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution:
-                '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
-              subdomains: ['a', 'b', 'c'],
-            }).addTo(map);
+        const heatData = Array(7).fill(0).map(() => {
+            return Array(100).fill(0).map(() => [
+                37 + (Math.random() * 10 - 5),
+                -96 + (Math.random() * 20 - 10),
+                Math.random() * 0.8
+            ]);
+        });
 
-            let currentDay = 1;
-            let heatLayer;
-            function updateHeatMap(day) {
-              if (heatLayer) map.removeLayer(heatLayer);
-              const dayData = data.days[day - 1].map((point) => [
-                point[0],
-                point[1],
-                point[2],
-              ]);
-              heatLayer = L.heatLayer(dayData, {
+        let heatLayer;
+        function updateHeatMap(day) {
+            if (heatLayer) map.removeLayer(heatLayer);
+            heatLayer = L.heatLayer(heatData[day - 1], {
                 radius: 25,
                 blur: 15,
                 maxZoom: 1,
                 gradient: { 0.4: 'blue', 0.65: 'yellow', 1: 'red' },
-              }).addTo(map);
-              heatLayer._animateZoom = function () {}; // Optional: to prevent animation on zoom
-            }
+            }).addTo(map);
+            heatLayer.setLatLngs(heatData[day - 1]);
+            map.panTo(new L.LatLng(heatData[day - 1][0][0], heatData[day - 1][0][1]));
+        }
 
-            document
-              .getElementById('day-slider')
-              .addEventListener('input', function (e) {
-                currentDay = e.target.value;
-                document.getElementById('selected-day').innerText = currentDay;
-                updateHeatMap(currentDay);
-              });
+        document.getElementById('day-slider').addEventListener('input', function(e) {
+            updateHeatMap(e.target.value);
+            document.getElementById('selected-day').innerText = e.target.value;
+        });
 
-            updateHeatMap(currentDay);
-          });
-      }
+        // Modal functionality
+        const modal = document.getElementById('modal');
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        function setCity() {
+            const cityInput = document.getElementById('cityInput').value;
+            // Here you would call a geocoding API like Nominatim or OpenCage Geocoder
+            // to convert the city name to coordinates, then update the map view accordingly.
+            // For demo purposes, we'll just close the modal.
+            modal.classList.add('hidden');
+        }
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('click', function() {
+    document.body.classList.toggle('dark-mode');
+            this.checked ? document.body.classList.add('dark-mode') : document.body.classList.remove('dark-mode');
+        });
+       
+
+        updateHeatMap(1);
     </script>
-  </body>
+</body>
 </html>

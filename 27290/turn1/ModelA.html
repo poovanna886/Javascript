@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racing Data Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+<style>
+    body { background-color: #212529; color: white; }
+    .track-image { width: 80%; height: auto; margin: 20px auto; display: block; }
+    .dot { position: absolute; width: 10px; height: 10px; background-color: #007BFF; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Laps Left: <span id="laps-left">60</span></h1>
+    <table class="table table-dark table-striped">
+        <thead><tr><th>Standing</th><th>Driver Name</th><th>Team</th><th>Gap</th><th>Lap Time</th></tr></thead>
+        <tbody id="racers-table"></tbody>
+    </table>
+    <img src="path_to_track_image.png" alt="Track Layout" class="track-image" id="track">
+    <div id="dots"></div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const racersData =   [
+        {name: 'Lewis Hamilton', team: 'Mercedes'},
+        {name: 'George Russel', team: 'Mercedes'},
+        {name: 'Max Verstappen', team: 'Red Bull'},
+        {name: 'Sergio Perez', team: 'Red Bull'},
+        {name: 'Charles Leclerc', team: 'Ferrari'},
+        {name: 'Carlos Sainz', team: 'Ferrari'},
+        {name: 'Lando Norris', team: 'Mclaren'},
+        {name: 'Oscar Piastri', team: 'Mclaren'},
+        {name: 'Pierre Gasly', team: 'Alpine'},
+        {name: 'Estaban Ocon', team: 'Alpine'},
+    ]; // Initialize with data for 10 racers
+        const updateInterval = 2000; // 2 seconds
+        const lapTimeUpdateInterval = 60000; // 1 minute
+        let lapsLeft = 60;
+        let trackDots = [];
+
+        function updateRacersTable() {
+            $("#racers-table").html(racersData.map((racer, index) => {
+                return `<tr><td>${index + 1}</td><td>${racer.name}</td><td>${racer.team}</td><td id="gap-${index}">${racer.gap}</td><td>${racer.lapTime}</td></tr>`;
+            }).join(''));
+        }
+
+        function updateGap() {
+            racersData.forEach((racer, index) => {
+                const newGap = Math.random() < 0.5 ? '+' : '-';
+                $(`#gap-${index}`).text(`${newGap} ${Math.random() * 2 | 0}.${Math.random() * 9 | 0}s`);
+            });
+        }
+
+        function updateLapTime() {
+            racersData.forEach(racer => racer.lapTime = new Date().toLocaleTimeString());
+            updateRacersTable();
+            lapsLeft--;
+            $("#laps-left").text(lapsLeft);
+        }
+
+        function animateDots() {
+            const trackRect = $("#track")[0].getBoundingClientRect();
+            const dotRadius = 5;
+            $("#dots").html(racersData.map((racer, index) => {
+                const angle = index * (360 / racersData.length);
+                const x = trackRect.width / 2 + (trackRect.width / 2 - dotRadius) * Math.sin(angle * (Math.PI / 180));
+                const y = trackRect.height / 2 + (trackRect.height / 2 - dotRadius) * Math.cos(angle * (Math.PI / 180));
+                return `<div class="dot" style="left: ${x + trackRect.left}px; top: ${y + trackRect.top}px;"></div>`;
+            }).join(''));
+        }
+
+        updateRacersTable();
+        setInterval(updateGap, updateInterval);
+        setInterval(updateLapTime, lapTimeUpdateInterval);
+        setInterval(animateDots, 50); // Update dot positions frequently for smooth animation
+        animateDots();
+    });
+</script>
+</body>
+</html>

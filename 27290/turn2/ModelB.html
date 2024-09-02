@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Racing Data Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* General styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            opacity: 0;
+    transition: opacity 1s;
+        }
+
+        /* Laps Left Section */
+        .laps-left {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        svg {
+            width: 80%;
+            height: 80%;
+            max-width: 600px;
+            margin-bottom: 20px;
+
+        }
+
+        #trackImage {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #driverDots {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Styling the driver dots */
+        .driver-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+            transition: all 1s ease-in-out;
+            /* Smooth transition for dot movement */
+
+        }
+
+        /* Media Queries for Responsive Design */
+        @media (max-width: 768px) {
+            table {
+                width: 100%;
+            }
+
+            .track-container {
+                width: 100%;
+            }
+        }
+        /* Dark mode styles */
+.dark-mode {
+    background-color: #333;
+    color: #fff;
+}
+
+.dark-mode th {
+    background-color: #444;
+}
+
+.dark-mode .laps-left {
+    color: #fff;
+}
+
+.dark-mode table {
+    color: #fff;
+}
+
+.dark-mode tbody tr:nth-child(even) {
+    background-color: #444;
+}
+
+.dark-mode tbody tr:hover {
+    background-color: #555;
+}
+
+/* Toggle Button Styles */
+.toggle-container {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin: 10px;
+}
+
+.toggle-container input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-container label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-container label:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + label {
+    background-color: #2196F3;
+}
+
+input:checked + label:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Animation for page load */
+
+body.loaded {
+    opacity: 1;
+}
+
+table, .track-container {
+    opacity: 0;
+    transition: opacity 1.5s;
+}
+
+table.loaded, .track-container.loaded {
+    opacity: 1;
+}
+
+/* Fade effect for dark mode transition */
+.dark-mode-transition {
+    transition: background-color 0.5s, color 0.5s;
+}
+    </style>
+</head>
+
+<body>
+    <div class="toggle-container">
+        <input type="checkbox" id="darkmode-toggle" />
+        <label for="darkmode-toggle"></label>
+    </div>
+    <h1>US Grand Prix</h1>
+    <div class="laps-left">Laps Left: <span id="lapsLeft">50</span>/50</div>
+    <table id="raceTable">
+        <thead>
+            <tr>
+                <th>Driver Standing</th>
+                <th>Driver Name</th>
+                <th>Driver Team</th>
+                <th>Gap to Next Driver</th>
+                <th>Current Lap Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Populate rows with JavaScript -->
+        </tbody>
+    </table>
+    <h2>Live Position</h2>
+    <div class="track-container">
+       
+    </div>
+    <script>
+        // Get DOM elements
+        const lapsLeftElement = document.getElementById('lapsLeft');
+        const raceTable = document.getElementById('raceTable').getElementsByTagName('tbody')[0];
+        const driverDotsContainer = document.getElementById('driverDots');
+
+        // Initialize race data
+        let lapsLeft = 50;
+        let raceData = [
+            { standing: 1, name: 'Lewis Hamilton', team: 'Mercedes', gap: 0, lapTime: "00:00:00" },
+            { standing: 2, name: 'George Russel', team: 'Mercedes', gap: 0, lapTime: "00:00:00" },
+            { standing: 3, name: 'Max Verstappen', team: 'Red Bull', gap: 0, lapTime: "00:00:00" },
+            { standing: 4, name: 'Sergio Perez', team: 'Red Bull', gap: 0, lapTime: "00:00:00" },
+            { standing: 5, name: 'Charles Leclerc', team: 'Ferrari', gap: 0, lapTime: "00:00:00" },
+            { standing: 6, name: 'Carlos Sainz', team: 'Ferrari', gap: 0, lapTime: "00:00:00" },
+            { standing: 7, name: 'Lando Norris', team: 'Mclaren', gap: 0, lapTime: "00:00:00" },
+            { standing: 8, name: 'Oscar Piastri', team: 'Mclaren', gap: 0, lapTime: "00:00:00" },
+            { standing: 9, name: 'Pierre Gasly', team: 'Alpine', gap: 0, lapTime: "00:00:00" },
+            { standing: 10, name: 'Estaban Ocon', team: 'Alpine', gap: 0, lapTime: "00:00:00" },
+        ];
+
+        // Function to update the number of laps left
+        function updateLaps() {
+            if (lapsLeft > 0) {
+                lapsLeft--;
+                lapsLeftElement.textContent = lapsLeft;
+            }
+        }
+        setInterval(updateLaps, 60000); // Decrease laps every 1 minute
+
+        // Function to update the gap to the next driver
+        function updateGap() {
+            for (let i = 1; i < raceData.length; i++) {
+                raceData[i].gap = (Math.random() * 3).toFixed(1); // Simulate new gap value
+            }
+            renderTable();
+        }
+        setInterval(updateGap, 2000); // Update gap every 2 seconds
+
+        // Function to update the current lap time
+        function updateLapTime() {
+            raceData.forEach(driver => {
+                // Simulate a new lap time
+                const minutes = Math.floor(Math.random() * 2) + 1;
+                const seconds = Math.floor(Math.random() * 60);
+                const milliseconds = Math.floor(Math.random() * 1000);
+                driver.lapTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}.${milliseconds}`;
+            });
+            renderTable();
+        }
+        setInterval(updateLapTime, 60000); // Update lap time every 1 minute
+
+        // Function to render the race table
+        function renderTable() {
+            raceTable.innerHTML = ''; // Clear existing table content
+            raceData.forEach(driver => {
+                let row = raceTable.insertRow();
+                row.insertCell(0).textContent = driver.standing;
+                row.insertCell(1).textContent = driver.name;
+                row.insertCell(2).textContent = driver.team;
+                row.insertCell(3).textContent = driver.gap + 's';
+                row.insertCell(4).textContent = driver.lapTime;
+            });
+        }
+        // Toggle dark mode
+document.getElementById('darkmode-toggle').addEventListener('change', function() {
+    document.body.classList.toggle('dark-mode', this.checked);
+    // Add transition effect to elements that change color
+    document.querySelectorAll('.dark-mode-transition').forEach(el => el.classList.toggle('dark-mode', this.checked));
+});
+
+// Add event listener for page loaded to trigger animations
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.classList.add('loaded');
+    document.querySelector('table').classList.add('loaded');
+    document.querySelector('.track-container').classList.add('loaded');
+});
+
+        // Initial render
+        renderTable();
+
+
+    </script>
+</body>
+
+</html>
