@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Racing Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); 
+            color: #fff; 
+            text-align: center;
+        }
+        #gameCanvas { 
+            display: block; 
+            margin: 50px auto; 
+            border: 5px solid #fff; 
+            border-radius: 15px; 
+            background: #333; 
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.7); 
+        }
+        #countdown, #score, #gameOver { 
+            position: absolute; 
+            width: 100%; 
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); 
+        }
+        #countdown { 
+            top: 40%; 
+            font-size: 48px; 
+            font-weight: 600; 
+        }
+        #score { 
+            top: 10px; 
+            left: 10px; 
+            font-size: 24px; 
+        }
+        #gameOver { 
+            top: 40%; 
+            display: none; 
+            font-size: 36px; 
+            font-weight: 600; 
+            animation: fadeIn 1s ease-in-out;
+        }
+        #gameOver span {
+            font-size: 42px;
+            color: #fdbb2d;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="countdown"></div>
+    <div id="score">Score: 0</div>
+    <div id="gameOver">Game Over! High Score: <span id="highScore">0</span></div>
+    
+    <script>
+   const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const countdownEl = document.getElementById('countdown');
+const scoreEl = document.getElementById('score');
+const gameOverEl = document.getElementById('gameOver');
+const highScoreEl = document.getElementById('highScore');
+
+let car = { lane: 1, y: 500, width: 50, height: 100 };
+let obstacles = [];
+let score = 0;
+let highScore = 0;
+let gameRunning = false;
+let countdown = 3;
+
+canvas.width = 400;
+canvas.height = 600;
+
+document.addEventListener('keydown', moveCar);
+
+function moveCar(e) {
+    if (e.key === 'a' && car.lane > 0) car.lane--; // Move left
+    if (e.key === 'd' && car.lane < 2) car.lane++; // Move right
+    updateCarPosition();
+}
+
+function updateCarPosition() {
+    // Calculate the x position based on the lane (0, 1, or 2)
+    car.x = car.lane * 133 + 50;
+}
+
+function startGame() {
+    gameRunning = true;
+    score = 0;
+    obstacles = [];
+    car.lane = 1;
+    car.y = 500;
+    updateCarPosition();
+    countdown = 3;
+    countdownEl.innerHTML = '';
+    gameOverEl.style.display = 'none';
+    scoreEl.innerHTML = 'Score: 0';
+    requestAnimationFrame(gameLoop);
+}
+
+function gameLoop() {
+    if (!gameRunning) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawRoad();
+    updateObstacles();
+    drawCar();
+    drawObstacles();
+
+    if (detectCollision()) {
+        endGame();
+    } else {
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+function drawRoad() {
+    // Draw road background
+    ctx.fillStyle = '#707070'; // Grey color for the road
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw lane dividers
+    ctx.strokeStyle = '#ffffff'; // White color for lane lines
+    ctx.lineWidth = 5;
+    ctx.setLineDash([20, 15]); // Dotted line style
+    
+    // Draw the first lane divider
+    ctx.beginPath();
+    ctx.moveTo(133, 0);
+    ctx.lineTo(133, canvas.height);
+    ctx.stroke();
+
+    // Draw the second lane divider
+    ctx.beginPath();
+    ctx.moveTo(267, 0);
+    ctx.lineTo(267, canvas.height);
+    ctx.stroke();
+}
+
+function drawCar() {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(car.x, car.y, car.width, car.height);
+}
+
+function updateObstacles() {
+    if (Math.random() < 0.02) {
+        let lane = Math.floor(Math.random() * 3);
+        let obstacleX = lane * 133 + 50;
+        obstacles.push({ x: obstacleX, y: -100, width: 50, height: 100 });
+    }
+
+    for (let i = 0; i < obstacles.length; i++) {
+        obstacles[i].y += 5;
+
+        // Check if the obstacle has passed the player's car
+        if (obstacles[i].y > canvas.height) {
+            obstacles.splice(i, 1);
+            score++;  // Increment score when an obstacle is passed
+            scoreEl.innerHTML = `Score: ${score}`;
+        }
+    }
+}
+
+function drawObstacles() {
+    ctx.fillStyle = '#1a2a6c';
+    for (let obstacle of obstacles) {
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    }
+}
+
+function detectCollision() {
+    for (let obstacle of obstacles) {
+        if (
+            car.x < obstacle.x + obstacle.width &&
+            car.x + car.width > obstacle.x &&
+            car.y < obstacle.y + obstacle.height &&
+            car.y + car.height > obstacle.y
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function endGame() {
+    gameRunning = false;
+    gameOverEl.style.display = 'block';
+    if (score > highScore) {
+        highScore = score;
+        highScoreEl.innerHTML = highScore;
+    }
+}
+
+function countdownStart() {
+    if (countdown > 0) {
+        countdownEl.innerHTML = countdown;
+        countdown--;
+        setTimeout(countdownStart, 1000);
+    } else {
+        countdownEl.innerHTML = 'Go!';
+        setTimeout(() => {
+            countdownEl.innerHTML = '';
+            startGame();
+        }, 1000);
+    }
+}
+
+countdownStart();
+
+    </script>
+</body>
+</html>

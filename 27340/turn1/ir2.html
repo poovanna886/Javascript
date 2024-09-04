@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Racing Game</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: 0 auto;
+            background-color: #e0e0e0;
+        }
+        #countdown, #timer {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="countdown">3</div>
+    <div id="timer">Time: 0s</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const track = [
+    { x: 50, y: 50 },
+    { x: 250, y: 50 },
+    { x: 250, y: 200 },
+    { x: 150, y: 200 },
+    { x: 150, y: 400 },
+    { x: 400, y: 400 },
+    { x: 400, y: 150 },
+    { x: 600, y: 150 },
+    { x: 600, y: 350 },
+    { x: 750, y: 350 },
+    { x: 750, y: 550 },
+    { x: 50, y: 550 },
+    { x: 50, y: 400 },
+    { x: 200, y: 400 },
+    { x: 200, y: 100 },
+    { x: 50, y: 100 }
+];
+
+let redCar = { x: 50, y: 50, width: 30, height: 15, color: 'red', speed: 2, angle: 0 };
+let blueCar = { x: 70, y: 70, width: 30, height: 15, color: 'blue', speed: 1.8, angle: 0 };
+
+let timer = 0;
+let countdown = 3;
+let gameStarted = false;
+let raceOver = false;
+let interval;
+
+// Draw the track and the cars
+function drawGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawTrack();
+    drawCar(redCar);
+    drawCar(blueCar);
+}
+
+function drawTrack() {
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 5;
+
+    ctx.beginPath();
+    ctx.moveTo(track[0].x, track[0].y);
+
+    for (let i = 1; i < track.length; i++) {
+        ctx.lineTo(track[i].x, track[i].y);
+    }
+
+    ctx.closePath();
+    ctx.stroke();
+}
+
+function drawCar(car) {
+    ctx.save();
+    ctx.translate(car.x, car.y);
+    ctx.rotate(car.angle);
+    ctx.fillStyle = car.color;
+    ctx.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
+    ctx.restore();
+}
+
+// Update car positions
+function updateGame() {
+    if (gameStarted && !raceOver) {
+        moveCar(redCar);
+        moveCar(blueCar, true);
+
+        drawGame();
+        checkWinCondition();
+    }
+    requestAnimationFrame(updateGame);
+}
+
+function moveCar(car, isAI = false) {
+    if (isAI) {
+        car.x += car.speed * Math.cos(car.angle);
+        car.y += car.speed * Math.sin(car.angle);
+        followTrack(car);
+    } else {
+        car.x += car.speed * Math.cos(car.angle);
+        car.y += car.speed * Math.sin(car.angle);
+    }
+}
+
+// Handle keypress events
+document.addEventListener('keydown', (event) => {
+    if (gameStarted) {
+        switch (event.key) {
+            case 'w': // Move forward
+                redCar.speed = 2;
+                break;
+            case 's': // Move backward
+                redCar.speed = -2;
+                break;
+            case 'a': // Turn left
+                redCar.angle -= 0.1;
+                break;
+            case 'd': // Turn right
+                redCar.angle += 0.1;
+                break;
+        }
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    if (gameStarted) {
+        switch (event.key) {
+            case 'w':
+            case 's':
+                redCar.speed = 0;
+                break;
+        }
+    }
+});
+
+// Start the countdown and timer
+function startGame() {
+    let countdownInterval = setInterval(() => {
+        if (countdown > 0) {
+            document.getElementById('countdown').innerText = countdown;
+            countdown--;
+        } else {
+            clearInterval(countdownInterval);
+            document.getElementById('countdown').innerText = 'Go!';
+            gameStarted = true;
+            interval = setInterval(() => {
+                if (gameStarted) {
+                    timer++;
+                    document.getElementById('timer').innerText = `Time: ${timer}s`;
+                }
+            }, 1000);
+        }
+    }, 1000);
+}
+
+function followTrack(car) {
+    // Very simple AI that makes the blue car follow the track by steering slightly toward the next point
+    let nextPoint = track[0];
+    for (let i = 0; i < track.length; i++) {
+        let dist = Math.hypot(car.x - track[i].x, car.y - track[i].y);
+        if (dist < 20) {
+            nextPoint = track[(i + 1) % track.length];
+            break;
+        }
+    }
+
+    let angleToNextPoint = Math.atan2(nextPoint.y - car.y, nextPoint.x - car.x);
+    car.angle += (angleToNextPoint - car.angle) * 0.05;
+}
+
+function checkWinCondition() {
+    let finishLine = track[track.length - 1];
+
+    if (Math.hypot(redCar.x - finishLine.x, redCar.y - finishLine.y) < 20) {
+        alert('Red Car Wins!');
+        resetGame();
+    } else if (Math.hypot(blueCar.x - finishLine.x, blueCar.y - finishLine.y) < 20) {
+        alert('Blue Car Wins!');
+        resetGame();
+    }
+}
+
+function resetGame() {
+    clearInterval(interval);
+    redCar = { x: 50, y: 50, width: 30, height: 15, color: 'red', speed: 2, angle: 0 };
+    blueCar = { x: 70, y: 70, width: 30, height: 15, color: 'blue', speed: 1.8, angle: 0 };
+    timer = 0;
+    countdown = 3;
+    gameStarted = false;
+    raceOver = false;
+    document.getElementById('timer').innerText = 'Time: 0s';
+    startGame();
+}
+
+// Start the game loop
+requestAnimationFrame(updateGame);
+startGame();
+
+    </script>
+</body>
+</html>

@@ -1,118 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Storm Prediction Map</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <!-- Link to Ionicons for spaceship and alien icons -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
     <style>
-      #map {
-        width: 100%;
-        height: 600px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
-      .slider {
-        appearance: none;
-        width: 100%;
-        height: 8px;
-        background: #d1d5db;
-        outline: none;
-        opacity: 0.9;
-        transition: opacity 0.15s ease-in-out;
-      }
-      .slider:hover {
-        opacity: 1;
-      }
-      .slider::-webkit-slider-thumb {
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        background: #4a5568;
-        cursor: pointer;
-        border-radius: 50%;
-      }
-      .slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        background: #4a5568;
-        cursor: pointer;
-        border-radius: 50%;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-100">
-    <div class="container mx-auto p-6 mt-8 bg-white shadow-lg rounded-lg">
-      <h1 class="text-4xl font-bold text-center mb-6 text-gray-800">
-        Storm Prediction for Next 7 Days
-      </h1>
-      <div id="map" class="mb-6"></div>
-      <div class="flex flex-col items-center">
-        <input
-          id="day-slider"
-          type="range"
-          min="1"
-          max="7"
-          value="1"
-          class="slider w-full max-w-lg mt-4"
-        />
-        <p class="text-lg mt-4 text-gray-700">
-          Day: <span id="selected-day" class="font-semibold">1</span>
-        </p>
-      </div>
-    </div>
-
-    <script>
-      const map = L.map('map').setView([37.8, -96], 4);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
-        subdomains: ['a', 'b', 'c'],
-      }).addTo(map);
-
-      const heatData = Array(7)
-        .fill(0)
-        .map(() => {
-          return Array(100)
-            .fill(0)
-            .map(() => [
-              37 + (Math.random() * 10 - 5),
-              -96 + (Math.random() * 20 - 10),
-              Math.random() * 0.8,
-            ]);
-        });
-
-      let heatLayer;
-      function updateHeatMap(day) {
-        if (heatLayer) {
-          map.removeLayer(heatLayer);
+        body {
+            background-color: black;
+            color: white;
+            text-align: center;
         }
-        heatLayer = L.heatLayer(heatData[day - 1], {
-          radius: 25,
-          blur: 15,
-          maxZoom: 1,
-          gradient: { 0.4: 'blue', 0.65: 'yellow', 1: 'red' },
-        }).addTo(map);
-      }
 
-      document
-        .getElementById('day-slider')
-        .addEventListener('input', function (e) {
-          const day = e.target.value;
-          document.getElementById('selected-day').innerText = day;
-          updateHeatMap(day);
-        });
+        .grid {
+            width: 300px;
+            height: 300px;
+            border: solid white 1px;
+            border-radius: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            position: relative;
+            margin: 0 auto;
+            margin-top: 50px;
+        }
 
-      updateHeatMap(1);
+        .grid div {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+
+        /* Use Ionicons for invader and shooter */
+        .invader ion-icon {
+            font-size: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .shooter ion-icon {
+            font-size: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .laser {
+            background-color: orange;
+        }
+
+        .boom {
+            background-color: red;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-size: 1.5rem;
+        }
+
+        .score-board {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="results score-board">Score: 0 | High Score: 0</h1>
+    <div class="grid"></div>
+    <script>
+        const grid = document.querySelector(".grid")
+        const resultDisplay = document.querySelector(".results")
+        let currentShooterIndex = 202
+        const width = 15
+        const aliensRemoved = []
+        let invadersId
+        let isGoingRight = true
+        let direction = 1
+        let results = 0
+
+        // Retrieve high score from local storage or set to 0
+        let highScore = localStorage.getItem('highScore') || 0
+        resultDisplay.innerHTML = `Score: 0 | High Score: ${highScore}`
+
+        // Create grid squares
+        for (let i = 0; i < width * width; i++) {
+            const square = document.createElement("div")
+            grid.appendChild(square)
+        }
+
+        const squares = Array.from(document.querySelectorAll(".grid div"))
+
+        // Alien invaders
+        const alienInvaders = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+            15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            30, 31, 32, 33, 34, 35, 36, 37, 38, 39
+        ]
+
+        // Draw aliens
+        function draw() {
+            for (let i = 0; i < alienInvaders.length; i++) {
+                if (!aliensRemoved.includes(i)) {
+                    const alienIcon = document.createElement('ion-icon')
+                    alienIcon.setAttribute('name', 'planet')
+                    squares[alienInvaders[i]].appendChild(alienIcon)
+                }
+            }
+        }
+
+        draw()
+
+        // Place the shooter
+        function placeShooter() {
+            const shooterIcon = document.createElement('ion-icon')
+            shooterIcon.setAttribute('name', 'rocket')
+            squares[currentShooterIndex].appendChild(shooterIcon)
+        }
+
+        placeShooter()
+
+        // Remove aliens
+        function remove() {
+            for (let i = 0; i < alienInvaders.length; i++) {
+                squares[alienInvaders[i]].innerHTML = ''
+            }
+        }
+
+        // Move shooter left and right
+        function moveShooter(e) {
+            squares[currentShooterIndex].innerHTML = ''
+            switch (e.key) {
+                case "ArrowLeft":
+                    if (currentShooterIndex % width !== 0) currentShooterIndex -= 1
+                    break
+                case "ArrowRight":
+                    if (currentShooterIndex % width < width - 1) currentShooterIndex += 1
+                    break
+            }
+            placeShooter()
+        }
+
+        document.addEventListener("keydown", moveShooter)
+
+        // Move invaders
+        function moveInvaders() {
+            const leftEdge = alienInvaders[0] % width === 0
+            const rightEdge = alienInvaders[alienInvaders.length - 1] % width === width - 1
+            remove()
+
+            if (rightEdge && isGoingRight) {
+                for (let i = 0; i < alienInvaders.length; i++) {
+                    alienInvaders[i] += width + 1
+                }
+                direction = -1
+                isGoingRight = false
+            }
+
+            if (leftEdge && !isGoingRight) {
+                for (let i = 0; i < alienInvaders.length; i++) {
+                    alienInvaders[i] += width - 1
+                }
+                direction = 1
+                isGoingRight = true
+            }
+
+            for (let i = 0; i < alienInvaders.length; i++) {
+                alienInvaders[i] += direction
+            }
+
+            draw()
+
+            // Check if invaders hit the shooter
+            if (squares[currentShooterIndex].querySelector('ion-icon[name="planet"]')) {
+                resultDisplay.innerHTML = "GAME OVER"
+                clearInterval(invadersId)
+                checkHighScore() // Check if the current score is a high score
+            }
+
+            // Check if all invaders are removed
+            if (aliensRemoved.length === alienInvaders.length) {
+                resultDisplay.innerHTML = "YOU WIN"
+                clearInterval(invadersId)
+                checkHighScore() // Check if the current score is a high score
+            }
+        }
+
+        invadersId = setInterval(moveInvaders, 600)
+
+        // Shoot laser
+        function shoot(e) {
+            let laserId
+            let currentLaserIndex = currentShooterIndex
+
+            function moveLaser() {
+                // Remove laser from current position
+                squares[currentLaserIndex].classList.remove("laser")
+
+                // Move laser upward
+                currentLaserIndex -= width
+
+                // Check if laser is still within the grid bounds
+                if (currentLaserIndex >= 0) {
+                    squares[currentLaserIndex].classList.add("laser")
+
+                    // Check if laser hits invader
+                    if (squares[currentLaserIndex].querySelector('ion-icon[name="planet"]')) {
+                        squares[currentLaserIndex].classList.remove("laser")
+                        squares[currentLaserIndex].innerHTML = ''
+                        squares[currentLaserIndex].classList.add("boom")
+
+                        setTimeout(() => squares[currentLaserIndex].classList.remove("boom"), 300)
+                        clearInterval(laserId)
+
+                        const alienRemoved = alienInvaders.indexOf(currentLaserIndex)
+                        aliensRemoved.push(alienRemoved)
+                        results++
+                        resultDisplay.innerHTML = `Score: ${results} | High Score: ${highScore}`
+                    }
+                } else {
+                    // Clear the interval if laser goes out of bounds
+                    clearInterval(laserId)
+                }
+            }
+
+            if (e.key === "ArrowUp") {
+                laserId = setInterval(moveLaser, 100)
+            }
+        }
+
+        document.addEventListener('keydown', shoot)
+
+        // Function to check and update high score
+        function checkHighScore() {
+            if (results > highScore) {
+                highScore = results
+                localStorage.setItem('highScore', highScore)
+                resultDisplay.innerHTML = `Score: ${results} | High Score: ${highScore}`
+            }
+        }
     </script>
-  </body>
+</body>
 </html>

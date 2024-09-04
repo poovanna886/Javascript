@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tank Battle</title>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  #gameArea {
+    width: 800px;
+    height: 600px;
+    background: #f0f0f0;
+    position: relative;
+    overflow: hidden;
+  }
+  .tank {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    background-color: green;
+  }
+  .enemy {
+    background-color: red;
+  }
+  .bullet {
+    width: 5px;
+    height: 5px;
+    background-color: black;
+    position: absolute;
+  }
+  #healthBar {
+    width: 200px;
+    background: red;
+  }
+  #health {
+    width: 100%;
+    height: 20px;
+    background: green;
+  }
+</style>
+</head>
+<body>
+<div id="gameArea">
+  <div id="player" class="tank"></div>
+</div>
+<div id="healthBar"><div id="health"></div></div>
+<button id="restart" style="display:none;">Restart Game</button>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const gameArea = document.getElementById('gameArea');
+    const player = document.getElementById('player');
+    const healthBar = document.getElementById('health');
+    const restartButton = document.getElementById('restart');
+    
+    let playerHealth = 10;
+    let score = 0;
+
+    // Player controls
+    const keys = {};
+    document.addEventListener('keydown', (e) => keys[e.key] = true);
+    document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+    // Game state
+    const enemies = [];
+    const playerSpeed = 5;
+    const bulletSpeed = 10;
+
+    // Spawn enemies
+    function spawnEnemy() {
+        const enemy = document.createElement('div');
+        enemy.className = 'tank enemy';
+        enemy.style.left = `${Math.random() * (gameArea.offsetWidth - 30)}px`;
+        enemy.style.top = `${Math.random() * (gameArea.offsetHeight - 30)}px`;
+        gameArea.appendChild(enemy);
+        enemies.push({element: enemy, health: 3});
+    }
+
+    // Initial spawn
+    for(let i = 0; i < 4; i++) spawnEnemy();
+
+    function shoot() {
+        if (keys['o']) {
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet';
+            bullet.style.left = `${player.offsetLeft + 15}px`;
+            bullet.style.top = `${player.offsetTop + 15}px`;
+            gameArea.appendChild(bullet);
+
+            const moveBullet = () => {
+                let top = bullet.offsetTop - bulletSpeed;
+                bullet.style.top = `${top}px`;
+                if (top > 0) {
+                    requestAnimationFrame(moveBullet);
+                } else {
+                    bullet.remove();
+                }
+                // Check collision with enemies
+                enemies.forEach((enemy, index) => {
+                    if (collision(bullet, enemy.element)) {
+                        bullet.remove();
+                        enemy.health--;
+                        if (enemy.health <= 0) {
+                            enemy.element.remove();
+                            enemies.splice(index, 1);
+                            score++;
+                            spawnEnemy();
+                        }
+                    }
+                });
+            };
+            moveBullet();
+        }
+    }
+
+    function movePlayer() {
+        if (keys['w']) player.style.top = `${Math.max(player.offsetTop - playerSpeed, 0)}px`;
+        if (keys['s']) player.style.top = `${Math.min(player.offsetTop + playerSpeed, gameArea.offsetHeight - 30)}px`;
+        if (keys['a']) player.style.left = `${Math.max(player.offsetLeft - playerSpeed, 0)}px`;
+        if (keys['d']) player.style.left = `${Math.min(player.offsetLeft + playerSpeed, gameArea.offsetWidth - 30)}px`;
+    }
+
+    function collision($div1, $div2) {
+        const x1 = $div1.offsetLeft;
+        const y1 = $div1.offsetTop;
+        const h1 = $div1.clientHeight;
+        const w1 = $div1.clientWidth;
+        const b1 = y1 + h1;
+        const r1 = x1 + w1;
+        const x2 = $div2.offsetLeft;
+        const y2 = $div2.offsetTop;
+        const h2 = $div2.clientHeight;
+        const w2 = $div2.clientWidth;
+        const b2 = y2 + h2;
+        const r2 = x2 + w2;
+
+        return !(b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2);
+    }
+
+    function gameLoop() {
+        movePlayer();
+        shoot();
+        // Enemy collision with player
+        enemies.forEach(enemy => {
+            if (collision(player, enemy.element)) {
+                playerHealth--;
+                healthBar.style.width = `${(playerHealth / 10) * 100}%`;
+                if (playerHealth <= 0) {
+                    alert(`Game Over! Your score: ${score}`);
+                    restartButton.style.display = 'block';
+                }
+            }
+        });
+        requestAnimationFrame(gameLoop);
+    }
+
+    restartButton.onclick = function() {
+        location.reload();
+    };
+
+    gameLoop();
+});
+</script>
+</body>
+</html>

@@ -1,53 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storm Prediction Map</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-    <style>
-        #map { width: 100%; height: 600px; }
-    </style>
+<meta charset="UTF-8">
+<title>Space Shooter</title>
+<style>
+    body { margin: 0; background: \#000; overflow: hidden; }
+    \#gameArea { position: relative; width: 100vw; height: 100vh; background: url('data:image/png;base64,...'); /* Base64 for stars */ }
+    \#spaceship { position: absolute; bottom: 10px; left: 50\%; width: 50px; height: 50px; background: url('spaceship.png') no-repeat; background-size: cover; transform: translateX(-50\%); }
+    .bullet { position: absolute; width: 5px; height: 20px; background: yellow; }
+    .enemy { position: absolute; width: 40px; height: 40px; background: url('enemy.png') no-repeat; background-size: cover; }
+    \#score, \#highScore { position: absolute; top: 10px; color: white; font-family: Arial, sans-serif; }
+    \#score { left: 10px; }
+    \#highScore { right: 10px; }
+    \#gameOver { display: none; position: absolute; top: 50\%; left: 50\%; transform: translate(-50\%, -50\%); color: red; font-size: 30px; }
+</style>
 </head>
-<body class="bg-gray-100">
-
-<div class="container mx-auto p-4 mt-4">
-    <h1 class="text-3xl mb-2">Storm Prediction for Next 7 Days</h1>
-    <div id="map" class="shadow-md rounded"></div>
-    <input id="day-slider" type="range" min="1" max="7" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-4">
-    <p class="text-lg mt-2">Day: <span id="selected-day">1</span></p>
+<body>
+<div id="gameArea">
+    <div id="spaceship"></div>
+    <div id="score">Score: 0</div>
+    <div id="highScore">High Score: 0</div>
+    <div id="gameOver">Game Over</div>
 </div>
-
 <script>
-    const map = L.map('map').setView([37.8, -96], 4);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
-        subdomains: ['a', 'b', 'c']
-    }).addTo(map);
-
-    const heatData = Array(7).fill(0).map(() => {
-        return Array(100).fill(0).map(() => [37 + (Math.random() * 10 - 5), -96 + (Math.random() * 20 - 10), Math.random() * 0.8]);
-    });
-
-    let heatLayer;
-    function updateHeatMap(day) {
-        if (heatLayer) {
-            map.removeLayer(heatLayer);
-        }
-        heatLayer = L.heatLayer(heatData[day - 1], { radius: 25, blur: 15, maxZoom: 1, gradient: { 0.4: 'blue', 0.65: 'yellow', 1: 'red' } }).addTo(map);
+// Use CDN for any additional libraries if needed, for simplicity, we're not using any here
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        game.handleKey(e.key);
     }
+});
 
-    document.getElementById('day-slider').addEventListener('input', function(e) {
-        const day = e.target.value;
-        document.getElementById('selected-day').innerText = day;
-        updateHeatMap(day);
-    });
+const game = {
+    spaceship: document.getElementById('spaceship'),
+    gameArea: document.getElementById('gameArea'),
+    scoreDisplay: document.getElementById('score'),
+    highScoreDisplay: document.getElementById('highScore'),
+    gameOverDisplay: document.getElementById('gameOver'),
+    score: 0,
+    highScore: localStorage.getItem('highScore') || 0,
+    enemies: [],
+    bullets: [],
 
-    updateHeatMap(1);
+    init: function() {
+        this.updateHighScore();
+        this.createEnemy();
+        requestAnimationFrame(this.gameLoop.bind(this));
+    },
+
+    handleKey: function(key) {
+        const move = 10;
+        let left = this.spaceship.offsetLeft;
+        if (key === 'ArrowLeft' \&\& left > 0) left -= move;
+        if (key === 'ArrowRight' \&\& left < this.gameArea.offsetWidth - this.spaceship.offsetWidth) left += move;
+        if (key === 'ArrowUp') this.fireBullet();
+        this.spaceship.style.left = left + 'px';
+    },
+
+    fireBullet: function() {
+        const bullet = document.createElement('div');
+        bullet.className = 'bullet';
+        bullet.style.left = (this.spaceship.offsetLeft + this.spaceship.offsetWidth / 2 - 2.5) + 'px';
+        bullet.style.bottom = '60px';
+        this.gameArea.appendChild(bullet);
+        this.bullets.push(bullet);
+    },
+
+    createEnemy: function() {
+        const enemy = document.createElement('div');
+        enemy.className = 'enemy';
+        enemy.style.left = Math.random() * (this.gameArea.offsetWidth - 40) + 'px';
+        enemy.style.top = '0px';
+        this.gameArea.appendChild(enemy);
+        this.enemies.push(enemy);
+        setTimeout(this.createEnemy.bind(this), 1000 + Math.random() * 2000);
+    },
+
+    gameLoop: function() {
+        this.moveBullets();
+        this.moveEnemies();
+        this.checkCollisions();
+        if (!this.checkGameOver()) {
+            requestAnimationFrame(this.gameLoop.bind(this));
+        }
+    },
+
+    moveBullets: function() {
+        for(let i = this.bullets.length - 1; i >= 0; i--) {
+            let bullet = this.bullets[i];
+            let top = bullet.offsetTop - 5;
+            if (top < 0) {
+                this.gameArea.removeChild(bullet);
+                this.bullets.splice(i, 1);
+            } else {
+                bullet.style.top = top + 'px';
+            }
+        }
+    },
+
+    moveEnemies: function() {
+        this.enemies.forEach(enemy => {
+            let top = enemy.offsetTop + 1;
+            enemy.style.top = top + 'px';
+        });
+    },
+
+    checkCollisions: function() {
+        for(let b = this.bullets.length - 1; b >= 0; b--) {
+            for(let e = this.enemies.length - 1; e >= 0; e--) {
+                if(this.collision(this.bullets[b], this.enemies[e])) {
+                    this.gameArea.removeChild(this.bullets[b]);
+                    this.bullets.splice(b, 1);
+                    this.gameArea.removeChild(this.enemies[e]);
+                    this.enemies.splice(e, 1);
+                    this.score++;
+                    this.scoreDisplay.textContent = 'Score: ' + this.score;
+                    break;
+                }
+            }
+        }
+    },
+
+    collision: function(\$div1, \$div2) {
+        let x1 = \$div1.offsetLeft;
+        let y1 = \$div1.offsetTop;
+        let h1 = \$div1.clientHeight;
+        let w1 = \$div1.clientWidth;
+        let b1 = y1 + h1;
+        let r1 = x1 + w1;
+
+        let x2 = \$div2.offsetLeft;
+        let y2 = \$div2.offsetTop;
+        let h2 = \$div2.clientHeight;
+        let w2 = \$div2.clientWidth;
+        let b2 = y2 + h2;
+        let r2 = x2 + w2;
+
+        return !(b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2);
+    },
+
+    checkGameOver: function() {
+        if (this.enemies.some(enemy => enemy.offsetTop + enemy.offsetHeight >= this.gameArea.offsetHeight)) {
+            this.gameOver();
+            return true;
+        }
+        return false;
+    },
+
+    gameOver: function() {
+        this.gameOverDisplay.style.display = 'block';
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('highScore', this.highScore);
+            this.updateHighScore();
+        }
+    },
+
+    updateHighScore: function() {
+        this.highScoreDisplay.textContent = 'High Score: ' + this.highScore;
+    }
+};
+
+game.init();
 </script>
-
 </body>
 </html>

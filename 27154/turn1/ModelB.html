@@ -1,80 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Storm Prediction Map</title>
-    <link
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
-  </head>
-  <body class="bg-gray-100">
-    <div id="map" class="h-screen w-full"></div>
-    <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-50">
-      <input
-        type="range"
-        min="0"
-        max="6"
-        value="0"
-        class="slider w-64"
-        id="daySlider"
-      />
-      <p class="text-center mt-2" id="dayDisplay">Day: 1</p>
-    </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Shooter</title>
+<style>
+body { margin: 0; overflow: hidden; background: \#000; }
+canvas { display: block; }
+\#score, \#gameOver { position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; }
+\#gameOver { display: none; font-size: 2em; top: 50\%; left: 50\%; transform: translate(-50\%, -50\%); }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="score">Score: 0 | High Score: <span id="highScore">0</span></div>
+<div id="gameOver">Game Over</div>
 
-    <script>
-      // Initialize the map
-      var map = L.map('map').setView([37.8, -96], 4);
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map);
+const spaceship = {
+    x: canvas.width / 2 - 25,
+    y: canvas.height - 60,
+    width: 50,
+    height: 30,
+    dx: 5
+};
 
-      // Dummy data generation
-      function generateDummyData(day) {
-        let data = [];
-        for (let i = 0; i < 1000; i++) {
-          data.push([
-            Math.random() * 180 - 90,
-            Math.random() * 360 - 180,
-            Math.random() * (day + 1),
-          ]); // Lat, Lng, Intensity
+let bullets = [];
+let enemies = [];
+let score = 0;
+let gameOver = false;
+let highScore = localStorage.getItem('spaceShooterHighScore') || 0;
+
+document.getElementById('highScore').textContent = highScore;
+
+function drawSpaceship() {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(spaceship.x, spaceship.y, spaceship.width, spaceship.height);
+}
+
+function drawBullet(bullet) {
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(bullet.x, bullet.y, 3, 10);
+}
+
+function drawEnemy(enemy) {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(enemy.x, enemy.y, 30, 20);
+}
+
+function moveSpaceship(e) {
+    if (e.key === 'ArrowLeft' \&\& spaceship.x > 0) {
+        spaceship.x -= spaceship.dx;
+    } else if (e.key === 'ArrowRight' \&\& spaceship.x < canvas.width - spaceship.width) {
+        spaceship.x += spaceship.dx;
+    } else if (e.key === 'ArrowUp' \&\& !gameOver) {
+        bullets.push({x: spaceship.x + spaceship.width / 2, y: spaceship.y});
+    }
+}
+
+function update() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (!gameOver) {
+        drawSpaceship();
+        bullets.forEach((bullet, index) => {
+            bullet.y -= 5;
+            if (bullet.y < 0) bullets.splice(index, 1);
+            drawBullet(bullet);
+        });
+
+        if (Math.random() < 0.02) {
+            enemies.push({x: Math.random() * (canvas.width - 30), y: 0});
         }
-        return data;
-      }
 
-      var heat;
-      function updateHeatMap(day) {
-        if (heat) {
-          map.removeLayer(heat);
+        enemies.forEach((enemy, i) => {
+            enemy.y += 1;
+            if (enemy.y > canvas.height - spaceship.height - 20) {
+                gameOver = true;
+            }
+            drawEnemy(enemy);
+
+            bullets.forEach((bullet, j) => {
+                if (bullet.x < enemy.x + 30 \&\& bullet.x + 3 > enemy.x \&\& 
+                    bullet.y < enemy.y + 20 \&\& bullet.y + 10 > enemy.y) {
+                    enemies.splice(i, 1);
+                    bullets.splice(j, 1);
+                    score++;
+                }
+            });
+
+            if (enemy.x < spaceship.x + spaceship.width \&\& enemy.x + 30 > spaceship.x \&\& 
+                enemy.y < spaceship.y + spaceship.height \&\& enemy.y + 20 > spaceship.y) {
+                gameOver = true;
+            }
+        });
+
+        document.getElementById('score').textContent = `Score: \${score} | High Score: \${highScore}`;
+    }
+
+    if (gameOver) {
+        document.getElementById('gameOver').style.display = 'block';
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('spaceShooterHighScore', highScore);
+            document.getElementById('highScore').textContent = highScore;
         }
-        heat = L.heatLayer(generateDummyData(day), {
-          radius: 25,
-          blur: 15,
-          maxZoom: 10,
-          gradient: { 0.4: 'blue', 0.65: 'lime', 1: 'red' },
-        }).addTo(map);
-      }
+    }
 
-      // Initial heatmap
-      updateHeatMap(0);
+    if (!gameOver) requestAnimationFrame(update);
+}
 
-      // Slider functionality
-      var slider = document.getElementById('daySlider');
-      var dayDisplay = document.getElementById('dayDisplay');
-
-      slider.oninput = function () {
-        let day = this.value;
-        dayDisplay.textContent = 'Day: ' + (parseInt(day) + 1);
-        updateHeatMap(day);
-      };
-    </script>
-  </body>
+document.addEventListener('keydown', moveSpaceship);
+update();
+</script>
+</body>
 </html>

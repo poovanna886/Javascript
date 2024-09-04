@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2D Racing Game</title>
+<style>
+    body { 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        background: #f0f0f0; 
+        margin: 0; 
+        font-family: 'Arial', sans-serif; 
+    }
+    #gameCanvas {
+        background: #333;
+        border: 2px solid #000;
+    }
+    #countdown, #gameOver {
+        position: absolute;
+        font-size: 3em;
+        color: white;
+        text-shadow: 2px 2px 4px #000000;
+    }
+    #score, #highScore {
+        position: absolute;
+        top: 10px;
+        color: #fff;
+        font-size: 1.5em;
+    }
+    #score { left: 10px; }
+    #highScore { right: 10px; }
+</style>
+</head>
+<body>
+<div id="countdown"></div>
+<div id="gameOver" style="display:none;"></div>
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+<div id="score">Score: 0</div>
+<div id="highScore">High Score: 0</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const carWidth = 40, carHeight = 80, laneWidth = canvas.width / 3;
+let carPos = {x: canvas.width / 2 - carWidth / 2, y: canvas.height - carHeight - 20};
+let obstacles = [];
+let score = 0, highScore = 0;
+let gameLoop, countdown = 3, gameRunning = false;
+
+// Car image (you would need an actual image here)
+const carImage = new Image();
+carImage.src = 'https://w7.pngwing.com/pngs/90/531/png-transparent-taxi-car-simulator-3d-dodge-sprite-sprite-s-rectangle-car-video-game.png'; // Replace with actual path
+
+// Start countdown
+function startGame() {
+    const countElement = document.getElementById('countdown');
+    const interval = setInterval(() => {
+        countElement.textContent = countdown;
+        if (countdown <= 0) {
+            countElement.textContent = "GO!";
+            gameRunning = true;
+            gameLoop = requestAnimationFrame(gameTick);
+            setTimeout(() => countElement.style.display = 'none', 1000);
+            clearInterval(interval);
+        }
+        countdown--;
+    }, 1000);
+}
+
+// Obstacle creation
+function createObstacle() {
+    if (gameRunning && Math.random() < 0.02) { // Adjust frequency of obstacles
+        obstacles.push({
+            x: Math.floor(Math.random() * 3) * laneWidth,
+            y: -40, // Start above the canvas
+            width: laneWidth - 10,
+            height: 40
+        });
+    }
+}
+
+// Game loop
+function gameTick() {
+    updateGame();
+    drawGame();
+    if (gameRunning) {
+        gameLoop = requestAnimationFrame(gameTick);
+    }
+}
+
+// Update game state
+function updateGame() {
+    // Move obstacles
+    obstacles.forEach((obstacle, index) => {
+        obstacle.y += 5; // Speed of obstacles
+        if (obstacle.y > canvas.height) {
+            obstacles.splice(index, 1);
+            score++;
+        }
+    });
+
+    // Check for collision
+    if (checkCollision()) {
+        gameOver();
+    }
+
+    createObstacle();
+}
+
+// Draw game elements
+function drawGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw road
+    ctx.fillStyle = "#666";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw lanes
+    ctx.strokeStyle = "#fff";
+    for(let i = 1; i < 3; i++) {
+        ctx.beginPath();
+        ctx.setLineDash([15, 15]);
+        ctx.moveTo(i * laneWidth, 0);
+        ctx.lineTo(i * laneWidth, canvas.height);
+        ctx.stroke();
+    }
+
+    // Draw car
+    ctx.drawImage(carImage, carPos.x, carPos.y, carWidth, carHeight);
+
+    // Draw obstacles
+    ctx.fillStyle = "#f00";
+    obstacles.forEach(obstacle => ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height));
+
+    // Update score
+    document.getElementById('score').textContent = `Score: ${score}`;
+}
+
+// Collision detection
+function checkCollision() {
+    return obstacles.some(obstacle => 
+        carPos.x < obstacle.x + obstacle.width &&
+        carPos.x + carWidth > obstacle.x &&
+        carPos.y < obstacle.y + obstacle.height &&
+        carPos.y + carHeight > obstacle.y
+    );
+}
+
+function gameOver() {
+    gameRunning = false;
+    cancelAnimationFrame(gameLoop);
+    document.getElementById('gameOver').textContent = `Game Over! Score: ${score}`;
+    document.getElementById('gameOver').style.display = 'block';
+    if (score > highScore) highScore = score;
+    document.getElementById('highScore').textContent = `High Score: ${highScore}`;
+}
+
+// Controls
+document.addEventListener('keydown', function(e) {
+    if (!gameRunning) return;
+    switch(e.key) {
+        case 'a': carPos.x = Math.max(0, carPos.x - laneWidth); break;
+        case 'd': carPos.x = Math.min(canvas.width - carWidth, carPos.x + laneWidth); break;
+    }
+});
+
+// Start the game
+startGame();
+</script>
+</body>
+</html>
