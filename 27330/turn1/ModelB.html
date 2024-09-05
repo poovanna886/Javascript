@@ -1,153 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productivity Timer</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-        .full-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: #f0f0f0;
-        }
-        #timer {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: 10px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2em;
-        }
-        #startButton {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-        }
-        .dashboard {
-            padding: 20px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Tank Battle</title>
+<style>
+    body { margin: 0; background: #000; overflow: hidden; }
+    #gameCanvas { background: #87CEEB; display: block; }
+    #healthBar { height: 20px; width: 500px; background: grey; position: absolute; top: 10px; left: 50%; margin-left: -250px; }
+    .healthUnit { height: 20px; width: 50px; background: green; display: inline-block; }
+    #restartBtn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; }
+</style>
 </head>
 <body>
-    <div class="full-screen">
-        <div id="timer"></div>
-        <button id="startButton">Start Focus</button>
-    </div>
-    <div class="dashboard" style="display: block;">
-        <div id="timeline_chart" style="width: 100%; height: 300px;"></div>
-        <div id="bar_chart" style="width: 100%; height: 300px;"></div>
-    </div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="healthBar">
+    <div class="healthUnit"></div><div class="healthUnit"></div><div class="healthUnit"></div><div class="healthUnit"></div><div class="healthUnit"></div>
+    <div class="healthUnit"></div><div class="healthUnit"></div><div class="healthUnit"></div><div class="healthUnit"></div><div class="healthUnit"></div>
+</div>
+<button id="restartBtn" onclick="restartGame()">Restart Game</button>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const restartBtn = document.getElementById('restartBtn');
+let playerHealth = 10;
+let score = 0;
 
-    <script>
-    google.charts.load('current', {'packages':['corechart', 'bar']});
-    google.charts.setOnLoadCallback(drawCharts);
+class Tank {
+    constructor(x, y, isPlayer = false) {
+        this.x = x;
+        this.y = y;
+        this.width = 30;
+        this.height = 30;
+        this.color = isPlayer ? 'blue' : 'red';
+        this.bullets = [];
+        this.health = isPlayer ? 10 : 3;
+    }
 
-    let timeLeft = 25 * 60; // 25 minutes in seconds
-    const timerElement = document.getElementById('timer');
-    const startButton = document.getElementById('startButton');
-    let timerInterval;
-    let workSessions = JSON.parse(localStorage.getItem('workSessions')) || Array(7).fill({work: 0, pause: 0});
+    shoot() {
+        this.bullets.push(new Bullet(this.x + this.width / 2 - 2.5, this.y, this.color === 'blue' ? -10 : 10));
+    }
 
-    function startTimer() {
-        if (!timerInterval) {
-            timerInterval = setInterval(updateTimer, 1000);
-            startButton.textContent = 'Pause';
-        } else {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            startButton.textContent = 'Resume';
+    move(dx, dy) {
+        this.x = Math.max(0, Math.min(canvas.width - this.width, this.x + dx));
+        this.y = Math.max(0, Math.min(canvas.height - this.height, this.y + dy));
+    }
+}
+
+class Bullet {
+    constructor(x, y, dy) {
+        this.x = x;
+        this.y = y;
+        this.dy = dy;
+        this.radius = 5;
+    }
+}
+
+const player = new Tank(400, 550, true);
+let enemies = [new Tank(100, 10), new Tank(300, 10), new Tank(500, 10), new Tank(700, 10)];
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Player control
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'w') player.move(0, -5);
+        if (e.key === 's') player.move(0, 5);
+        if (e.key === 'a') player.move(-5, 0);
+        if (e.key === 'd') player.move(5, 0);
+        if (e.key === 'o') player.shoot();
+    });
+
+    // Update and draw tanks and bullets
+    [player, ...enemies].forEach(tank => {
+        ctx.fillStyle = tank.color;
+        ctx.fillRect(tank.x, tank.y, tank.width, tank.height);
+        
+        // Update bullets
+        tank.bullets = tank.bullets.filter(bullet => {
+            bullet.y += bullet.dy;
+            ctx.beginPath();
+            ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+            ctx.fill();
+            return bullet.y > 0 && bullet.y < canvas.height;
+        });
+
+        // Check for collisions
+        enemies.forEach(enemy => {
+            if (tank !== enemy) {
+                tank.bullets.forEach((bullet, bIndex) => {
+                    if (bullet.x > enemy.x && bullet.x < enemy.x + enemy.width &&
+                        bullet.y > enemy.y && bullet.y < enemy.y + enemy.height) {
+                        enemy.health--;
+                        tank.bullets.splice(bIndex, 1);
+                        if (enemy.health <= 0) {
+                            if (enemy === player) {
+                                gameOver();
+                            } else {
+                                score++;
+                                enemies.splice(enemies.indexOf(enemy), 1);
+                                enemies.push(new Tank(Math.random() * (canvas.width - 30), 10));
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // Player hit by enemy bullet
+        if (tank === player) {
+            enemies.forEach(enemy => {
+                enemy.bullets.forEach((bullet, bIndex) => {
+                    if (bullet.x > player.x && bullet.x < player.x + player.width &&
+                        bullet.y > player.y && bullet.y < player.y + player.height) {
+                        playerHealth--;
+                        document.getElementsByClassName('healthUnit')[playerHealth].style.background = 'grey';
+                        enemy.bullets.splice(bIndex, 1);
+                    }
+                });
+            });
         }
+    });
+
+    if (playerHealth > 0) {
+        requestAnimationFrame(gameLoop);
     }
+}
 
-    function updateTimer() {
-        if (timeLeft > 0) {
-            timeLeft--;
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-            updateCircle();
-        } else {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            alert('Time is up!');
-            playSound();
-            startButton.textContent = 'Start Focus';
-        }
-    }
+function gameOver() {
+    ctx.font = "30px Arial";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText(`Game Over! Score: ${score}`, canvas.width/2, canvas.height/2);
+    restartBtn.style.display = 'block';
+}
 
-    function updateCircle() {
-        const percent = (timeLeft / (25 * 60)) * 100;
-        timerElement.style.background = `conic-gradient(#4CAF50 ${percent}%, #eee ${percent}%)`;
-    }
+function restartGame() {
+    playerHealth = 10;
+    score = 0;
+    player.x = 400;
+    player.y = 550;
+    enemies = [new Tank(100, 10), new Tank(300, 10), new Tank(500, 10), new Tank(700, 10)];
+    document.querySelectorAll('.healthUnit').forEach(unit => unit.style.background = 'green');
+    restartBtn.style.display = 'none';
+    gameLoop();
+}
 
-    function playSound() {
-        const audio = new Audio('path_to_your_sound_file.mp3'); // Replace with your sound file
-        audio.play();
-    }
-
-    function drawCharts() {
-        drawTimeline();
-        drawBarChart();
-    }
-
-    function drawTimeline() {
-        const data = new google.visualization.DataTable();
-        data.addColumn('date', 'Date');
-        data.addColumn('number', 'Work');
-        data.addColumn('number', 'Pause');
-
-        const today = new Date();
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(today.getDate() - i);
-            data.addRow([date, workSessions[i].work, workSessions[i].pause]);
-        }
-
-        const options = {
-            hAxis: { title: 'Date' },
-            vAxis: { title: 'Time' },
-            colors: ['blue', 'red']
-        };
-
-        const chart = new google.visualization.Timeline(document.getElementById('timeline_chart'));
-        chart.draw(data, options);
-    }
-
-    function drawBarChart() {
-        const data = google.visualization.arrayToDataTable([
-            ['Day', 'Hours Worked'],
-            ...workSessions.map((session, index) => {
-                const day = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay() - index];
-                return [day, session.work / 3600]; // Convert seconds to hours
-            }).reverse()
-        ]);
-
-        const options = {
-            chart: { title: 'Hours Worked Each Day' },
-            bars: 'vertical'
-        };
-
-        const chart = new google.visualization.BarChart(document.getElementById('bar_chart'));
-        chart.draw(data, options);
-    }
-
-    startButton.onclick = startTimer;
-    window.onscroll = function() { 
-        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-            document.querySelector('.dashboard').style.display = 'block';
-        }
-    };
-    </script>
+gameLoop();
+</script>
 </body>
 </html>
