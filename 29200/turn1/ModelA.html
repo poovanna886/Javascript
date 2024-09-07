@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Typing Speed Test</title>
+    <style>
+        body {
+            background-color: black;
+            color: #d3d3d3;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #typingArea {
+            width: 80%;
+            font-size: 1.5em;
+            text-align: center;
+        }
+        #userInput {
+            width: 80%;
+            margin-top: 20px;
+            font-size: 1.5em;
+            background: #333;
+            color: white;
+            border: none;
+            outline: none;
+        }
+        #results, #graph {
+            margin-top: 20px;
+            color: white;
+        }
+        .wrong { color: red; }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css">
+</head>
+<body>
+
+<div id="typingArea"></div>
+<input type="text" id="userInput" disabled>
+<div id="results"></div>
+<canvas id="speedGraph" width="400" height="200"></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+<script>
+    const words = 'the quick brown fox jumps over the lazy dog'.split(' '); // Simple word list for demo
+    let paragraph = '';
+    let startTime, endTime;
+    let correctChars = 0, totalChars = 0;
+    let typingSpeedData = [];
+
+    function generateParagraph() {
+        paragraph = Array.from({length: 40}, () => words[Math.floor(Math.random() * words.length)]).join(' ');
+        document.getElementById('typingArea').innerHTML = paragraph.split('').map(char => `<span>${char}</span>`).join('');
+    }
+
+    function startCountdown() {
+        let count = 3;
+        const countdown = setInterval(() => {
+            document.getElementById('typingArea').innerHTML = count === 0 ? 'Go!' : count;
+            count--;
+            if (count < 0) {
+                clearInterval(countdown);
+                document.getElementById('userInput').disabled = false;
+                document.getElementById('userInput').focus();
+                startTest();
+            }
+        }, 1000);
+    }
+
+    function startTest() {
+        startTime = new Date();
+        document.getElementById('userInput').addEventListener('input', checkTyping);
+    }
+
+    function checkTyping() {
+        if (!startTime) return; // Test hasn't started yet
+        const input = this.value;
+        const spans = document.querySelectorAll('#typingArea span');
+        let correct = true;
+
+        spans.forEach((charSpan, index) => {
+            const char = input[index];
+            if (char == null) {
+                charSpan.className = '';
+            } else if (char === charSpan.innerText) {
+                charSpan.className = 'correct';
+                correctChars++;
+            } else {
+                charSpan.className = 'wrong';
+                correct = false;
+            }
+        });
+
+        if (correct) {
+            this.value = input; // Only move forward if correct
+            totalChars = correctChars; // Update total for accuracy
+        } else {
+            totalChars++; // Increment total for mistakes
+        }
+
+        if (input.length >= paragraph.length) {
+            endTest();
+        }
+
+        // For graph
+        typingSpeedData.push({x: new Date() - startTime, y: calculateWPM()});
+    }
+
+    function endTest() {
+        endTime = new Date();
+        document.getElementById('userInput').disabled = true;
+        showResults();
+        drawGraph();
+    }
+
+    function showResults() {
+        const accuracy = ((correctChars / totalChars) * 100).toFixed(2);
+        const wpm = calculateWPM();
+        document.getElementById('results').innerHTML = `WPM: ${wpm} | Accuracy: ${accuracy}%`;
+    }
+
+    function calculateWPM() {
+        const timeInSeconds = (endTime - startTime) / 1000;
+        const wordsTyped = correctChars / 5; // Assuming average word length is 5 characters
+        return Math.round(wordsTyped / (timeInSeconds / 60));
+    }
+
+    function drawGraph() {
+        new Chart(document.getElementById("speedGraph"), {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Typing Speed (WPM)',
+                    data: typingSpeedData,
+                    borderColor: 'white',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    xAxes: [{ 
+                        type: 'linear',
+                        position: 'bottom',
+                        scaleLabel: { display: true, labelString: 'Time (ms)' }
+                    }],
+                    yAxes: [{ scaleLabel: { display: true, labelString: 'WPM' } }]
+                }
+            }
+        });
+    }
+
+    generateParagraph();
+    startCountdown();
+</script>
+
+</body>
+</html>

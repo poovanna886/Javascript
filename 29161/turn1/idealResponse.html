@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>F1 Fantasy App</title>
+    <style>
+        @keyframes raceCar {
+            0% { transform: translateX(0vw); }
+            100% { transform: translateX(100vw); }
+        }
+        .car {
+            animation: raceCar 3s linear infinite;
+        }
+        .fade-in {
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .fade-in.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <!-- Loading Animation -->
+    <div id="loadingScreen" class="fixed inset-0 bg-black flex items-center z-50">
+        <img id="raceCar" src="https://freesvg.org/img/Porsche_911_brut.png" class="car h-24">
+    </div>
+
+    <div id="mainContainer" class="container mx-auto flex fade-in">
+        <!-- My Team Section -->
+        <div class="mt-8 mr-4 w-1/3">
+            <h3 class="text-2xl font-bold mb-4">My Team</h3>
+            <div id="myTeam" class="space-y-4">
+                <!-- Selected drivers will appear here -->
+            </div>
+            <p class="text-lg font-semibold mt-4">Remaining Points: <span id="totalPoints">100.00</span> / 100</p>
+            <button id="submitBtn" class="mt-4 px-4 py-2 bg-blue-500 text-white font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition duration-300" disabled>Submit Team</button>
+        </div>
+
+        <!-- Driver Selection Table -->
+        <div class="my-8 w-2/3">
+            <h2 class="text-2xl font-bold mb-4">Select Drivers</h2>
+            <div id="driverTable" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Dynamically insert driver cards here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Display Section -->
+    <div id="teamDisplay" class="hidden container mx-auto p-8">
+        <h2 class="text-3xl font-bold mb-4">Your Team</h2>
+        <div id="selectedDriversGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Selected drivers will be displayed here after submission -->
+        </div>
+        <button id="backBtn" class="mt-4 px-4 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition duration-300">Go Back</button>
+    </div>
+
+    <script>
+        const drivers = [
+            { name: "Max Verstappen", value: 31.4, photoUrl: "https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/131.png?v=20240904115656" },
+            { name: "Lando Norris", value: 26.6, photoUrl: "https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/117.png?v=20240904115656" },
+            {name:"Clarles Leclerc" , value: 24.9, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/115.png?v=20240904115656'},
+            {name: "Oscar Piastri", value: 24.2 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/1982.png?v=20240904115656'},
+            {name: "Carlos Sainz", value: 23.4, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/125.png?v=20240904115656'},
+            {name:"Lewis Hamilton" , value: 24.5, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/110.png?v=20240904115656'},
+            {name:"Sergio Perez" , value: 23.5, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/121.png?v=20240904115656'},
+            {name:"George Russel" , value: 21.1 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/124.png?v=20240904115656'},
+            {name:"Fernando Alonso" , value: 16.2, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/12.png?v=20240904115656'},
+            {name: "Kevin Magnussen", value: 12.8, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/116.png?v=20240904115656'},
+            {name: "Lance Stroll", value:14.7 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/129.png?v=20240904115656'},
+            {name: "Nico Hulkenberg", value: 9.7, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/111.png?v=20240904115656'},
+            {name: "Esteban Ocon", value: 11.3, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/left/118.png?v=20240904115656'},
+            {name: "Yuki Tsunoda", value: 10.5, photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/130.png?v=20240904115656'},
+            {name: "Daniel Ricciardo", value:11.1 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/123.png?v=20240904115656'},
+            {name: "Valtteri Bottas", value:7.3 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/13.png?v=20240904115656'},
+            {name: "Pierre Gasly", value: 10.0 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/18.png?v=20240904115656'},
+            {name: "Zhou Guanyu", value: 6.8 , photoUrl:'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/134.png?v=20240904115656' },
+            {name: "Alexander Albon", value:8.5 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/11.png?v=20240904115656'},
+            {name: "Franco Colapinto", value:5.3 , photoUrl: 'https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/11059.png?v=20240904115656'},
+        ];
+
+        let selectedDrivers = [];
+        let totalPoints = 100;
+
+        // Function to display drivers
+        function renderDrivers() {
+            const driverTable = document.getElementById("driverTable");
+            driverTable.innerHTML = '';
+            drivers.forEach((driver, index) => {
+                const driverCard = `
+                    <div class="p-4 bg-white rounded-lg shadow-lg flex flex-col items-center text-center transition-opacity duration-700 opacity-0" id="driver-${index}">
+                        <img src="${driver.photoUrl}" alt="${driver.name}" class="w-auto h-16 rounded-md">
+                        <div class="mt-4">
+                            <span class="text-xl font-black">${driver.name}</span>
+                            <span>Points: ${driver.value}</span></br>
+                            <button id="add-${index}" class="mt-2 px-2 py-1 bg-green-500 text-white font-bold rounded hover:bg-green-600 transition duration-300" onclick="addDriver(${index})">+</button>
+                        </div>
+                    </div>
+                `;
+                driverTable.innerHTML += driverCard;
+                setTimeout(() => {
+                    document.getElementById(`driver-${index}`).classList.add('opacity-100');
+                }, index * 100); // Stagger the fade-in for each driver
+            });
+        }
+
+        function addDriver(index) {
+            const driver = drivers[index];
+            if (selectedDrivers.length < 5 && totalPoints - driver.value >= 0 && !selectedDrivers.includes(driver)) {
+                selectedDrivers.push(driver);
+                totalPoints -= driver.value;
+                renderMyTeam();
+                updatePoints();
+            }
+        }
+
+        function removeDriver(index) {
+            const driver = selectedDrivers[index];
+            selectedDrivers.splice(index, 1);
+            totalPoints += driver.value;
+            renderMyTeam();
+            updatePoints();
+        }
+
+        function renderMyTeam() {
+            const myTeam = document.getElementById("myTeam");
+            myTeam.innerHTML = '';
+            selectedDrivers.forEach((driver, index) => {
+                const teamCard = `
+                    <div class="p-4 bg-white rounded-lg shadow-lg flex flex-col items-center justify-center hover:bg-gray-50 transition duration-300">
+                        <img src="${driver.photoUrl}" alt="${driver.name}" class="w-auto h-16 rounded-md">
+                        <div class="ml-4 flex flex-col items-center">
+                            <p class="text-lg font-semibold">${driver.name}</p>
+                            <p class="text-md">Points: ${driver.value}</p>
+                            <button id="remove-${index}" class="mt-2 px-2 py-1 bg-red-500 text-white font-bold rounded hover:bg-red-600 transition duration-300" onclick="removeDriver(${index})">x</button>
+                        </div>
+                    </div>
+                `;
+                myTeam.innerHTML += teamCard;
+            });
+        }
+
+        function updatePoints() {
+            document.getElementById('totalPoints').textContent = totalPoints.toFixed(2);
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = selectedDrivers.length !== 5;
+        }
+
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            // Hide the mainContainer and show the teamDisplay section
+            document.getElementById('mainContainer').classList.add('hidden');
+            document.getElementById('teamDisplay').classList.remove('hidden');
+
+            const selectedDriversGrid = document.getElementById('selectedDriversGrid');
+            selectedDriversGrid.innerHTML = '';
+
+            // Render the selected drivers in grid format
+            selectedDrivers.forEach((driver) => {
+                const driverCard = `
+                    <div class="p-4 bg-white rounded-lg shadow-lg flex flex-col items-center text-center hover:bg-gray-50 transition duration-300 opacity-0">
+                        <img src="${driver.photoUrl}" alt="${driver.name}" class="w-auto h-16 rounded-md">
+                        <div class="mt-4">
+                            <span class="text-xl font-black">${driver.name}</span>
+                            <span>Points: ${driver.value}</span>
+                        </div>
+                    </div>
+                `;
+                selectedDriversGrid.innerHTML += driverCard;
+            });
+
+            // Add fade-in effect to the selected drivers after a slight delay
+            setTimeout(() => {
+                document.querySelectorAll('#selectedDriversGrid > div').forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('opacity-100');
+                    }, index * 100);
+                });
+            }, 100);
+        });
+
+        // Back Button to go back to the selection screen
+        document.getElementById('backBtn').addEventListener('click', () => {
+            document.getElementById('teamDisplay').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+        });
+
+        // Display the loading animation and delay the content for 3 seconds
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainContainer').classList.add('show'); // Apply the fade-in effect
+            }, 2000); // 2 seconds delay
+        });
+
+        renderDrivers();
+    </script>
+</body>
+</html>

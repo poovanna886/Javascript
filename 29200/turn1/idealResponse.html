@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Typing Speed Tester</title>
+    <style>
+        body {
+            background-color: black;
+            color: lightgray;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #textDisplay {
+            width: 80%;
+            margin: 20px auto;
+            font-size: 1.5em;
+            line-height: 1.5;
+            user-select: none;
+        }
+        #inputField {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid white;
+            color: white;
+            font-size: 1.5em;
+            width: 80%;
+            outline: none;
+        }
+        .correct { color: white; font-size: 1.6em; }
+        .incorrect { color: red; font-size: 1.6em;}
+        #timer, #results {
+            color: white;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        #countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            color: white;
+        }
+        #chartContainer {
+            margin-top: 20px;
+            width: 30%;
+        }
+        canvas {
+            margin-top: 20px;
+            background: black;
+        }
+    </style>
+</head>
+<body>
+
+<div id="countdown"></div>
+<div id="textDisplay"></div>
+<input type="text" id="inputField" disabled>
+<div id="timer">Time: 30</div>
+<div id="results"></div>
+<div id="chartContainer">
+    <canvas id="speedChartCanvas"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+<script>
+    const words = ["the", "be", "to", "of", "and", "a", "in", "that", "have", "I", "it", "for", "not", "on", "with", "he", "as", "you", "do", "at", "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their", "what", "so", "up", "out", "if", "about", "who", "get", "which", "go", "me"];
+    const textDisplay = document.getElementById('textDisplay');
+    const inputField = document.getElementById('inputField');
+    const countdownDiv = document.getElementById('countdown');
+    const timerDiv = document.getElementById('timer');
+    const resultsDiv = document.getElementById('results');
+    const chartContainer = document.getElementById('chartContainer');
+    const speedChartCanvas = document.getElementById('speedChartCanvas');
+    let text, timer, startTime, wordCount = 0, speedData = [], speedChart;
+    let hasStarted = false;
+
+    function generateParagraph() {
+        text = Array.from({ length: 40 }, () => words[Math.floor(Math.random() * words.length)]).join(' ');
+        textDisplay.innerHTML = text.split('').map(char => `<span>${char}</span>`).join('');
+    }
+
+    function startCountdown() {
+        let count = 3;
+        const countdown = setInterval(() => {
+            countdownDiv.textContent = count > 0 ? count : 'Go!';
+            if (count <= 0) {
+                clearInterval(countdown);
+                countdownDiv.style.display = 'none';
+                inputField.disabled = false;
+                inputField.focus();
+            }
+            count--;
+        }, 1000);
+    }
+
+    function startTest() {
+        inputField.addEventListener('input', onInputChange);
+    }
+
+    function onInputChange() {
+        if (!hasStarted) {
+            hasStarted = true;
+            startTimer();
+        }
+
+        const arrayText = textDisplay.querySelectorAll('span');
+        const arrayValue = inputField.value.split('');
+        let allCorrect = true;
+
+        arrayText.forEach((charSpan, index) => {
+            const character = arrayValue[index];
+            if (character == null) {
+                charSpan.classList.remove('correct', 'incorrect');
+                allCorrect = false;
+            } else if (character === charSpan.innerText) {
+                charSpan.classList.add('correct');
+                charSpan.classList.remove('incorrect');
+            } else {
+                charSpan.classList.add('incorrect');
+                charSpan.classList.remove('correct');
+                allCorrect = false;
+            }
+        });
+
+        if (allCorrect) endTest();
+    }
+
+    function startTimer() {
+        startTime = new Date().getTime();
+        wordCount = 0;
+        speedData = [];
+
+        timer = setInterval(() => {
+            const timeElapsed = Math.floor((new Date().getTime() - startTime) / 1000);
+            let timeLeft = 30 - timeElapsed;
+            timerDiv.textContent = `Time: ${timeLeft}`;
+
+            if (timeLeft <= 0) endTest();
+            else calculateWPM(timeElapsed);
+        }, 1000);
+    }
+
+    function calculateWPM(timeElapsed) {
+        const wordsTyped = inputField.value.trim().split(/\s+/).length;
+        const wpm = Math.round((wordsTyped / timeElapsed) * 60);
+        speedData.push(wpm);
+        updateSpeedChart();
+    }
+
+    function endTest() {
+        clearInterval(timer);
+        inputField.disabled = true;
+        calculateFinalResults();
+        updateSpeedChart(); // Ensure final update after the test ends
+    }
+
+    function calculateFinalResults() {
+        const wordsTyped = inputField.value.trim().split(/\s+/).length;
+        const wpm = Math.round((wordsTyped / 30) * 60);
+        const totalChars = text.length;
+        const correctChars = text.split('').filter((char, i) => char === inputField.value[i] || (char === ' ' && !inputField.value[i])).length;
+        const accuracy = Math.round((correctChars / totalChars) * 100);
+
+        resultsDiv.innerHTML = `Final WPM: ${wpm} | Accuracy: ${accuracy}%`;
+    }
+
+    function updateSpeedChart() {
+        if (!speedChart) {
+            const ctx = speedChartCanvas.getContext('2d');
+            speedChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: speedData.length }, (_, i) => i + 1),
+                    datasets: [{
+                        label: 'WPM',
+                        data: speedData,
+                        borderColor: 'white',
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' },
+                            title: {
+                                display: true,
+                                text: 'Time (seconds)',
+                                color: 'white'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'white' },
+                            title: {
+                                display: true,
+                                text: 'WPM',
+                                color: 'white'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        } else {
+            speedChart.data.labels = Array.from({ length: speedData.length }, (_, i) => i + 1);
+            speedChart.data.datasets[0].data = speedData;
+            speedChart.update();
+        }
+    }
+
+    generateParagraph();
+    startCountdown();
+    startTest();
+</script>
+</body>
+</html>

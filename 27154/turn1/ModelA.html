@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <title>Space Shooter</title>
 <style>
-    body { margin: 0; background: \#000; overflow: hidden; }
-    \#gameArea { position: relative; width: 100vw; height: 100vh; background: url('data:image/png;base64,...'); /* Base64 for stars */ }
-    \#spaceship { position: absolute; bottom: 10px; left: 50\%; width: 50px; height: 50px; background: url('spaceship.png') no-repeat; background-size: cover; transform: translateX(-50\%); }
+    body { margin: 0; background: #000; overflow: hidden; }
+    #gameArea { position: relative; width: 100vw; height: 100vh; background: url('https://img.itch.zone/aW1nLzQ4NzU2MzQucG5n/315x250%23c/4Ti0%2BG.png'); /* Base64 for stars */ }
+    #spaceship { position: absolute; bottom: 10px; left: 50%; width: 50px; height: 50px; background: url('https://freesvg.org/img/2011-02-16-ALTHIB-The-Wolf-Shi.png') no-repeat; background-size: cover; transform: translateX(-50%); }
     .bullet { position: absolute; width: 5px; height: 20px; background: yellow; }
-    .enemy { position: absolute; width: 40px; height: 40px; background: url('enemy.png') no-repeat; background-size: cover; }
-    \#score, \#highScore { position: absolute; top: 10px; color: white; font-family: Arial, sans-serif; }
-    \#score { left: 10px; }
-    \#highScore { right: 10px; }
-    \#gameOver { display: none; position: absolute; top: 50\%; left: 50\%; transform: translate(-50\%, -50\%); color: red; font-size: 30px; }
+    .enemy { position: absolute; width: 40px; height: 40px; background: url('https://freesvg.org/img/Alienigena.png') no-repeat; background-size: cover; }
+    #score, #highScore { position: absolute; top: 10px; color: white; font-family: Arial, sans-serif; }
+    #score { left: 10px; }
+    #highScore { right: 10px; }
+    #gameOver { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: red; font-size: 30px; }
 </style>
 </head>
 <body>
@@ -51,8 +51,8 @@ const game = {
     handleKey: function(key) {
         const move = 10;
         let left = this.spaceship.offsetLeft;
-        if (key === 'ArrowLeft' \&\& left > 0) left -= move;
-        if (key === 'ArrowRight' \&\& left < this.gameArea.offsetWidth - this.spaceship.offsetWidth) left += move;
+        if (key === 'ArrowLeft' && left > 0) left -= move;
+        if (key === 'ArrowRight' && left < this.gameArea.offsetWidth - this.spaceship.offsetWidth) left += move;
         if (key === 'ArrowUp') this.fireBullet();
         this.spaceship.style.left = left + 'px';
     },
@@ -121,18 +121,18 @@ const game = {
         }
     },
 
-    collision: function(\$div1, \$div2) {
-        let x1 = \$div1.offsetLeft;
-        let y1 = \$div1.offsetTop;
-        let h1 = \$div1.clientHeight;
-        let w1 = \$div1.clientWidth;
+    collision: function($div1, $div2) {
+        let x1 = $div1.offsetLeft;
+        let y1 = $div1.offsetTop;
+        let h1 = $div1.clientHeight;
+        let w1 = $div1.clientWidth;
         let b1 = y1 + h1;
         let r1 = x1 + w1;
 
-        let x2 = \$div2.offsetLeft;
-        let y2 = \$div2.offsetTop;
-        let h2 = \$div2.clientHeight;
-        let w2 = \$div2.clientWidth;
+        let x2 = $div2.offsetLeft;
+        let y2 = $div2.offsetTop;
+        let h2 = $div2.clientHeight;
+        let w2 = $div2.clientWidth;
         let b2 = y2 + h2;
         let r2 = x2 + w2;
 

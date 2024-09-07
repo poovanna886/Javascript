@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tower Defense Game</title>
+<style>
+    canvas { 
+        background: url('path/to/your/background.jpg') no-repeat center center; 
+        background-size: cover;
+        display: block;
+        margin: auto;
+    }
+    body { 
+        background-color: black; 
+        color: white; 
+        text-align: center; 
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="score">Score: 0</div>
+<div id="gameOver" style="display:none;">
+    <h2>Game Over</h2>
+    <p>Your Score: <span id="finalScore"></span></p>
+    <button onclick="restartGame()">Restart</button>
+</div>
+<script>
+// Game setup
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+const gameOverDisplay = document.getElementById('gameOver');
+const finalScoreDisplay = document.getElementById('finalScore');
+
+let score = 0;
+let towers = [{x: 100, y: 550, health: 10}, {x: 700, y: 550, health: 10}];
+let player = {x: canvas.width / 2, y: canvas.height - 30, dx: 5, dy: 5};
+let enemies = [];
+let bullets = [];
+let enemyBullets = [];
+
+function drawPlayer() {
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(player.x, player.y, 20, 20);
+}
+
+function drawTowers() {
+    towers.forEach(tower => {
+        ctx.fillStyle = 'green';
+        ctx.fillRect(tower.x, tower.y, 50, 50);
+        // Health bar
+        ctx.fillStyle = 'red';
+        ctx.fillRect(tower.x, tower.y - 10, 50 * (tower.health / 10), 5);
+    });
+}
+
+function drawEnemies() {
+    enemies.forEach(enemy => {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(enemy.x, enemy.y, 20, 20);
+    });
+}
+
+function drawBullets() {
+    bullets.forEach(bullet => {
+        ctx.fillStyle = 'yellow';
+        ctx.fillRect(bullet.x, bullet.y, 5, 5);
+    });
+}
+
+function movePlayer(e) {
+    switch(e.key) {
+        case 'a': player.x -= player.dx; break;
+        case 'd': player.x += player.dx; break;
+        case 'w': player.y -= player.dy; break;
+        case 's': player.y += player.dy; break;
+        case ' ':
+            bullets.push({x: player.x + 10, y: player.y, dy: -5});
+            break;
+    }
+    // Keep player within canvas
+    player.x = Math.max(0, Math.min(canvas.width - 20, player.x));
+    player.y = Math.max(0, Math.min(canvas.height - 20, player.y));
+}
+
+function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawPlayer();
+    drawTowers();
+    drawEnemies();
+    drawBullets();
+
+    // Move and check for bullet collisions
+    bullets = bullets.filter(bullet => {
+        bullet.y += bullet.dy;
+        return bullet.y > 0;
+    });
+
+    // Enemy movement and shooting
+    enemies.forEach(enemy => {
+        enemy.y += 1;
+        if(Math.random() < 0.001) {  // Random shooting
+            enemyBullets.push({x: enemy.x + 10, y: enemy.y + 20, dy: 2});
+        }
+    });
+
+    // Enemy bullet movement
+    enemyBullets.forEach(bullet => {
+        bullet.y += bullet.dy;
+    });
+
+    // Collision detection
+    enemies = enemies.filter(enemy => {
+        let hit = false;
+        bullets.forEach(bullet => {
+            if (bullet.x < enemy.x + 20 && bullet.x + 5 > enemy.x && 
+                bullet.y < enemy.y + 20 && bullet.y + 5 > enemy.y) {
+                hit = true;
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+            }
+        });
+        return !hit && enemy.y < canvas.height;
+    });
+
+    // Check for tower hits
+    towers.forEach(tower => {
+        enemyBullets = enemyBullets.filter(bullet => {
+            if (bullet.x < tower.x + 50 && bullet.x > tower.x && 
+                bullet.y < tower.y + 50 && bullet.y > tower.y) {
+                tower.health--;
+                if (tower.health <= 0) {
+                    tower.destroyed = true;
+                }
+                return false;
+            }
+            return true;
+        });
+    });
+
+    // Check game over condition
+    if (towers.every(t => t.destroyed)) {
+        gameOver();
+        return;
+    }
+
+    // Spawn new enemies
+    if (Math.random() < 0.02 * (1 + score / 100)) {  // Increase enemy spawn rate
+        enemies.push({x: Math.random() * (canvas.width - 20), y: 0});
+    }
+
+    requestAnimationFrame(update);
+}
+
+function gameOver() {
+    gameOverDisplay.style.display = 'block';
+    finalScoreDisplay.textContent = score;
+    document.removeEventListener('keydown', movePlayer);
+}
+
+function restartGame() {
+    score = 0;
+    towers = [{x: 100, y: 550, health: 10}, {x: 700, y: 550, health: 10}];
+    enemies = [];
+    bullets = [];
+    enemyBullets = [];
+    gameOverDisplay.style.display = 'none';
+    document.addEventListener('keydown', movePlayer);
+    update();
+}
+
+document.addEventListener('keydown', movePlayer);
+update();
+</script>
+</body>
+</html>

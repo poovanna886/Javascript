@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Typing Speed Tester</title>
+    <style>
+        body {
+            background-color: black;
+            color: lightgray;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #textDisplay {
+            width: 80%;
+            margin: 20px auto;
+            font-size: 1.5em;
+            line-height: 1.5;
+            user-select: none;
+        }
+        #inputField {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid white;
+            color: white;
+            font-size: 1.5em;
+            width: 80%;
+            outline: none;
+        }
+        .correct { color: white; }
+        .incorrect { color: red; }
+        #timer, #results {
+            color: white;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        #countdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div id="countdown"></div>
+<div id="textDisplay"></div>
+<input type="text" id="inputField" disabled>
+<div id="timer">Time: 30</div>
+<div id="results"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+<script>
+    const words = ["the", "be", "to", "of", "and", "a", "in", "that", "have", "I", "it", "for", "not", "on", "with", "he", "as", "you", "do", "at", "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their", "what", "so", "up", "out", "if", "about", "who", "get", "which", "go", "me"];
+    const textDisplay = document.getElementById('textDisplay');
+    const inputField = document.getElementById('inputField');
+    const countdownDiv = document.getElementById('countdown');
+    const timerDiv = document.getElementById('timer');
+    const resultsDiv = document.getElementById('results');
+    let text, timer, speedData = [], startTime, endTime;
+
+    function generateParagraph() {
+        text = Array.from({length: 40}, () => words[Math.floor(Math.random() * words.length)]).join(' ');
+        textDisplay.innerHTML = text.split('').map(char => `<span>${char}</span>`).join('');
+    }
+
+    function startCountdown() {
+        let count = 3;
+        const countdown = setInterval(() => {
+            countdownDiv.textContent = count > 0 ? count : 'Go!';
+            if (count <= 0) {
+                clearInterval(countdown);
+                countdownDiv.style.display = 'none';
+                inputField.disabled = false;
+                inputField.focus();
+                startTest();
+            }
+            count--;
+        }, 1000);
+    }
+
+    function startTest() {
+        startTime = new Date().getTime();
+        timer = setInterval(() => {
+            let timeLeft = 30 - Math.floor((new Date().getTime() - startTime) / 1000);
+            timerDiv.textContent = `Time: ${timeLeft}`;
+            if (timeLeft <= 0) endTest();
+        }, 1000);
+
+        inputField.addEventListener('input', function() {
+            if (!startTime) startTime = new Date().getTime();
+            const arrayText = textDisplay.querySelectorAll('span');
+            const arrayValue = this.value.split('');
+            let allCorrect = true;
+            
+            arrayText.forEach((charSpan, index) => {
+                const character = arrayValue[index];
+                if (character == null) {
+                    charSpan.classList.remove('correct', 'incorrect');
+                    allCorrect = false;
+                } else if (character === charSpan.innerText) {
+                    charSpan.classList.add('correct');
+                    charSpan.classList.remove('incorrect');
+                } else {
+                    charSpan.classList.add('incorrect');
+                    charSpan.classList.remove('correct');
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) endTest();
+        });
+    }
+
+    function endTest() {
+        clearInterval(timer);
+        endTime = new Date().getTime();
+        inputField.disabled = true;
+        calculateResults();
+    }
+
+    function calculateResults() {
+        const timeTaken = (endTime - startTime) / 1000;
+        const wordsTyped = inputField.value.trim().split(/\s+/).length;
+        const wpm = Math.round((wordsTyped / timeTaken) * 60);
+        const totalChars = text.length;
+        const correctChars = text.split('').filter((char, i) => char === inputField.value[i] || (char === ' ' && !inputField.value[i])).length;
+        const accuracy = Math.round((correctChars / totalChars) * 100);
+
+        resultsDiv.innerHTML = `WPM: ${wpm} | Accuracy: ${accuracy}%`;
+        displaySpeedGraph();
+    }
+
+    function displaySpeedGraph() {
+        // Here you would typically collect speed data at intervals during typing,
+        // but for simplicity, let's assume we have some data points:
+        const ctx = document.createElement('canvas').getContext('2d');
+        resultsDiv.appendChild(ctx.canvas);
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 30}, (_, i) => i + 1),
+                datasets: [{
+                    label: 'Typing Speed',
+                    data: speedData, // Here you would push actual speed data during typing
+                    borderColor: 'white',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            fontColor: 'white'
+                        }
+                    }],
+                    xAxes: [{
+                        ticks: {
+                            fontColor: 'white'
+                        }
+                    }]
+                },
+                legend: {
+                    labels: {
+                        fontColor: 'white'
+                    }
+                }
+            }
+        });
+    }
+
+    generateParagraph();
+    startCountdown();
+</script>
+</body>
+</html>

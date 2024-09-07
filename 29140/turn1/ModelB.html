@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tower Defense Game</title>
+<style>
+    #gameCanvas {
+        background: url('https://preview.redd.it/any-suggestions-for-making-2d-backgrounds-for-a-top-down-v0-ytpemr1hcsoa1.png?width=1024&format=png&auto=webp&s=698e7121e86be876423a53b8e043835541d5bf5f') no-repeat center center;
+        background-size: cover;
+        display: block;
+        margin: auto;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Game assets (use CDN or local paths)
+    const images = {
+        player: 'https://freesvg.org/img/1528027543.png',
+        enemy: 'https://freesvg.org/img/1528027543.png',
+        tower: 'https://freesvg.org/img/rg1024-isometric-tower.png',
+        projectile: 'https://freesvg.org/img/nicubunu_RPG_map_symbols_Tower_Square.png'
+    };
+
+    // Game state
+    let player, towers, enemies, playerProjectiles, enemyProjectiles, score, gameOver;
+
+    function initGame() {
+        player = { x: canvas.width / 2, y: canvas.height - 50, width: 30, height: 30, speed: 5 };
+        towers = [
+            { x: 50, y: canvas.height - 40, health: 10, width: 40, height: 40 },
+            { x: canvas.width - 90, y: canvas.height - 40, health: 10, width: 40, height: 40 }
+        ];
+        enemies = [];
+        playerProjectiles = [];
+        enemyProjectiles = [];
+        score = 0;
+        gameOver = false;
+    }
+
+    // Key handling
+    const keys = {};
+    document.addEventListener('keydown', (e) => keys[e.key] = true);
+    document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+    function gameLoop() {
+        if (!gameOver) {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        } else {
+            showGameOver();
+        }
+    }
+
+    function update() {
+        // Player movement
+        if (keys['a'] && player.x > 0) player.x -= player.speed;
+        if (keys['d'] && player.x < canvas.width - player.width) player.x += player.speed;
+        if (keys['w'] && player.y > 0) player.y -= player.speed;
+        if (keys['s'] && player.y < canvas.height - player.height) player.y += player.speed;
+        if (keys[' ']) firePlayerProjectile();
+
+        // Enemy spawn and update
+        if (Math.random() < 0.02) enemies.push({ x: Math.random() * (canvas.width - 20), y: 0, speed: 1 + score * 0.01 });
+        enemies.forEach(e => {
+            e.y += e.speed;
+            if (Math.random() < 0.005) fireEnemyProjectile(e);
+        });
+
+        // Projectile updates
+        updateProjectiles(playerProjectiles, enemies, true);
+        updateProjectiles(enemyProjectiles, towers, false);
+
+        // Remove out of bounds enemies and projectiles
+        enemies = enemies.filter(e => e.y < canvas.height);
+        // Similar cleanup for projectiles...
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw game elements: player, enemies, towers, projectiles, UI
+    }
+
+    function firePlayerProjectile() {
+        playerProjectiles.push({ x: player.x + player.width / 2, y: player.y, speed: -5 });
+    }
+
+    function fireEnemyProjectile(enemy) {
+        enemyProjectiles.push({ x: enemy.x, y: enemy.y, speed: 3, target: towers[Math.floor(Math.random() * towers.length)] });
+    }
+
+    function updateProjectiles(projectiles, targets, isPlayer) {
+        projectiles.forEach((p, i) => {
+            p.y += p.speed;
+            targets.forEach((t, j) => {
+                if (collision(p, t)) {
+                    if (isPlayer) {
+                        score++;
+                        enemies.splice(j, 1);
+                    } else {
+                        t.health--;
+                        if (t.health <= 0) {
+                            towers.splice(j, 1);
+                            if (towers.length === 0) gameOver = true;
+                        }
+                    }
+                    projectiles.splice(i, 1);
+                }
+            });
+        });
+    }
+
+    function collision(a, b) {
+        return a.x < b.x + b.width && a.x + 5 > b.x && a.y < b.y + b.height && a.y + 5 > b.y; // 5 is projectile size
+    }
+
+    function showGameOver() {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.font = '48px serif';
+        ctx.fillText(`Game Over! Your Score: ${score}`, canvas.width / 2, canvas.height / 2);
+        // Add restart button logic here
+    }
+
+    initGame();
+    gameLoop();
+</script>
+</body>
+</html>

@@ -1,246 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Invaders</title>
-    <!-- Link to Ionicons for spaceship and alien icons -->
-    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
-    <style>
-        body {
-            background-color: black;
-            color: white;
-            text-align: center;
-        }
-
-        .grid {
-            width: 300px;
-            height: 300px;
-            border: solid white 1px;
-            border-radius: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            position: relative;
-            margin: 0 auto;
-            margin-top: 50px;
-        }
-
-        .grid div {
-            width: 20px;
-            height: 20px;
-            position: relative;
-        }
-
-        /* Use Ionicons for invader and shooter */
-        .invader ion-icon {
-            font-size: 20px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .shooter ion-icon {
-            font-size: 20px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .laser {
-            background-color: orange;
-        }
-
-        .boom {
-            background-color: red;
-        }
-
-        h1 {
-            margin-top: 20px;
-            font-size: 1.5rem;
-        }
-
-        .score-board {
-            font-size: 1.2rem;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Space Shooter</title>
+<style>
+    body { margin: 0; background: #000; overflow: hidden; }
+    #gameArea { position: relative; width: 100vw; height: 100vh; background: url('https://img.itch.zone/aW1nLzQ4NzU2MzQucG5n/315x250%23c/4Ti0%2BG.png'); }
+    #spaceship { position: absolute; bottom: 10px; left: 50%; width: 50px; height: 50px; background: url('https://freesvg.org/img/2011-02-16-ALTHIB-The-Wolf-Shi.png') no-repeat; background-size: cover; transform: translateX(-50%); }
+    .bullet { position: absolute; width: 5px; height: 20px; background: yellow; }
+    .enemy { position: absolute; width: 60px; height: 60px; background: url('https://freesvg.org/img/Alienigena.png') no-repeat; background-size: cover; }
+    #score, #highScore { position: absolute; top: 10px; color: white; font-family: Arial, sans-serif; }
+    #score { left: 10px; }
+    #highScore { right: 10px; }
+    #gameOver { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: red; font-size: 30px; }
+</style>
 </head>
 <body>
-    <h1 class="results score-board">Score: 0 | High Score: 0</h1>
-    <div class="grid"></div>
-    <script>
-        const grid = document.querySelector(".grid")
-        const resultDisplay = document.querySelector(".results")
-        let currentShooterIndex = 202
-        const width = 15
-        const aliensRemoved = []
-        let invadersId
-        let isGoingRight = true
-        let direction = 1
-        let results = 0
+<div id="gameArea">
+    <div id="spaceship"></div>
+    <div id="score">Score: 0</div>
+    <div id="highScore">High Score: 0</div>
+    <div id="gameOver">Game Over</div>
+</div>
+<script>
+let keysPressed = {};
+let canShoot = true;
 
-        // Retrieve high score from local storage or set to 0
-        let highScore = localStorage.getItem('highScore') || 0
-        resultDisplay.innerHTML = `Score: 0 | High Score: ${highScore}`
+// Track key presses for continuous movement
+document.addEventListener('keydown', (e) => {
+    keysPressed[e.key] = true;
+});
 
-        // Create grid squares
-        for (let i = 0; i < width * width; i++) {
-            const square = document.createElement("div")
-            grid.appendChild(square)
+document.addEventListener('keyup', (e) => {
+    keysPressed[e.key] = false;
+});
+
+const game = {
+    spaceship: document.getElementById('spaceship'),
+    gameArea: document.getElementById('gameArea'),
+    scoreDisplay: document.getElementById('score'),
+    highScoreDisplay: document.getElementById('highScore'),
+    gameOverDisplay: document.getElementById('gameOver'),
+    score: 0,
+    highScore: localStorage.getItem('highScore') || 0,
+    enemies: [],
+    bullets: [],
+    isGameOver: false,
+
+    init: function() {
+        this.updateHighScore();
+        this.createEnemy();
+        requestAnimationFrame(this.gameLoop.bind(this));
+    },
+
+    handleMovement: function() {
+        const move = 5;
+        let left = this.spaceship.offsetLeft;
+
+        // Handle player movement with continuous key press
+        if (keysPressed['ArrowLeft'] && left > 0) {
+            left -= move;
         }
+        if (keysPressed['ArrowRight'] && left < this.gameArea.offsetWidth - this.spaceship.offsetWidth) {
+            left += move;
+        }
+        this.spaceship.style.left = left + 'px';
 
-        const squares = Array.from(document.querySelectorAll(".grid div"))
+        // Handle shooting
+        if (keysPressed['ArrowUp'] && canShoot) {
+            this.fireBullet();
+            canShoot = false;
+            setTimeout(() => canShoot = true, 500);  // Limit shooting speed
+        }
+    },
 
-        // Alien invaders
-        const alienInvaders = [
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-            15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            30, 31, 32, 33, 34, 35, 36, 37, 38, 39
-        ]
+    fireBullet: function() {
+        const bullet = document.createElement('div');
+        bullet.className = 'bullet';
+        bullet.style.left = (this.spaceship.offsetLeft + this.spaceship.offsetWidth / 2 - 2.5) + 'px';
+        bullet.style.bottom = '60px';
+        this.gameArea.appendChild(bullet);
+        this.bullets.push(bullet);
+    },
 
-        // Draw aliens
-        function draw() {
-            for (let i = 0; i < alienInvaders.length; i++) {
-                if (!aliensRemoved.includes(i)) {
-                    const alienIcon = document.createElement('ion-icon')
-                    alienIcon.setAttribute('name', 'planet')
-                    squares[alienInvaders[i]].appendChild(alienIcon)
+    createEnemy: function() {
+        if (this.isGameOver) return; // Stop creating enemies after game over
+        const enemy = document.createElement('div');
+        enemy.className = 'enemy';
+        enemy.style.left = Math.random() * (this.gameArea.offsetWidth - 40) + 'px'; // Random position at the top
+        enemy.style.top = '0px';
+        enemy.dataset.direction = 'right'; // Set initial movement direction
+        this.gameArea.appendChild(enemy);
+        this.enemies.push(enemy);
+
+        // Slow down enemy creation
+        setTimeout(this.createEnemy.bind(this), 2000 + Math.random() * 3000);  // Slower enemy generation
+    },
+
+    gameLoop: function() {
+        this.handleMovement();  // Handle player movement and shooting
+        this.moveBullets();
+        this.moveEnemies();
+        this.checkCollisions();
+        if (!this.checkGameOver()) {
+            requestAnimationFrame(this.gameLoop.bind(this));
+        }
+    },
+
+    moveBullets: function() {
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+            let bullet = this.bullets[i];
+            let top = bullet.offsetTop - 5;
+            if (top < 0) {
+                this.gameArea.removeChild(bullet);
+                this.bullets.splice(i, 1);
+            } else {
+                bullet.style.top = top + 'px';
+            }
+        }
+    },
+
+    moveEnemies: function() {
+        this.enemies.forEach(enemy => {
+            let left = enemy.offsetLeft;
+            let top = enemy.offsetTop;
+
+            // Move enemy based on its current direction
+            if (enemy.dataset.direction === 'right') {
+                left += 2; // Move right
+                if (left > this.gameArea.offsetWidth - enemy.offsetWidth) {
+                    enemy.dataset.direction = 'left'; // Change direction to left
+                    top += 40; // Move down one step
                 }
-            }
-        }
-
-        draw()
-
-        // Place the shooter
-        function placeShooter() {
-            const shooterIcon = document.createElement('ion-icon')
-            shooterIcon.setAttribute('name', 'rocket')
-            squares[currentShooterIndex].appendChild(shooterIcon)
-        }
-
-        placeShooter()
-
-        // Remove aliens
-        function remove() {
-            for (let i = 0; i < alienInvaders.length; i++) {
-                squares[alienInvaders[i]].innerHTML = ''
-            }
-        }
-
-        // Move shooter left and right
-        function moveShooter(e) {
-            squares[currentShooterIndex].innerHTML = ''
-            switch (e.key) {
-                case "ArrowLeft":
-                    if (currentShooterIndex % width !== 0) currentShooterIndex -= 1
-                    break
-                case "ArrowRight":
-                    if (currentShooterIndex % width < width - 1) currentShooterIndex += 1
-                    break
-            }
-            placeShooter()
-        }
-
-        document.addEventListener("keydown", moveShooter)
-
-        // Move invaders
-        function moveInvaders() {
-            const leftEdge = alienInvaders[0] % width === 0
-            const rightEdge = alienInvaders[alienInvaders.length - 1] % width === width - 1
-            remove()
-
-            if (rightEdge && isGoingRight) {
-                for (let i = 0; i < alienInvaders.length; i++) {
-                    alienInvaders[i] += width + 1
-                }
-                direction = -1
-                isGoingRight = false
-            }
-
-            if (leftEdge && !isGoingRight) {
-                for (let i = 0; i < alienInvaders.length; i++) {
-                    alienInvaders[i] += width - 1
-                }
-                direction = 1
-                isGoingRight = true
-            }
-
-            for (let i = 0; i < alienInvaders.length; i++) {
-                alienInvaders[i] += direction
-            }
-
-            draw()
-
-            // Check if invaders hit the shooter
-            if (squares[currentShooterIndex].querySelector('ion-icon[name="planet"]')) {
-                resultDisplay.innerHTML = "GAME OVER"
-                clearInterval(invadersId)
-                checkHighScore() // Check if the current score is a high score
-            }
-
-            // Check if all invaders are removed
-            if (aliensRemoved.length === alienInvaders.length) {
-                resultDisplay.innerHTML = "YOU WIN"
-                clearInterval(invadersId)
-                checkHighScore() // Check if the current score is a high score
-            }
-        }
-
-        invadersId = setInterval(moveInvaders, 600)
-
-        // Shoot laser
-        function shoot(e) {
-            let laserId
-            let currentLaserIndex = currentShooterIndex
-
-            function moveLaser() {
-                // Remove laser from current position
-                squares[currentLaserIndex].classList.remove("laser")
-
-                // Move laser upward
-                currentLaserIndex -= width
-
-                // Check if laser is still within the grid bounds
-                if (currentLaserIndex >= 0) {
-                    squares[currentLaserIndex].classList.add("laser")
-
-                    // Check if laser hits invader
-                    if (squares[currentLaserIndex].querySelector('ion-icon[name="planet"]')) {
-                        squares[currentLaserIndex].classList.remove("laser")
-                        squares[currentLaserIndex].innerHTML = ''
-                        squares[currentLaserIndex].classList.add("boom")
-
-                        setTimeout(() => squares[currentLaserIndex].classList.remove("boom"), 300)
-                        clearInterval(laserId)
-
-                        const alienRemoved = alienInvaders.indexOf(currentLaserIndex)
-                        aliensRemoved.push(alienRemoved)
-                        results++
-                        resultDisplay.innerHTML = `Score: ${results} | High Score: ${highScore}`
-                    }
-                } else {
-                    // Clear the interval if laser goes out of bounds
-                    clearInterval(laserId)
+            } else {
+                left -= 2; // Move left
+                if (left < 0) {
+                    enemy.dataset.direction = 'right'; // Change direction to right
+                    top += 40; // Move down one step
                 }
             }
 
-            if (e.key === "ArrowUp") {
-                laserId = setInterval(moveLaser, 100)
+            enemy.style.left = left + 'px';
+            enemy.style.top = top + 'px';
+        });
+    },
+
+    checkCollisions: function() {
+        // Check for bullet collisions
+        for (let b = this.bullets.length - 1; b >= 0; b--) {
+            for (let e = this.enemies.length - 1; e >= 0; e--) {
+                if (this.collision(this.bullets[b], this.enemies[e])) {
+                    this.gameArea.removeChild(this.bullets[b]);
+                    this.bullets.splice(b, 1);
+                    this.gameArea.removeChild(this.enemies[e]);
+                    this.enemies.splice(e, 1);
+                    this.score++;
+                    this.scoreDisplay.textContent = 'Score: ' + this.score;
+                    break;
+                }
             }
         }
+    },
 
-        document.addEventListener('keydown', shoot)
-
-        // Function to check and update high score
-        function checkHighScore() {
-            if (results > highScore) {
-                highScore = results
-                localStorage.setItem('highScore', highScore)
-                resultDisplay.innerHTML = `Score: ${results} | High Score: ${highScore}`
+    checkGameOver: function() {
+        // End the game if any enemy touches the player or reaches the bottom
+        for (let i = 0; i < this.enemies.length; i++) {
+            let enemy = this.enemies[i];
+            if (this.collision(this.spaceship, enemy) || enemy.offsetTop + enemy.offsetHeight >= this.gameArea.offsetHeight) {
+                this.gameOver();
+                return true;
             }
         }
-    </script>
+        return false;
+    },
+
+    collision: function($div1, $div2) {
+        let x1 = $div1.offsetLeft;
+        let y1 = $div1.offsetTop;
+        let h1 = $div1.clientHeight;
+        let w1 = $div1.clientWidth;
+        let b1 = y1 + h1;
+        let r1 = x1 + w1;
+
+        let x2 = $div2.offsetLeft;
+        let y2 = $div2.offsetTop;
+        let h2 = $div2.clientHeight;
+        let w2 = $div2.clientWidth;
+        let b2 = y2 + h2;
+        let r2 = x2 + w2;
+
+        return !(b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2);
+    },
+
+    gameOver: function() {
+        this.isGameOver = true;
+        this.gameOverDisplay.style.display = 'block';
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('highScore', this.highScore);
+            this.updateHighScore();
+        }
+    },
+
+    updateHighScore: function() {
+        this.highScoreDisplay.textContent = 'High Score: ' + this.highScore;
+    }
+};
+
+game.init();
+</script>
 </body>
 </html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Duck Hunter</title>
+<style>
+    #gameArea {
+        width: 100%;
+        height: 600px;
+        background-size: cover;
+        position: relative;
+        overflow: hidden;
+    }
+    .duck {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        background: url('https://freesvg.org/img/duck-flying.png') no-repeat;
+        background-size: contain;
+    }
+    #crosshair {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: red;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+    #timer, #score {
+        position: absolute;
+        top: 10px;
+        color: white;
+        font-size: 24px;
+    }
+    #timer { left: 10px; }
+    #score { right: 10px; }
+</style>
+</head>
+<body>
+<div id="gameArea">
+    <div id="crosshair"></div>
+    <div id="timer">Time: 60</div>
+    <div id="score">Score: 0</div>
+</div>
+
+<script>
+    const gameArea = document.getElementById('gameArea');
+    const crosshair = document.getElementById('crosshair');
+    const timerDisplay = document.getElementById('timer');
+    const scoreDisplay = document.getElementById('score');
+    let score = 0;
+    let timeLeft = 60;
+    let ducks = [];
+    let gameInterval;
+
+    function spawnDuck() {
+        const duck = document.createElement('div');
+        duck.className = 'duck';
+        const direction = Math.random() < 0.5 ? 'left' : 'right';
+        duck.style[direction] = '-50px';
+        duck.style.top = `${Math.random() * (gameArea.offsetHeight - 50)}px`;
+        duck.dataset.direction = direction;
+        gameArea.appendChild(duck);
+        ducks.push(duck);
+        if (ducks.length > 2) {
+            gameArea.removeChild(ducks.shift());
+        }
+    }
+
+    function moveDucks() {
+        ducks.forEach(duck => {
+            const speed = 2;
+            const currentPos = parseInt(duck.style[duck.dataset.direction] || 0);
+            duck.style[duck.dataset.direction] = `${currentPos + (duck.dataset.direction === 'right' ? speed : -speed)}px`;
+            if (currentPos > gameArea.offsetWidth || currentPos < -50) {
+                gameArea.removeChild(duck);
+                ducks = ducks.filter(d => d !== duck);
+            }
+        });
+    }
+
+    function moveCrosshair(e) {
+        switch(e.key) {
+            case 'w': crosshair.style.top = Math.max(0, crosshair.offsetTop - 10) + 'px'; break;
+            case 's': crosshair.style.top = Math.min(gameArea.offsetHeight - 20, crosshair.offsetTop + 10) + 'px'; break;
+            case 'a': crosshair.style.left = Math.max(0, crosshair.offsetLeft - 10) + 'px'; break;
+            case 'd': crosshair.style.left = Math.min(gameArea.offsetWidth - 20, crosshair.offsetLeft + 10) + 'px'; break;
+            case 'Enter': shoot(); break;
+        }
+    }
+
+    function shoot() {
+        const crosshairRect = crosshair.getBoundingClientRect();
+        ducks.forEach(duck => {
+            const duckRect = duck.getBoundingClientRect();
+            if (crosshairRect.left < duckRect.right && 
+                crosshairRect.right > duckRect.left && 
+                crosshairRect.top < duckRect.bottom && 
+                crosshairRect.bottom > duckRect.top) {
+                duck.style.transition = 'top 1s';
+                duck.style.top = `${gameArea.offsetHeight}px`;
+                setTimeout(() => gameArea.removeChild(duck), 1000);
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+            }
+        });
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        alert(`Game Over! Your score: ${score}`);
+    }
+
+    function startGame() {
+        gameInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.textContent = `Time: ${timeLeft}`;
+            if (timeLeft <= 0) gameOver();
+            if (Math.random() < 0.03) spawnDuck(); // Random spawn chance
+            moveDucks();
+        }, 1000);
+        document.addEventListener('keydown', moveCrosshair);
+    }
+
+    startGame();
+</script>
+</body>
+</html>

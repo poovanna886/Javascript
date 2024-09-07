@@ -18,6 +18,7 @@
 
     canvas {
       background: linear-gradient(135deg, #e0e0e0, #f9f9f9);
+      background-image: url('https://preview.redd.it/any-suggestions-for-making-2d-backgrounds-for-a-top-down-v0-71oyawh2asoa1.png?width=1024&format=png&auto=webp&s=d457ac165de2f6cd154ed0f7c28563881ca99306');
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       display: block;
@@ -64,24 +65,6 @@
     #restart:hover {
       background-color: #0056b3;
     }
-
-    .tank {
-      border-radius: 50%;
-      background-color: #4caf50;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .enemy {
-      background-color: #f44336;
-      border-radius: 50%;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .bullet {
-      background-color: #333;
-      border-radius: 50%;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
   </style>
 </head>
 <body>
@@ -91,208 +74,216 @@
   <div id="restart">Restart Game</div>
 
   <script>
-   const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const healthBar = document.getElementById('health-bar');
-const scoreElement = document.getElementById('score');
-const scoreValue = document.getElementById('scoreValue');
-const restartButton = document.getElementById('restart');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const healthBar = document.getElementById('health-bar');
+    const scoreElement = document.getElementById('score');
+    const scoreValue = document.getElementById('scoreValue');
+    const restartButton = document.getElementById('restart');
 
-// Game variables
-let player, enemies, bullets, score = 0, gameOver = false;
-let keysPressed = {}; // Track keys pressed for smooth movement
-let enemyShootIntervals = []; // Track all enemy shooting intervals
+    // Game variables
+    let player, enemies, bullets, score = 0, gameOver = false;
+    let keysPressed = {}; // Track keys pressed for smooth movement
+    let enemyShootIntervals = []; // Track all enemy shooting intervals
 
-// Tank Class
-class Tank {
-  constructor(x, y, isPlayer = false) {
-    this.x = x;
-    this.y = y;
-    this.width = 40;
-    this.height = 40;
-    this.health = isPlayer ? 10 : 3;
-    this.isPlayer = isPlayer;
-    this.speed = isPlayer ? 4 : 2; // Increase player speed for smoother gameplay
-    this.bulletCooldown = false;
-    this.shootInterval = null;
-    
-    if (!isPlayer) {
-      this.initEnemyShooting(); // Initiate random shooting for enemies
-    }
-  }
+    // Load tank images
+    const playerTankImage = new Image();
+    playerTankImage.src = 'https://freesvg.org/img/1456586475.png'; // Replace with the URL or path to your player's tank image
 
-  draw() {
-    ctx.fillStyle = this.isPlayer ? 'blue' : 'red';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-  }
+    const enemyTankImage = new Image();
+    enemyTankImage.src = 'https://freesvg.org/img/1528027568.png'; // Replace with the URL or path to your enemy's tank image
 
-  move(direction) {
-    if (direction === 'w' && this.y > 0) this.y -= this.speed;
-    if (direction === 's' && this.y + this.height < canvas.height) this.y += this.speed;
-    if (direction === 'a' && this.x > 0) this.x -= this.speed;
-    if (direction === 'd' && this.x + this.width < canvas.width) this.x += this.speed;
-  }
+    // Tank Class
+    class Tank {
+      constructor(x, y, isPlayer = false) {
+        this.x = x;
+        this.y = y;
+        this.width = 60;
+        this.height = 60;
+        this.health = isPlayer ? 10 : 3;
+        this.isPlayer = isPlayer;
+        this.speed = isPlayer ? 4 : 2;
+        this.bulletCooldown = false;
+        this.shootInterval = null;
 
-  shoot() {
-    if (!this.bulletCooldown) {
-      bullets.push({ x: this.x + this.width / 2, y: this.y, direction: this.isPlayer ? -1 : 1, owner: this });
-      this.bulletCooldown = true;
-      setTimeout(() => this.bulletCooldown = false, 500); // Limit one bullet per keypress
-    }
-  }
-
-  // Set random intervals for enemy tanks to shoot
-  initEnemyShooting() {
-    this.shootInterval = setInterval(() => {
-      if (!this.bulletCooldown && !gameOver) {
-        this.shoot();
+        if (!isPlayer) {
+          this.initEnemyShooting(); // Initiate random shooting for enemies
+        }
       }
-    }, Math.random() * 2000 + 1000); // Shoot at random intervals between 1-3 seconds
-    enemyShootIntervals.push(this.shootInterval); // Track the interval
-  }
 
-  destroy() {
-    if (this.shootInterval) clearInterval(this.shootInterval); // Clear shooting interval on enemy destroy
-  }
-}
+      draw() {
+        if (this.isPlayer) {
+          ctx.drawImage(playerTankImage, this.x, this.y, this.width, this.height);
+        } else {
+          ctx.drawImage(enemyTankImage, this.x, this.y, this.width, this.height);
+        }
+      }
 
-// Initialize player and enemies
-function initGame() {
-  clearAllIntervals(); // Clear previous enemy shoot intervals before starting a new game
-  player = new Tank(400, 500, true);
-  enemies = [];
-  bullets = [];
-  score = 0;
-  gameOver = false;
+      move(direction) {
+        if (direction === 'w' && this.y > 0) this.y -= this.speed;
+        if (direction === 's' && this.y + this.height < canvas.height) this.y += this.speed;
+        if (direction === 'a' && this.x > 0) this.x -= this.speed;
+        if (direction === 'd' && this.x + this.width < canvas.width) this.x += this.speed;
+      }
 
-  for (let i = 0; i < 4; i++) {
-    spawnEnemy();
-  }
+      shoot() {
+        if (!this.bulletCooldown) {
+          bullets.push({ x: this.x + this.width / 2, y: this.y, direction: this.isPlayer ? -1 : 1, owner: this });
+          this.bulletCooldown = true;
+          setTimeout(() => this.bulletCooldown = false, 500); // Limit one bullet per keypress
+        }
+      }
 
-  updateHealthBar();
-  gameLoop();
-}
-
-// Clear all intervals
-function clearAllIntervals() {
-  enemyShootIntervals.forEach(interval => clearInterval(interval));
-  enemyShootIntervals = []; // Reset the array
-}
-
-// Spawn a new enemy
-function spawnEnemy() {
-  const x = Math.random() * (canvas.width - 40);
-  const y = Math.random() * (canvas.height / 2);
-  enemies.push(new Tank(x, y));
-}
-
-// Update health bar
-function updateHealthBar() {
-  healthBar.innerHTML = '';
-  for (let i = 0; i < player.health; i++) {
-    const bar = document.createElement('div');
-    bar.classList.add('bar');
-    healthBar.appendChild(bar);
-  }
-}
-
-// Handle bullet movement and collisions
-function updateBullets() {
-  for (let i = bullets.length - 1; i >= 0; i--) {
-    const bullet = bullets[i];
-    bullet.y += bullet.direction * 5;
-
-    if (bullet.y < 0 || bullet.y > canvas.height) {
-      bullets.splice(i, 1); // Remove off-screen bullets
-    } else {
-      // Check for collisions
-      if (bullet.owner.isPlayer) {
-        enemies.forEach((enemy, index) => {
-          if (bullet.x >= enemy.x && bullet.x <= enemy.x + enemy.width &&
-              bullet.y >= enemy.y && bullet.y <= enemy.y + enemy.height) {
-            enemy.health -= 1;
-            bullets.splice(i, 1);
-            if (enemy.health <= 0) {
-              enemy.destroy(); // Clear interval when enemy is destroyed
-              enemies.splice(index, 1);
-              spawnEnemy();
-              score += 10;
-            }
+      // Set random intervals for enemy tanks to shoot
+      initEnemyShooting() {
+        this.shootInterval = setInterval(() => {
+          if (!this.bulletCooldown && !gameOver) {
+            this.shoot();
           }
-        });
-      } else {
-        // Bullet hit the player
-        if (bullet.x >= player.x && bullet.x <= player.x + player.width &&
-            bullet.y >= player.y && bullet.y <= player.y + player.height) {
-          player.health -= 1;
-          bullets.splice(i, 1);
-          updateHealthBar();
-          if (player.health <= 0) {
-            endGame();
+        }, Math.random() * 2000 + 1000); // Shoot at random intervals between 1-3 seconds
+        enemyShootIntervals.push(this.shootInterval); // Track the interval
+      }
+
+      destroy() {
+        if (this.shootInterval) clearInterval(this.shootInterval); // Clear shooting interval on enemy destroy
+      }
+    }
+
+    // Initialize player and enemies
+    function initGame() {
+      clearAllIntervals(); // Clear previous enemy shoot intervals before starting a new game
+      player = new Tank(400, 500, true);
+      enemies = [];
+      bullets = [];
+      score = 0;
+      gameOver = false;
+
+      for (let i = 0; i < 4; i++) {
+        spawnEnemy();
+      }
+
+      updateHealthBar();
+      gameLoop();
+    }
+
+    // Clear all intervals
+    function clearAllIntervals() {
+      enemyShootIntervals.forEach(interval => clearInterval(interval));
+      enemyShootIntervals = []; // Reset the array
+    }
+
+    // Spawn a new enemy
+    function spawnEnemy() {
+      const x = Math.random() * (canvas.width - 40);
+      const y = Math.random() * (canvas.height / 2);
+      enemies.push(new Tank(x, y));
+    }
+
+    // Update health bar
+    function updateHealthBar() {
+      healthBar.innerHTML = '';
+      for (let i = 0; i < player.health; i++) {
+        const bar = document.createElement('div');
+        bar.classList.add('bar');
+        healthBar.appendChild(bar);
+      }
+    }
+
+    // Handle bullet movement and collisions
+    function updateBullets() {
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const bullet = bullets[i];
+        bullet.y += bullet.direction * 5;
+
+        if (bullet.y < 0 || bullet.y > canvas.height) {
+          bullets.splice(i, 1); // Remove off-screen bullets
+        } else {
+          // Check for collisions
+          if (bullet.owner.isPlayer) {
+            enemies.forEach((enemy, index) => {
+              if (bullet.x >= enemy.x && bullet.x <= enemy.x + enemy.width &&
+                  bullet.y >= enemy.y && bullet.y <= enemy.y + enemy.height) {
+                enemy.health -= 1;
+                bullets.splice(i, 1);
+                if (enemy.health <= 0) {
+                  enemy.destroy(); // Clear interval when enemy is destroyed
+                  enemies.splice(index, 1);
+                  spawnEnemy();
+                  score += 10;
+                }
+              }
+            });
+          } else {
+            // Bullet hit the player
+            if (bullet.x >= player.x && bullet.x <= player.x + player.width &&
+                bullet.y >= player.y && bullet.y <= player.y + player.height) {
+              player.health -= 1;
+              bullets.splice(i, 1);
+              updateHealthBar();
+              if (player.health <= 0) {
+                endGame();
+              }
+            }
           }
         }
       }
     }
-  }
-}
 
-// End the game
-function endGame() {
-  gameOver = true;
-  scoreElement.style.display = 'block';
-  scoreValue.textContent = score;
-  restartButton.style.display = 'block';
-}
+    // End the game
+    function endGame() {
+      gameOver = true;
+      scoreElement.style.display = 'block';
+      scoreValue.textContent = score;
+      restartButton.style.display = 'block';
+    }
 
-// Main game loop
-function gameLoop() {
-  if (!gameOver) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Main game loop
+    function gameLoop() {
+      if (!gameOver) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    updatePlayerMovement();  // Continuously check and update player movement
+        updatePlayerMovement();  // Continuously check and update player movement
 
-    player.draw();
-    enemies.forEach(enemy => enemy.draw());
-    bullets.forEach(bullet => {
-      ctx.fillRect(bullet.x, bullet.y, 5, 10);
+        player.draw();
+        enemies.forEach(enemy => enemy.draw());
+        bullets.forEach(bullet => {
+          ctx.fillRect(bullet.x, bullet.y, 5, 10);
+        });
+
+        updateBullets();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    // Handle player movement based on keys pressed
+    function updatePlayerMovement() {
+      if (keysPressed['w'] && player.y > 0) player.y -= player.speed;
+      if (keysPressed['s'] && player.y + player.height < canvas.height) player.y += player.speed;
+      if (keysPressed['a'] && player.x > 0) player.x -= player.speed;
+      if (keysPressed['d'] && player.x + player.width < canvas.width) player.x += player.speed;
+    }
+
+    // Handle keydown and keyup events
+    document.addEventListener('keydown', (e) => {
+      keysPressed[e.key] = true; // Mark key as pressed
+      if (e.key === 'o') {
+        player.shoot();
+      }
     });
 
-    updateBullets();
-    requestAnimationFrame(gameLoop);
-  }
-}
+    document.addEventListener('keyup', (e) => {
+      keysPressed[e.key] = false; // Mark key as released
+    });
 
-// Handle player movement based on keys pressed
-function updatePlayerMovement() {
-  if (keysPressed['w'] && player.y > 0) player.y -= player.speed;
-  if (keysPressed['s'] && player.y + player.height < canvas.height) player.y += player.speed;
-  if (keysPressed['a'] && player.x > 0) player.x -= player.speed;
-  if (keysPressed['d'] && player.x + player.width < canvas.width) player.x += player.speed;
-}
+    // Restart game
+    restartButton.addEventListener('click', () => {
+      scoreElement.style.display = 'none';
+      restartButton.style.display = 'none';
+      initGame();
+    });
 
-// Handle keydown and keyup events
-document.addEventListener('keydown', (e) => {
-  keysPressed[e.key] = true; // Mark key as pressed
-  if (e.key === 'o') {
-    player.shoot();
-  }
-});
-
-document.addEventListener('keyup', (e) => {
-  keysPressed[e.key] = false; // Mark key as released
-});
-
-// Restart game
-restartButton.addEventListener('click', () => {
-  scoreElement.style.display = 'none';
-  restartButton.style.display = 'none';
-  initGame();
-});
-
-// Initialize the game
-initGame();
-
-
+    // Initialize the game
+    initGame();
   </script>
 </body>
 </html>

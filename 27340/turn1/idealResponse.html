@@ -58,161 +58,159 @@
     <canvas id="gameCanvas"></canvas>
     <div id="countdown"></div>
     <div id="score">Score: 0</div>
-    <div id="gameOver">Game Over! High Score: <span id="highScore">0</span></div>
+    <div id="gameOver">Game Over! Your Score: <span id="highScore">0</span></div>
     
     <script>
-   const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const countdownEl = document.getElementById('countdown');
-const scoreEl = document.getElementById('score');
-const gameOverEl = document.getElementById('gameOver');
-const highScoreEl = document.getElementById('highScore');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const countdownEl = document.getElementById('countdown');
+    const scoreEl = document.getElementById('score');
+    const gameOverEl = document.getElementById('gameOver');
+    const highScoreEl = document.getElementById('highScore');
 
-let car = { lane: 1, y: 500, width: 50, height: 100 };
-let obstacles = [];
-let score = 0;
-let highScore = 0;
-let gameRunning = false;
-let countdown = 3;
+    let car = { lane: 1, y: 500, width: 70, height: 70, image: new Image() };
+    car.image.src = 'https://freesvg.org/img/glibersat_Nioubiteul.png'; // Set your player's car image path
 
-canvas.width = 400;
-canvas.height = 600;
+    let obstacleImage = new Image();
+    obstacleImage.src = 'https://freesvg.org/img/car_topview.png'; //obstacle image
+    let obstacles = [];
+    let score = 0;
+    let highScore = 0;
+    let gameRunning = false;
+    let countdown = 3;
 
-document.addEventListener('keydown', moveCar);
+    canvas.width = 400;
+    canvas.height = 600;
 
-function moveCar(e) {
-    if (e.key === 'a' && car.lane > 0) car.lane--; // Move left
-    if (e.key === 'd' && car.lane < 2) car.lane++; // Move right
-    updateCarPosition();
-}
+    document.addEventListener('keydown', moveCar);
 
-function updateCarPosition() {
-    // Calculate the x position based on the lane (0, 1, or 2)
-    car.x = car.lane * 133 + 50;
-}
+    function moveCar(e) {
+        if (e.key === 'a' && car.lane > 0) car.lane--; // Move left
+        if (e.key === 'd' && car.lane < 2) car.lane++; // Move right
+        if (e.key === 'w' && car.y > 0) car.y -= 10;  // Move forward
+        if (e.key === 's' && car.y < canvas.height - car.height) car.y += 10;  // Move backward
+        updateCarPosition();
+    }
 
-function startGame() {
-    gameRunning = true;
-    score = 0;
-    obstacles = [];
-    car.lane = 1;
-    car.y = 500;
-    updateCarPosition();
-    countdown = 3;
-    countdownEl.innerHTML = '';
-    gameOverEl.style.display = 'none';
-    scoreEl.innerHTML = 'Score: 0';
-    requestAnimationFrame(gameLoop);
-}
+    function updateCarPosition() {
+        car.x = car.lane * 133 + 50;
+    }
 
-function gameLoop() {
-    if (!gameRunning) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawRoad();
-    updateObstacles();
-    drawCar();
-    drawObstacles();
-
-    if (detectCollision()) {
-        endGame();
-    } else {
+    function startGame() {
+        gameRunning = true;
+        score = 0;
+        obstacles = [];
+        car.lane = 1;
+        car.y = 500;
+        updateCarPosition();
+        countdown = 3;
+        countdownEl.innerHTML = '';
+        gameOverEl.style.display = 'none';
+        scoreEl.innerHTML = 'Score: 0';
         requestAnimationFrame(gameLoop);
     }
-}
 
-function drawRoad() {
-    // Draw road background
-    ctx.fillStyle = '#707070'; // Grey color for the road
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw lane dividers
-    ctx.strokeStyle = '#ffffff'; // White color for lane lines
-    ctx.lineWidth = 5;
-    ctx.setLineDash([20, 15]); // Dotted line style
-    
-    // Draw the first lane divider
-    ctx.beginPath();
-    ctx.moveTo(133, 0);
-    ctx.lineTo(133, canvas.height);
-    ctx.stroke();
+    function gameLoop() {
+        if (!gameRunning) return;
 
-    // Draw the second lane divider
-    ctx.beginPath();
-    ctx.moveTo(267, 0);
-    ctx.lineTo(267, canvas.height);
-    ctx.stroke();
-}
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRoad();
+        updateObstacles();
+        drawCar();
+        drawObstacles();
 
-function drawCar() {
-    ctx.fillStyle = 'red';
-    ctx.fillRect(car.x, car.y, car.width, car.height);
-}
-
-function updateObstacles() {
-    if (Math.random() < 0.02) {
-        let lane = Math.floor(Math.random() * 3);
-        let obstacleX = lane * 133 + 50;
-        obstacles.push({ x: obstacleX, y: -100, width: 50, height: 100 });
-    }
-
-    for (let i = 0; i < obstacles.length; i++) {
-        obstacles[i].y += 5;
-
-        // Check if the obstacle has passed the player's car
-        if (obstacles[i].y > canvas.height) {
-            obstacles.splice(i, 1);
-            score++;  // Increment score when an obstacle is passed
-            scoreEl.innerHTML = `Score: ${score}`;
+        if (detectCollision()) {
+            endGame();
+        } else {
+            requestAnimationFrame(gameLoop);
         }
     }
-}
 
-function drawObstacles() {
-    ctx.fillStyle = '#1a2a6c';
-    for (let obstacle of obstacles) {
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    function drawRoad() {
+        ctx.fillStyle = '#707070';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 5;
+        ctx.setLineDash([20, 15]);
+
+        ctx.beginPath();
+        ctx.moveTo(133, 0);
+        ctx.lineTo(133, canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(267, 0);
+        ctx.lineTo(267, canvas.height);
+        ctx.stroke();
     }
-}
 
-function detectCollision() {
-    for (let obstacle of obstacles) {
-        if (
-            car.x < obstacle.x + obstacle.width &&
-            car.x + car.width > obstacle.x &&
-            car.y < obstacle.y + obstacle.height &&
-            car.y + car.height > obstacle.y
-        ) {
-            return true;
+    function drawCar() {
+        ctx.drawImage(car.image, car.x, car.y, car.width, car.height);  // Draw the player's car image
+    }
+
+    function updateObstacles() {
+        if (Math.random() < 0.018) {
+            let lane = Math.floor(Math.random() * 3);
+            let obstacleX = lane * 133 + 50;
+            obstacles.push({ x: obstacleX, y: -100, width: 50, height: 50 });
+        }
+
+        for (let i = 0; i < obstacles.length; i++) {
+            obstacles[i].y += 5;
+
+            if (obstacles[i].y > canvas.height) {
+                obstacles.splice(i, 1);
+                score++;
+                scoreEl.innerHTML = `Score: ${score}`;
+            }
         }
     }
-    return false;
-}
 
-function endGame() {
-    gameRunning = false;
-    gameOverEl.style.display = 'block';
-    if (score > highScore) {
-        highScore = score;
-        highScoreEl.innerHTML = highScore;
+    function drawObstacles() {
+        for (let obstacle of obstacles) {
+            ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);  // Draw obstacle images
+        }
     }
-}
 
-function countdownStart() {
-    if (countdown > 0) {
-        countdownEl.innerHTML = countdown;
-        countdown--;
-        setTimeout(countdownStart, 1000);
-    } else {
-        countdownEl.innerHTML = 'Go!';
-        setTimeout(() => {
-            countdownEl.innerHTML = '';
-            startGame();
-        }, 1000);
+    function detectCollision() {
+        for (let obstacle of obstacles) {
+            if (
+                car.x < obstacle.x + obstacle.width &&
+                car.x + car.width > obstacle.x &&
+                car.y < obstacle.y + obstacle.height &&
+                car.y + car.height > obstacle.y
+            ) {
+                return true;
+            }
+        }
+        return false;
     }
-}
 
-countdownStart();
+    function endGame() {
+        gameRunning = false;
+        gameOverEl.style.display = 'block';
+        if (score > highScore) {
+            highScore = score;
+            highScoreEl.innerHTML = highScore;
+        }
+    }
+
+    function countdownStart() {
+        if (countdown > 0) {
+            countdownEl.innerHTML = countdown;
+            countdown--;
+            setTimeout(countdownStart, 1000);
+        } else {
+            countdownEl.innerHTML = 'Go!';
+            setTimeout(() => {
+                countdownEl.innerHTML = '';
+                startGame();
+            }, 1000);
+        }
+    }
+
+    countdownStart();
 
     </script>
 </body>

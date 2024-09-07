@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duck Hunter Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #gameCanvas {
+      display: block;
+    }
+
+    #timer, #score {
+      position: absolute;
+      top: 10px;
+      font-size: 24px;
+      color: white;
+    }
+
+    #timer {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #score {
+      right: 20px;
+    }
+
+    #gameOver {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer">60</div>
+  <div id="score">Score: 0</div>
+  <div id="gameOver">Game Over! Your Score: <span id="finalScore"></span></div>
+  <canvas id="gameCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let ducks = [];
+    let duckSpeed = 2;
+    let gameTime = 60; // 1 minute
+    let score = 0;
+    let gameRunning = true; // Game state
+    let crosshair = { x: canvas.width / 2, y: canvas.height / 2, size: 20, speed: 5 };
+    let timerElement = document.getElementById('timer');
+    let scoreElement = document.getElementById('score');
+    let gameOverElement = document.getElementById('gameOver');
+    let finalScoreElement = document.getElementById('finalScore');
+
+    // Movement flags for crosshair
+    let keys = {
+      w: false,
+      a: false,
+      s: false,
+      d: false
+    };
+
+    // Load images
+    let backgroundImage = new Image();
+    backgroundImage.src = 'https://cdn.gamedevmarket.net/wp-content/uploads/20191203145553/d874367282cec41be1ac5d8000899d2a.png';
+
+    let duckImage = new Image();
+    duckImage.src = 'https://freesvg.org/img/duck-flying.png';
+
+    let gunImage = new Image();
+    gunImage.src = 'https://freesvg.org/img/publicdomainq-rifle.png'; // Example gun image
+
+    // Duck constructor
+    class Duck {
+      constructor(x, y, direction) {
+        this.x = x;
+        this.y = y;
+        this.width = 80;
+        this.height = 80;
+        this.direction = direction; // 1: right, -1: left
+        this.falling = false;
+        this.hit = false;
+      }
+
+      draw() {
+        if (!this.falling) {
+          ctx.drawImage(duckImage, this.x, this.y, this.width, this.height);
+        } else {
+          ctx.drawImage(duckImage, this.x, this.y, this.width, this.height);
+        }
+      }
+
+      update() {
+        if (this.hit) {
+          this.falling = true;
+          this.y += 5; // Fall speed
+          if (this.y > canvas.height) {
+            ducks.splice(ducks.indexOf(this), 1); // Remove duck when it falls off screen
+          }
+        } else {
+          this.x += this.direction * duckSpeed;
+          if (this.direction === 1 && this.x > canvas.width) {
+            this.x = -this.width;
+          } else if (this.direction === -1 && this.x < -this.width) {
+            this.x = canvas.width;
+          }
+        }
+        this.draw();
+      }
+
+      // Check if the crosshair is on the duck
+      isHit(crosshair) {
+        return (
+          crosshair.x > this.x &&
+          crosshair.x < this.x + this.width &&
+          crosshair.y > this.y &&
+          crosshair.y < this.y + this.height
+        );
+      }
+    }
+
+    // Create two ducks moving in opposite directions
+    function spawnDuck() {
+      let x = Math.random() < 0.5 ? 0 : canvas.width - 50;
+      let y = Math.random() * (canvas.height / 2);
+      let direction = x === 0 ? 1 : -1;
+      let newDuck = new Duck(x, y, direction);
+      ducks.push(newDuck);
+    }
+
+    // Keep two ducks on the screen at all times
+    function maintainDuckCount() {
+      if (ducks.length < 2 && gameRunning) {
+        spawnDuck();
+      }
+    }
+
+    // Draw crosshair
+    function drawCrosshair() {
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(crosshair.x - crosshair.size / 2, crosshair.y);
+      ctx.lineTo(crosshair.x + crosshair.size / 2, crosshair.y);
+      ctx.moveTo(crosshair.x, crosshair.y - crosshair.size / 2);
+      ctx.lineTo(crosshair.x, crosshair.y + crosshair.size / 2);
+      ctx.stroke();
+    }
+
+    // Draw gun
+    function drawGun() {
+      ctx.drawImage(gunImage, canvas.width / 2 - 50, canvas.height - 100, 100, 100); // Draw gun at bottom center
+    }
+
+    // Update crosshair movement
+    function updateCrosshair() {
+      if (gameRunning) {
+        if (keys.w && crosshair.y > 0) crosshair.y -= crosshair.speed;
+        if (keys.a && crosshair.x > 0) crosshair.x -= crosshair.speed;
+        if (keys.s && crosshair.y < canvas.height) crosshair.y += crosshair.speed;
+        if (keys.d && crosshair.x < canvas.width) crosshair.x += crosshair.speed;
+      }
+    }
+
+    // Update the game
+    function updateGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw background image
+      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+      // Update crosshair
+      updateCrosshair();
+      drawCrosshair();
+
+      // Draw gun
+      drawGun();
+
+      // Update ducks
+      if (gameRunning) {
+        ducks.forEach(duck => duck.update());
+        maintainDuckCount();
+      }
+
+      requestAnimationFrame(updateGame);
+    }
+
+    // Timer logic
+    function startTimer() {
+      let timer = setInterval(() => {
+        gameTime--;
+        timerElement.textContent = gameTime;
+        if (gameTime <= 0) {
+          clearInterval(timer);
+          gameOver();
+        }
+      }, 1000);
+    }
+
+    // Game over logic
+    function gameOver() {
+      gameRunning = false; // Stop the game
+      gameOverElement.style.display = 'block';
+      finalScoreElement.textContent = score;
+    }
+
+    // Listen for keydown events to move crosshair smoothly
+    document.addEventListener('keydown', (event) => {
+      if (gameRunning) {
+        if (event.key === 'w') keys.w = true;
+        if (event.key === 'a') keys.a = true;
+        if (event.key === 's') keys.s = true;
+        if (event.key === 'd') keys.d = true;
+
+        if (event.key === 'Enter') {
+          // Shoot
+          ducks.forEach(duck => {
+            if (!duck.hit && duck.isHit(crosshair)) {
+              duck.hit = true; // Duck is hit, start falling
+              score++;
+              scoreElement.textContent = `Score: ${score}`;
+            }
+          });
+        }
+      }
+    });
+
+    // Listen for keyup events to stop crosshair movement
+    document.addEventListener('keyup', (event) => {
+      if (event.key === 'w') keys.w = false;
+      if (event.key === 'a') keys.a = false;
+      if (event.key === 's') keys.s = false;
+      if (event.key === 'd') keys.d = false;
+    });
+
+    // Initialize game
+    spawnDuck();
+    spawnDuck(); // Start with two ducks
+    startTimer();
+    updateGame();
+
+  </script>
+</body>
+</html>

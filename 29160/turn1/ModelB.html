@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Journal</title>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        body.modal-active {
+            overflow-x: hidden;
+            overflow-y: hidden !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+<!-- Main Content -->
+<div class="container mx-auto p-4">
+    <div id="albums" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+</div>
+
+<!-- Create Album Button -->
+<button class="fixed bottom-5 right-5 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-300" onclick="openCreateAlbumModal()">+</button>
+
+<!-- Create Album Modal -->
+<div id="createAlbumModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden justify-center items-center">
+    <div class="relative p-8 bg-white w-full max-w-md m-auto flex-col flex rounded-lg">
+        <h2 class="text-lg font-bold mb-4">Create New Album</h2>
+        <input id="albumName" type="text" placeholder="Album Name" class="mb-4 p-2 border border-gray-300 rounded">
+        <input type="file" id="albumPhoto" accept="image/*" class="mb-4">
+        <button onclick="createAlbum()" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Create</button>
+        <button onclick="closeCreateAlbumModal()" class="mt-2 text-gray-500">Cancel</button>
+    </div>
+</div>
+
+<!-- Album Content Modal -->
+<div id="albumContentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <!-- Modal content for album -->
+</div>
+
+<script>
+document.body.addEventListener('click', function(e) {
+    if (e.target.id === 'createAlbumModal' || e.target.id === 'albumContentModal') {
+        closeCreateAlbumModal();
+        closeAlbumContentModal();
+    }
+});
+
+function openCreateAlbumModal() {
+    document.getElementById('createAlbumModal').classList.remove('hidden');
+    document.body.classList.add('modal-active');
+}
+
+function closeCreateAlbumModal() {
+    document.getElementById('createAlbumModal').classList.add('hidden');
+    document.body.classList.remove('modal-active');
+}
+
+function createAlbum() {
+    const name = document.getElementById('albumName').value;
+    const fileInput = document.getElementById('albumPhoto');
+    if (name && fileInput.files[0]) {
+        // Here you would typically send data to a server or store in localStorage
+        console.log('Creating album:', name);
+        closeCreateAlbumModal();
+        // Refresh albums or add new album to view
+    }
+}
+
+// Placeholder for drag-and-drop functionality
+function setupDragAndDrop() {
+    // Implementation needed for drag-and-drop
+}
+
+// Placeholder for album content modal functions
+function openAlbumContentModal(albumId) {
+    // Logic to open album content
+}
+
+function closeAlbumContentModal() {
+    // Logic to close album content
+}
+
+// Initial setup on load
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupDragAndDrop();
+    // Fetch albums from storage or server here
+});
+</script>
+
+</body>
+</html>

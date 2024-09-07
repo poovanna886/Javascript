@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Journal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .fixed-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 50;
+    }
+
+    .modal {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      opacity: 0;
+      transform: scale(0.9);
+    }
+
+    .modal.active .modal-content {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .grid-item {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .grid-item.appear {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .btn {
+      background-color: #4f46e5;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #4338ca;
+    }
+
+    .btn:active {
+      background-color: #3730a3;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+</head>
+<body class="bg-gray-100">
+  <!-- Main Page -->
+  <div id="main-page" class="container mx-auto p-8 visible-page transition-opacity duration-500">
+    <h1 class="text-4xl font-bold text-gray-800 text-center mb-6">Travel Journal</h1>
+    <div id="album-grid" class="grid grid-cols-3 gap-6">
+      <!-- Albums will be dynamically inserted here -->
+    </div>
+    <!-- Create Album Button -->
+    <button class="fixed-btn bg-purple-600 text-white p-4 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none" onclick="openAlbumModal()">
+      + Create Album
+    </button>
+  </div>
+
+  <!-- Album Detail Page -->
+  <div id="album-page" class="container mx-auto p-5 hidden opacity-0 transition-opacity duration-500">
+    <div class="flex justify-between items-center mb-6">
+      <h2 id="albumTitle" class="text-3xl font-bold text-gray-700"></h2>
+      <div class="flex space-x-4">
+        <button class="btn" onclick="openNoteModal()">Create Note</button>
+        <button class="btn" onclick="openPhotoUploadModal()">Add Photos</button>
+      </div>
+    </div>
+    <button class="bg-gray-600 text-white px-4 py-2 mt-6 rounded shadow-lg hover:bg-gray-700 focus:outline-none mb-4" onclick="goBack()">Back to Albums</button>
+
+    <div id="notes-container" class="grid-container">
+      <!-- Notes will be dynamically inserted here -->
+    </div>
+  </div>
+
+  <!-- Modal for Creating an Album -->
+  <div id="album-modal" class="fixed inset-0 modal">
+    <div class="modal-content w-96">
+      <h2 class="modal-header">Create New Album</h2>
+      <input id="albumName" type="text" placeholder="Album Name" class="border w-full p-3 mb-4 rounded shadow-sm" />
+      <input id="albumPhotoUpload" type="file" accept="image/*" multiple class="mb-4" />
+      <div class="modal-btn-group">
+        <button class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closeAlbumModal()">Cancel</button>
+        <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700" onclick="createAlbum()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Creating a Text Note -->
+  <div id="note-modal" class="fixed inset-0 modal">
+    <div class="modal-content w-96">
+      <h2 class="modal-header">Create New Note</h2>
+      <textarea id="noteText" placeholder="Enter your note here..." class="border w-full p-3 mb-4 rounded shadow-sm" rows="4"></textarea>
+      <div class="modal-btn-group">
+        <button class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closeNoteModal()">Cancel</button>
+        <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700" onclick="createTextNote()">Create Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Adding Photos -->
+  <div id="photo-modal" class="fixed inset-0 modal">
+    <div class="modal-content w-96">
+      <h2 class="modal-header">Add Photos to Album</h2>
+      <input id="photoUpload" type="file" accept="image/*" multiple class="mb-4" />
+      <div class="modal-btn-group">
+        <button class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onclick="closePhotoUploadModal()">Cancel</button>
+        <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700" onclick="addPhotosToAlbum()">Add Photos</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let albums = [];
+    let currentAlbumIndex = null;
+
+    function openAlbumModal() {
+      document.getElementById('album-modal').classList.add('active');
+    }
+
+    function closeAlbumModal() {
+      document.getElementById('album-modal').classList.remove('active');
+      document.getElementById('albumName').value = ''; 
+      document.getElementById('albumPhotoUpload').value = ''; 
+    }
+
+    function openNoteModal() {
+      document.getElementById('note-modal').classList.add('active');
+    }
+
+    function closeNoteModal() {
+      document.getElementById('note-modal').classList.remove('active');
+    }
+
+    function openPhotoUploadModal() {
+      document.getElementById('photo-modal').classList.add('active');
+    }
+
+    function closePhotoUploadModal() {
+      document.getElementById('photo-modal').classList.remove('active');
+    }
+
+    function goBack() {
+      document.getElementById('album-page').classList.add('hidden');
+      document.getElementById('album-page').classList.add('opacity-0');
+      document.getElementById('main-page').classList.remove('hidden');
+      document.getElementById('main-page').classList.remove('opacity-0');
+    }
+
+    function createAlbum() {
+      const albumName = document.getElementById('albumName').value;
+      const photoUploads = document.getElementById('albumPhotoUpload').files;
+
+      if (albumName && photoUploads.length > 0) {
+        const reader = new FileReader();
+        let photoURLs = [];
+        let albumThumbnail = '';
+
+        reader.onload = function (e) {
+          albumThumbnail = e.target.result;
+        };
+        reader.readAsDataURL(photoUploads[0]);
+
+        for (let i = 0; i < photoUploads.length; i++) {
+          const fileReader = new FileReader();
+          fileReader.onload = function (e) {
+            photoURLs.push(e.target.result);
+          };
+          fileReader.readAsDataURL(photoUploads[i]);
+        }
+
+        setTimeout(function() {
+          const album = {
+            name: albumName,
+            thumbnail: albumThumbnail,
+            notes: photoURLs.map(photo => ({ text: '', photo }))
+          };
+          albums.push(album);
+          displayAlbums();
+          closeAlbumModal();
+        }, 1000);
+      }
+    }
+
+    function addPhotosToAlbum() {
+      const photoUploads = document.getElementById('photoUpload').files;
+
+      if (photoUploads.length > 0) {
+        let photoURLs = [];
+        
+        for (let i = 0; i < photoUploads.length; i++) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            photoURLs.push(e.target.result);
+            if (photoURLs.length === photoUploads.length) {
+              albums[currentAlbumIndex].notes.push(...photoURLs.map(photo => ({ text: '', photo })));
+              displayAlbumDetails(currentAlbumIndex);
+              closePhotoUploadModal();
+            }
+          };
+          reader.readAsDataURL(photoUploads[i]);
+        }
+      }
+    }
+
+    function createTextNote() {
+      const noteText = document.getElementById('noteText').value;
+
+      if (noteText) {
+        const note = {
+          text: noteText,
+          photo: null
+        };
+        albums[currentAlbumIndex].notes.push(note);
+        displayAlbumDetails(currentAlbumIndex);
+        closeNoteModal();
+      }
+    }
+
+    function displayAlbums() {
+      const albumGrid = document.getElementById('album-grid');
+      albumGrid.innerHTML = '';
+
+      albums.forEach((album, index) => {
+        const albumElement = document.createElement('div');
+        albumElement.classList.add('grid-item', 'appear');
+        albumElement.onclick = function () {
+          openAlbum(index);
+        };
+        albumElement.innerHTML = `
+          <img src="${album.thumbnail}" alt="${album.name}" class="w-full h-48 object-cover" />
+          <div class="p-4">
+            <h3 class="text-lg font-semibold">${album.name}</h3>
+          </div>
+        `;
+        albumGrid.appendChild(albumElement);
+      });
+    }
+
+    function openAlbum(index) {
+      currentAlbumIndex = index;
+      displayAlbumDetails(index);
+      document.getElementById('main-page').classList.add('opacity-0');
+      setTimeout(() => {
+        document.getElementById('main-page').classList.add('hidden');
+        document.getElementById('album-page').classList.remove('hidden');
+        document.getElementById('album-page').classList.remove('opacity-0');
+      }, 300); // Duration should match transition
+    }
+
+    function displayAlbumDetails(index) {
+      const album = albums[index];
+      document.getElementById('albumTitle').innerText = album.name;
+      const notesContainer = document.getElementById('notes-container');
+      notesContainer.innerHTML = '';
+
+      album.notes.forEach((note, i) => {
+        const noteElement = document.createElement('div');
+        noteElement.classList.add('grid-item', 'appear');
+        noteElement.innerHTML = `
+          ${note.photo ? `<img src="${note.photo}" alt="Note Image" class="w-full h-48 object-cover" />` : ''}
+          ${note.text ? `<p class="p-2 text-gray-800">${note.text}</p>` : ''}
+        `;
+        notesContainer.appendChild(noteElement);
+      });
+
+      new Sortable(notesContainer, {
+        animation: 150,
+        onEnd: function (evt) {
+          const item = albums[currentAlbumIndex].notes.splice(evt.oldIndex, 1)[0];
+          albums[currentAlbumIndex].notes.splice(evt.newIndex, 0, item);
+          displayAlbumDetails(currentAlbumIndex);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

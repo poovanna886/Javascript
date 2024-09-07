@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Fantasy Team Selector</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Additional custom styles if needed */
+        .loading-animation {
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .car {
+            width: 100px;
+            animation: drive 5s linear infinite;
+        }
+        @keyframes drive {
+            from { transform: translateX(-100vw); }
+            to { transform: translateX(100vw); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="loading" class="loading-animation fixed top-0 left-0">
+        <img src="https://www.shutterstock.com/shutterstock/photos/2188377985/display_1500/stock-vector-race-single-side-view-seater-f-d-car-icon-transport-jet-sport-racing-symbol-concept-art-design-2188377985.jpg" alt="Car" class="car">
+    </div>
+    
+    <div id="app" class="hidden">
+        <div class="container mx-auto p-4">
+            <h1 class="text-3xl font-bold mb-4">F1 Fantasy Team</h1>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="driversGrid"></div>
+            <div class="mt-8">
+                <h2 class="text-2xl">My Team</h2>
+                <div id="myTeam" class="flex flex-wrap"></div>
+                <p class="mt-2">Points Remaining: <span id="pointsRemaining">100</span></p>
+                <button id="submitTeam" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50" disabled>Submit Team</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const drivers = [
+            {name: "Lewis Hamilton", points: 30, image: "https://fantasy.formula1.com/static-assets/build/images/2024/drivers/side/110.png?v=20240904115656"},
+            // ... other drivers
+        ];
+
+        let selectedDrivers = [];
+        let totalPoints = 100;
+
+        const driversGrid = document.getElementById('driversGrid');
+        const myTeam = document.getElementById('myTeam');
+        const pointsRemaining = document.getElementById('pointsRemaining');
+        const submitButton = document.getElementById('submitTeam');
+        const loading = document.getElementById('loading');
+        const app = document.getElementById('app');
+
+        // Hide loading animation after a delay or when content is ready
+        setTimeout(() => {
+            loading.classList.add('hidden');
+            app.classList.remove('hidden');
+        }, 5000);
+
+        function updateUI() {
+            driversGrid.innerHTML = '';
+            myTeam.innerHTML = '';
+            drivers.forEach(driver => {
+                const driverDiv = document.createElement('div');
+                driverDiv.className = 'bg-white p-4 rounded shadow flex items-center justify-between';
+                driverDiv.innerHTML = `
+                    <img src="${driver.image}" alt="${driver.name}" class="w-12 h-12 rounded-full">
+                    <span>${driver.name} - ${driver.points} pts</span>
+                    <button onclick="addDriver('${driver.name}')" class="bg-green-500 text-white px-2 py-1 rounded">+</button>
+                `;
+                driversGrid.appendChild(driverDiv);
+            });
+
+            selectedDrivers.forEach(driver => {
+                const teamMember = document.createElement('div');
+                teamMember.className = 'bg-blue-100 m-2 p-2 rounded flex justify-between items-center';
+                teamMember.innerHTML = `${driver.name} <button onclick="removeDriver('${driver.name}')" class="text-red-500">x</button>`;
+                myTeam.appendChild(teamMember);
+            });
+
+            pointsRemaining.textContent = totalPoints;
+            submitButton.disabled = selectedDrivers.length !== 5 || totalPoints !== 0;
+        }
+
+        window.addDriver = function(name) {
+            const driver = drivers.find(d => d.name === name);
+            if (!selectedDrivers.includes(driver) && totalPoints >= driver.points) {
+                selectedDrivers.push(driver);
+                totalPoints -= driver.points;
+                updateUI();
+            }
+        };
+
+        window.removeDriver = function(name) {
+            const index = selectedDrivers.findIndex(d => d.name === name);
+            if (index > -1) {
+                totalPoints += selectedDrivers[index].points;
+                selectedDrivers.splice(index, 1);
+                updateUI();
+            }
+        };
+
+        updateUI();
+    });
+    </script>
+</body>
+</html>

@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Space Shooter</title>
 <style>
-body { margin: 0; overflow: hidden; background: \#000; }
+body { margin: 0; overflow: hidden; background: #000; }
 canvas { display: block; }
-\#score, \#gameOver { position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; }
-\#gameOver { display: none; font-size: 2em; top: 50\%; left: 50\%; transform: translate(-50\%, -50\%); }
+#score, #gameOver { position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; }
+#gameOver { display: none; font-size: 2em; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 </style>
 </head>
 <body>
@@ -54,11 +54,11 @@ function drawEnemy(enemy) {
 }
 
 function moveSpaceship(e) {
-    if (e.key === 'ArrowLeft' \&\& spaceship.x > 0) {
+    if (e.key === 'ArrowLeft' && spaceship.x > 0) {
         spaceship.x -= spaceship.dx;
-    } else if (e.key === 'ArrowRight' \&\& spaceship.x < canvas.width - spaceship.width) {
+    } else if (e.key === 'ArrowRight' && spaceship.x < canvas.width - spaceship.width) {
         spaceship.x += spaceship.dx;
-    } else if (e.key === 'ArrowUp' \&\& !gameOver) {
+    } else if (e.key === 'ArrowUp' && !gameOver) {
         bullets.push({x: spaceship.x + spaceship.width / 2, y: spaceship.y});
     }
 }
@@ -87,21 +87,21 @@ function update() {
             drawEnemy(enemy);
 
             bullets.forEach((bullet, j) => {
-                if (bullet.x < enemy.x + 30 \&\& bullet.x + 3 > enemy.x \&\& 
-                    bullet.y < enemy.y + 20 \&\& bullet.y + 10 > enemy.y) {
+                if (bullet.x < enemy.x + 30 && bullet.x + 3 > enemy.x && 
+                    bullet.y < enemy.y + 20 && bullet.y + 10 > enemy.y) {
                     enemies.splice(i, 1);
                     bullets.splice(j, 1);
                     score++;
                 }
             });
 
-            if (enemy.x < spaceship.x + spaceship.width \&\& enemy.x + 30 > spaceship.x \&\& 
-                enemy.y < spaceship.y + spaceship.height \&\& enemy.y + 20 > spaceship.y) {
+            if (enemy.x < spaceship.x + spaceship.width && enemy.x + 30 > spaceship.x && 
+                enemy.y < spaceship.y + spaceship.height && enemy.y + 20 > spaceship.y) {
                 gameOver = true;
             }
         });
 
-        document.getElementById('score').textContent = `Score: \${score} | High Score: \${highScore}`;
+        document.getElementById('score').textContent = `Score: ${score} | High Score: ${highScore}`;
     }
 
     if (gameOver) {
