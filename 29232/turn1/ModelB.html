@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Platform Runner</title>
+<style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; background: #f0f0f0; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const gravity = 0.5;
+let platforms = [];
+let gameOver = false;
+
+class Player {
+    constructor() {
+        this.x = 50;
+        this.y = 0;
+        this.width = 30;
+        this.height = 30;
+        this.velocityY = 0;
+        this.speed = 5;
+        this.jumpStrength = -12;
+    }
+
+    jump() {
+        if (this.velocityY === 0) this.velocityY = this.jumpStrength;
+    }
+
+    moveLeft() {
+        this.x -= this.speed;
+    }
+
+    moveRight() {
+        this.x += this.speed;
+    }
+
+    update() {
+        this.velocityY += gravity;
+        this.y += this.velocityY;
+
+        // Collision with ground or platforms
+        if (this.y + this.height > canvas.height) {
+            this.y = canvas.height - this.height;
+            this.velocityY = 0;
+        }
+
+        platforms.forEach(p => {
+            if (
+                this.y + this.height <= p.y &&
+                this.y + this.height + this.velocityY > p.y &&
+                this.x < p.x + p.width &&
+                this.x + this.width > p.x
+            ) {
+                this.y = p.y - this.height;
+                this.velocityY = 0;
+                if (p.color === 'white') gameOver = true;
+            }
+        });
+    }
+
+    draw() {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
+function createPlatform() {
+    let lastX = platforms.length ? platforms[platforms.length - 1].x : 0;
+    let x = lastX + Math.random() * 200 + 50;
+    let y = Math.random() * (canvas.height - 150) + 50;
+    let width = Math.random() * 100 + 50;
+    let color = Math.random() > 0.5 ? 'black' : 'white';
+    platforms.push({x, y, width, color});
+}
+
+function generatePlatforms() {
+    for (let i = 0; i < 10; i++) {
+        createPlatform();
+    }
+}
+
+function invertPlatforms() {
+    platforms.forEach(p => p.color = p.color === 'black' ? 'white' : 'black');
+}
+
+let player = new Player();
+
+document.addEventListener('keydown', (event) => {
+    switch(event.key) {
+        case 'ArrowUp': player.jump(); break;
+        case 'ArrowLeft': player.moveLeft(); break;
+        case 'ArrowRight': player.moveRight(); break;
+        case ' ': invertPlatforms(); break;
+    }
+});
+
+function gameLoop() {
+    if (gameOver) {
+        ctx.fillStyle = 'black';
+        ctx.font = '48px serif';
+        ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+        return;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    player.update();
+    player.draw();
+
+    platforms.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.width, 20);
+    });
+
+    if (player.y > canvas.height) gameOver = true;
+
+    requestAnimationFrame(gameLoop);
+}
+
+generatePlatforms();
+gameLoop();
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Platform Switch Game</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+            display: block;
+            margin: auto;
+        }
+        body { 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            background-color: #f0f0f0; 
+        }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Game variables
+    let player = {x: 50, y: 0, vy: 0, width: 20, height: 40, speed: 5, jumpStrength: -10};
+    let platforms = [];
+    let platformWidth = 60;
+    let platformHeight = 20;
+    let gameOver = false;
+
+    // Initialize platforms
+    function initPlatforms() {
+        for(let i = 0; i < 10; i++) {
+            platforms.push({
+                x: i * (platformWidth + 50),
+                y: Math.random() * (canvas.height - platformHeight - 100) + 100,
+                color: i % 2 === 0 ? 'black' : 'white'
+            });
+        }
+    }
+
+    // Draw game elements
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Draw player
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(player.x, canvas.height - player.y - player.height, player.width, player.height);
+        // Draw platforms
+        platforms.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, canvas.height - p.y, platformWidth, platformHeight);
+        });
+    }
+
+    // Update game state
+    function update() {
+        if (gameOver) return;
+
+        // Gravity
+        player.vy += 0.5;
+        player.y += player.vy;
+
+        // Collision detection with platforms
+        let standing = false;
+        for(let p of platforms) {
+            if (
+                player.x < p.x + platformWidth &&
+                player.x + player.width > p.x &&
+                canvas.height - player.y - player.height < p.y + platformHeight &&
+                canvas.height - player.y > p.y &&
+                p.color === 'black'
+            ) {
+                player.y = canvas.height - p.y;
+                player.vy = 0;
+                standing = true;
+                break;
+            }
+        }
+
+        if (!standing && player.y > canvas.height) {
+            gameOver = true;
+        }
+
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    // Key events
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowRight') player.x += player.speed;
+        if (e.key === 'ArrowLeft') player.x -= player.speed;
+        if (e.key === 'ArrowUp' && standing) player.vy = player.jumpStrength;
+        if (e.key === ' ' && !gameOver) {
+            platforms.forEach(p => p.color = p.color === 'black' ? 'white' : 'black');
+        }
+    });
+
+    // Reset game
+    function resetGame() {
+        player.x = 50;
+        player.y = 0;
+        gameOver = false;
+        platforms = [];
+        initPlatforms();
+    }
+
+    // Start game
+    initPlatforms();
+    update();
+
+    // Game over detection
+    setInterval(() => {
+        if (gameOver) {
+            alert('Game Over! Press OK to restart.');
+            resetGame();
+        }
+    }, 100);
+</script>
+</body>
+</html>
