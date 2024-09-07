@@ -4,149 +4,109 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Football Draft Game</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-<style>
-    body { font-family: 'Arial', sans-serif; background: #f4f4f7; margin: 0; }
-    .game-container { display: flex; height: 100vh; }
-    .player-area { flex: 1; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
-    .player-area:nth-child(1) { border-right: 2px solid #e0e0e0; }
-    .card { width: 100px; height: 150px; margin: 10px; background: #fff; border: 2px solid #000; border-radius: 8px; cursor: pointer; transition: transform 0.3s; transform-style: preserve-3d; }
-    .card:hover { transform: scale(1.05); }
-    .card-back, .card-front { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; }
-    .card-back { background: #333; }
-    .card-front { transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 5px; }
-    .draft-button, .steal-button { margin-top: auto; padding: 10px 20px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px; transition: background-color 0.3s; }
-    .draft-button:disabled, .steal-button:disabled { background-color: #cccccc; cursor: not-allowed; }
-    .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
-    .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; }
-</style>
 </head>
 <body>
-
 <div class="game-container">
-    <div class="player-area" id="player1">
-        <h2>Player 1</h2>
-        <div id="p1Cards"></div>
-        <button class="draft-button">Draft</button>
-        <button class="steal-button" style="display:none;">Steal</button>
-        <p>Total OVR: <span id="p1Ovr">0</span></p>
-    </div>
-    <div class="player-area" id="player2">
-        <h2>Player 2</h2>
-        <div id="p2Cards"></div>
-        <button class="draft-button">Draft</button>
-        <button class="steal-button" style="display:none;">Steal</button>
-        <p>Total OVR: <span id="p2Ovr">0</span></p>
-    </div>
+  <div class="player-section" id="player1">
+    <h2>Player 1</h2>
+    <button onclick="dealCards()" id="draftBtn1" disabled>Draft</button>
+    <div class="drafted-cards" id="draftedCards1"></div>
+    <div class="team" id="team1"></div>
+  </div>
+  <div class="player-section" id="player2">
+    <h2>Player 2</h2>
+    <button onclick="dealCards()" id="draftBtn2" disabled>Draft</button>
+    <div class="drafted-cards" id="draftedCards2"></div>
+    <div class="team" id="team2"></div>
+  </div>
 </div>
-
 <div id="winModal" class="modal">
-    <div class="modal-content">
-        <p>Congratulations! <span id="winnerName"></span> wins!</p>
-        <button onclick="location.reload()">Play Again</button>
-    </div>
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Congratulations, <span id="winnerName"></span> wins!</p>
+  </div>
 </div>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    const playersData = [
-        {name: "Lionel Messi", ovr: 93, image: "messi.jpg"},
-        {name: "Cristiano Ronaldo", ovr: 91, image: "ronaldo.jpg"},
-        // Add more players here...
-    ];
+const playersData = [
+    {name: "Leonel Messi", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/MESSIU.webp?v=1684950584&width=360"},
+{name:"Christiano Ronaldo", ovr:90 , image: "https://sportsclassicstore.com/cdn/shop/files/RONALDO_1.webp?v=1684776295&width=360"},
+{name:"Karim Benzema", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/BENZEMAU.webp?v=1684950847&width=360"},
+{name:"Robert Lewandowski", ovr:91 , image: "https://sportsclassicstore.com/cdn/shop/files/LEWANDOWSKIU.webp?v=1684951081&width=360"},
+{name:"Kylian Mbappe", ovr:91 , image: "https://sportsclassicstore.com/cdn/shop/files/MBAPPEU.webp?v=1684950429&width=360"},
+{name:"Neymar Jr", ovr: 89, image: "https://sportsclassicstore.com/cdn/shop/files/NEYMARU.webp?v=1684950648&width=360"},
+{name:"Erling Haaland", ovr:88 , image: "https://sportsclassicstore.com/cdn/shop/products/HAALANDU.webp?v=1684950289&width=360"},
+{name: "Thomas Muller", ovr:87, image: "https://sportsclassicstore.com/cdn/shop/files/MULLERU.webp?v=1684951367&width=360"},
+{name:"Bruno Fernandes", ovr:86 , image: "https://sportsclassicstore.com/cdn/shop/files/BRUNOEU.webp?v=1684951526&width=360"},
+{name:"Vinicius Jr", ovr:86 , image: "https://sportsclassicstore.com/cdn/shop/files/VINIJRU.webp?v=1684950737&width=360"},
+{name:"Gavi", ovr: 79 , image: "https://sportsclassicstore.com/cdn/shop/files/GAVIU.webp?v=1684950999&width=360"},
+{name:"Pedri", ovr:85 , image: "https://sportsclassicstore.com/cdn/shop/files/PEDRIU.webp?v=1684951132&width=360"},
+{name:"Kai Havertz", ovr:84 , image: "https://sportsclassicstore.com/cdn/shop/files/HAVERTZU.webp?v=1684955886&width=360"},
+{name:"Jack Grealish", ovr: 84 , image: "https://sportsclassicstore.com/cdn/shop/files/GREALISHU.webp?v=1684955468&width=360"},
+{name:"Odegaard", ovr: 84, image: "https://sportsclassicstore.com/cdn/shop/files/ODEGAARDEU.webp?v=1684956270&width=360"},
+{name:"Mason Mount", ovr: 84, image: "https://sportsclassicstore.com/cdn/shop/files/MOUNTU.webp?v=1684955974&width=360"},
+{name:"Darwin Nunez", ovr:82 , image:"https://sportsclassicstore.com/cdn/shop/files/NUNEZU.webp?v=1684955675&width=360"},
+{name:"Bukayo saka", ovr:82 , image: "https://sportsclassicstore.com/cdn/shop/files/SAKAEU.webp?v=1684956192&width=360"},
+{name:"Marcus Rashford", ovr: 81, image: "https://sportsclassicstore.com/cdn/shop/files/RASHFORDEU.webp?v=1684951590&width=360"},
+{name:"Martinelli", ovr: 78 , image: "https://sportsclassicstore.com/cdn/shop/files/MARTINELLIEU.webp?v=1684956336&width=360"},
+];
 
-    let game = {
-        currentPlayer: 1,
-        drafted: [],
-        player1Team: [],
-        player2Team: [],
-        canSteal: false
-    };
 
-    function dealCards() {
-        let cards = [];
-        while(cards.length < 3) {
-            let playerIndex = Math.floor(Math.random() * playersData.length);
-            let player = playersData[playerIndex];
-            if(!game.drafted.includes(player)) {
-                cards.push(player);
-                game.drafted.push(player);
-            }
-        }
-        return cards;
+let currentPlayer = 1;
+let gameState = {1: {team: []}, 2: {team: []}};
+let stealPhase = false;
+
+function initializeGame() {
+  // Shuffle players, setup initial state
+  // Implementation omitted for brevity
+}
+
+function dealCards() {
+  const playerDraftArea = $(`#draftedCards${currentPlayer}`);
+  playerDraftArea.empty();
+  for(let i = 0; i < 3; i++) {
+    let randomPlayer = playersData[Math.floor(Math.random() * playersData.length)];
+    playerDraftArea.append(`
+      <div class="card" onclick="selectCard(this, ${i})">
+        <img src="${randomPlayer.image}" alt="${randomPlayer.name}">
+        <p>${randomPlayer.name} (OVR: ${randomPlayer.ovr})</p>
+      </div>
+    `);
+  }
+  $(`#draftBtn${currentPlayer}`).prop('disabled', true);
+  currentPlayer = currentPlayer === 1 ? 2 : 1;
+  if(currentPlayer === 1) $(`#draftBtn${currentPlayer}`).prop('disabled', false);
+}
+
+function selectCard(cardElement, index) {
+  if (!stealPhase) {
+    let selectedPlayer = $(cardElement).find('p').text().split(' ')[0];
+    gameState[currentPlayer].team.push(selectedPlayer);
+    $(`#team${currentPlayer}`).append(cardElement);
+    $(`#draftedCards${currentPlayer === 1 ? 2 : 1}`).empty();
+    $(`#draftBtn${currentPlayer}`).prop('disabled', false);
+    if (gameState[1].team.length + gameState[2].team.length === playersData.length) {
+      stealPhase = true;
+      // Enable steal buttons or logic here
     }
+  }
+}
 
-    function updateOVR(playerTeam, playerElement) {
-        let totalOvr = playerTeam.reduce((sum, player) => sum + player.ovr, 0);
-        $(`#${playerElement}Ovr`).text(totalOvr);
-    }
+function endGame() {
+  // Calculate total OVR, determine winner, show modal
+  // Implementation omitted for brevity
+}
 
-    function showCards(cards, player) {
-        let cardArea = $(`#p${player}Cards`);
-        cardArea.empty();
-        cards.forEach((card, index) => {
-            let cardDiv = $(`
-                <div class="card" data-index="${index}" data-player="${player}" style="display:none;">
-                    <div class="card-back"></div>
-                    <div class="card-front">
-                        <img src="${card.image}" width="80" alt="${card.name}">
-                        <span>${card.name}</span>
-                        <span>OVR: ${card.ovr}</span>
-                    </div>
-                </div>
-            `);
-            cardArea.append(cardDiv);
-            cardDiv.fadeIn(300);
-            cardDiv.on('click', function() {
-                selectCard($(this), card, player);
-            });
-        });
-    }
-
-    function selectCard(cardElement, card, player) {
-        cardElement.flip(true); // Assuming you're using a flip plugin or custom flip function
-        $(`.player-area:nth-child(${player}) .draft-button`).prop('disabled', true);
-        if(player == 1) game.player1Team.push(card);
-        else game.player2Team.push(card);
-        updateOVR(player == 1 ? game.player1Team : game.player2Team, `p${player}`);
-        game.currentPlayer = player == 1 ? 2 : 1;
-        if(game.drafted.length < playersData.length) {
-            $(`.player-area:nth-child(${game.currentPlayer}) .draft-button`).prop('disabled', false);
-        } else {
-            endDraftPhase();
-        }
-    }
-
-    function endDraftPhase() {
-        game.canSteal = true;
-        $('.draft-button').hide();
-        $('.steal-button').show().prop('disabled', false);
-    }
-
-    function stealCard() {
-        // Implement steal logic here
-        // This function should allow stealing, update OVRs, and end the game
-    }
-
-    function endGame() {
-        let p1Ovr = parseInt($('#p1Ovr').text());
-        let p2Ovr = parseInt($('#p2Ovr').text());
-        let winner = p1Ovr > p2Ovr ? "Player 1" : "Player 2";
-        $('#winnerName').text(winner);
-        $('#winModal').css('display', 'block');
-    }
-
-    $('.draft-button').on('click', function() {
-        let player = $(this).closest('.player-area').attr('id').slice(-1);
-        let cards = dealCards();
-        showCards(cards, player);
-    });
-
-    $('.steal-button').on('click', stealCard);
-    
-    // Initialize game by enabling the draft button for player 1
-    $('#player1 .draft-button').prop('disabled', false);
+initializeGame();
 </script>
-
+<style>
+/* CSS for styling goes here */
+.game-container { display: flex; justify-content: space-around; }
+.player-section { text-align: center; }
+.card { border: 1px solid #ccc; margin: 10px; padding: 10px; transition: transform .2s; }
+.card:hover { transform: scale(1.05); }
+.modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; }
+.modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; }
+</style>
 </body>
 </html>
