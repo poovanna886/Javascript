@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanban Board</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+<style>
+    .kanban-board { display: flex; justify-content: space-around; padding: 30px; }
+    .column { flex: 1; margin: 0 10px; background: #f4f4f4; border-radius: 8px; padding: 10px; }
+    .column-header { text-align: center; margin-bottom: 20px; }
+    .card { background-color: #fff; margin-bottom: 10px; padding: 10px; border-radius: 4px; transition: background-color 0.3s, transform 0.3s; }
+    .card:hover { transform: translateY(-5px); }
+    .modal-card { width: 400px; }
+    .stories .card { background-color: #ff6b6b; }
+    .in-progress .card { background-color: #48dbfb; }
+    .peer-review .card { background-color: #feca57; }
+    .in-testing .card { background-color: #5f27cd; color: white; }
+    .done .card { background-color: #1dd1a1; }
+    .delete-btn { float: right; cursor: pointer; }
+</style>
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <button class="button is-primary" onclick="openModal()">Create Task</button>
+        <div class="kanban-board" id="kanban">
+            <!-- Columns will be dynamically added here -->
+        </div>
+    </div>
+</section>
+
+<div class="modal" id="taskModal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Create New Task</p>
+      <button class="delete" aria-label="close" onclick="closeModal()"></button>
+    </header>
+    <section class="modal-card-body">
+      <input class="input" type="text" id="taskTitle" placeholder="Task Title">
+      <textarea class="textarea" id="taskDescription" placeholder="Task Description"></textarea>
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-success" onclick="addTask()">Create Task</button>
+      <button class="button" onclick="closeModal()">Cancel</button>
+    </footer>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const kanban = document.getElementById('kanban');
+    const modal = document.getElementById('taskModal');
+
+    const columns = [
+        {name: 'stories', title: 'Stories'},
+        {name: 'in-progress', title: 'In Progress'},
+        {name: 'peer-review', title: 'Peer Review'},
+        {name: 'in-testing', title: 'In Testing'},
+        {name: 'done', title: 'Done'}
+    ];
+
+    function openModal() {
+        modal.classList.add('is-active');
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-active');
+    }
+
+    function addTask() {
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDescription').value;
+        if(title) {
+            const task = {title, description};
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || {stories: []};
+            tasks['stories'].push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+            closeModal();
+        }
+    }
+
+    function deleteTask(column, index) {
+        let tasks = JSON.parse(localStorage.getItem('tasks'));
+        tasks[column].splice(index, 1);
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+        renderTasks();
+    }
+
+    function renderTasks() {
+        kanban.innerHTML = '';
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || {};
+        columns.forEach(column => {
+            const div = document.createElement('div');
+            div.className = `column ${column.name}`;
+            div.innerHTML = `<h2 class="column-header">${column.title}</h2>`;
+            new Sortable(div, {
+                group: 'kanban',
+                onEnd: function (evt) {
+                    const itemEl = evt.item;  // dragged HTMLElement
+                    const fromColumn = evt.from.dataset.column;
+                    const toColumn = evt.to.dataset.column;
+                    const itemIndex = evt.oldIndex;
+                    
+                    let tasks = JSON.parse(localStorage.getItem('tasks'));
+                    let task = tasks[fromColumn].splice(itemIndex, 1)[0];
+                    tasks[toColumn].push(task);
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                }
+            });
+            (tasks[column.name] || []).forEach((task, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<div>${task.title}</div><div class="delete-btn" onclick="deleteTask('${column.name}', ${index})">✕</div>`;
+                div.appendChild(card);
+            });
+            kanban.appendChild(div);
+            div.dataset.column = column.name;
+        });
+    }
+
+    renderTasks();
+});
+</script>
+</body>
+</html>

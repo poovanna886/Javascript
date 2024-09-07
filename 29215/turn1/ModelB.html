@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Draft Game</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+    body { font-family: 'Arial', sans-serif; background: #f4f4f7; margin: 0; }
+    .game-container { display: flex; height: 100vh; }
+    .player-area { flex: 1; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+    .player-area:nth-child(1) { border-right: 2px solid #e0e0e0; }
+    .card { width: 100px; height: 150px; margin: 10px; background: #fff; border: 2px solid #000; border-radius: 8px; cursor: pointer; transition: transform 0.3s; transform-style: preserve-3d; }
+    .card:hover { transform: scale(1.05); }
+    .card-back, .card-front { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; }
+    .card-back { background: #333; }
+    .card-front { transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 5px; }
+    .draft-button, .steal-button { margin-top: auto; padding: 10px 20px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px; transition: background-color 0.3s; }
+    .draft-button:disabled, .steal-button:disabled { background-color: #cccccc; cursor: not-allowed; }
+    .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+    .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="player-area" id="player1">
+        <h2>Player 1</h2>
+        <div id="p1Cards"></div>
+        <button class="draft-button">Draft</button>
+        <button class="steal-button" style="display:none;">Steal</button>
+        <p>Total OVR: <span id="p1Ovr">0</span></p>
+    </div>
+    <div class="player-area" id="player2">
+        <h2>Player 2</h2>
+        <div id="p2Cards"></div>
+        <button class="draft-button">Draft</button>
+        <button class="steal-button" style="display:none;">Steal</button>
+        <p>Total OVR: <span id="p2Ovr">0</span></p>
+    </div>
+</div>
+
+<div id="winModal" class="modal">
+    <div class="modal-content">
+        <p>Congratulations! <span id="winnerName"></span> wins!</p>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    const playersData = [
+        {name: "Lionel Messi", ovr: 93, image: "messi.jpg"},
+        {name: "Cristiano Ronaldo", ovr: 91, image: "ronaldo.jpg"},
+        // Add more players here...
+    ];
+
+    let game = {
+        currentPlayer: 1,
+        drafted: [],
+        player1Team: [],
+        player2Team: [],
+        canSteal: false
+    };
+
+    function dealCards() {
+        let cards = [];
+        while(cards.length < 3) {
+            let playerIndex = Math.floor(Math.random() * playersData.length);
+            let player = playersData[playerIndex];
+            if(!game.drafted.includes(player)) {
+                cards.push(player);
+                game.drafted.push(player);
+            }
+        }
+        return cards;
+    }
+
+    function updateOVR(playerTeam, playerElement) {
+        let totalOvr = playerTeam.reduce((sum, player) => sum + player.ovr, 0);
+        $(`#${playerElement}Ovr`).text(totalOvr);
+    }
+
+    function showCards(cards, player) {
+        let cardArea = $(`#p${player}Cards`);
+        cardArea.empty();
+        cards.forEach((card, index) => {
+            let cardDiv = $(`
+                <div class="card" data-index="${index}" data-player="${player}" style="display:none;">
+                    <div class="card-back"></div>
+                    <div class="card-front">
+                        <img src="${card.image}" width="80" alt="${card.name}">
+                        <span>${card.name}</span>
+                        <span>OVR: ${card.ovr}</span>
+                    </div>
+                </div>
+            `);
+            cardArea.append(cardDiv);
+            cardDiv.fadeIn(300);
+            cardDiv.on('click', function() {
+                selectCard($(this), card, player);
+            });
+        });
+    }
+
+    function selectCard(cardElement, card, player) {
+        cardElement.flip(true); // Assuming you're using a flip plugin or custom flip function
+        $(`.player-area:nth-child(${player}) .draft-button`).prop('disabled', true);
+        if(player == 1) game.player1Team.push(card);
+        else game.player2Team.push(card);
+        updateOVR(player == 1 ? game.player1Team : game.player2Team, `p${player}`);
+        game.currentPlayer = player == 1 ? 2 : 1;
+        if(game.drafted.length < playersData.length) {
+            $(`.player-area:nth-child(${game.currentPlayer}) .draft-button`).prop('disabled', false);
+        } else {
+            endDraftPhase();
+        }
+    }
+
+    function endDraftPhase() {
+        game.canSteal = true;
+        $('.draft-button').hide();
+        $('.steal-button').show().prop('disabled', false);
+    }
+
+    function stealCard() {
+        // Implement steal logic here
+        // This function should allow stealing, update OVRs, and end the game
+    }
+
+    function endGame() {
+        let p1Ovr = parseInt($('#p1Ovr').text());
+        let p2Ovr = parseInt($('#p2Ovr').text());
+        let winner = p1Ovr > p2Ovr ? "Player 1" : "Player 2";
+        $('#winnerName').text(winner);
+        $('#winModal').css('display', 'block');
+    }
+
+    $('.draft-button').on('click', function() {
+        let player = $(this).closest('.player-area').attr('id').slice(-1);
+        let cards = dealCards();
+        showCards(cards, player);
+    });
+
+    $('.steal-button').on('click', stealCard);
+    
+    // Initialize game by enabling the draft button for player 1
+    $('#player1 .draft-button').prop('disabled', false);
+</script>
+
+</body>
+</html>

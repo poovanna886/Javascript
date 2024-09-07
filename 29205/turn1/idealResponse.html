@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kanban Board</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Include SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <!-- Google Font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+  <style>
+    /* Apply the Poppins font */
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Card transitions */
+    .task-card {
+      transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s;
+    }
+
+    .task-card.fade-in {
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+
+    .task-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Modal transitions */
+    .modal-enter {
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .modal-open {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .modal-close {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+
+    /* Smooth drag animation */
+    .sortable-ghost {
+      opacity: 0.7;
+      transform: scale(0.98);
+    }
+
+    .sortable-chosen {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+  <!-- Header Section -->
+  <header class="bg-blue-500 text-white py-6 shadow-lg">
+    <h1 class="text-center text-3xl font-bold tracking-wide">Kanban Board</h1>
+  </header>
+
+  <div class="container mx-auto p-5 fade-in">
+    <button
+      id="create-task-btn"
+      class="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+    >
+      Create Task
+    </button>
+
+    <div id="kanban-board" class="grid grid-cols-5 gap-6 mt-8">
+      <!-- Stories Column -->
+      <div class="column bg-white rounded-lg p-4 shadow-sm border border-gray-300">
+        <h2 class="font-bold text-lg text-center mb-4">Stories</h2>
+        <div id="stories" class="task-list min-h-[200px] rounded-lg bg-gray-100 p-3 shadow-inner border border-gray-200"></div>
+      </div>
+      <!-- In Progress Column -->
+      <div class="column bg-white rounded-lg p-4 shadow-sm border border-gray-300">
+        <h2 class="font-bold text-lg text-center mb-4">In Progress</h2>
+        <div id="in-progress" class="task-list min-h-[200px] rounded-lg bg-gray-100 p-3 shadow-inner border border-gray-200"></div>
+      </div>
+      <!-- Peer Review Column -->
+      <div class="column bg-white rounded-lg p-4 shadow-sm border border-gray-300">
+        <h2 class="font-bold text-lg text-center mb-4">Peer Review</h2>
+        <div id="peer-review" class="task-list min-h-[200px] rounded-lg bg-gray-100 p-3 shadow-inner border border-gray-200"></div>
+      </div>
+      <!-- In Testing Column -->
+      <div class="column bg-white rounded-lg p-4 shadow-sm border border-gray-300">
+        <h2 class="font-bold text-lg text-center mb-4">In Testing</h2>
+        <div id="in-testing" class="task-list min-h-[200px] rounded-lg bg-gray-100 p-3 shadow-inner border border-gray-200"></div>
+      </div>
+      <!-- Done Column -->
+      <div class="column bg-white rounded-lg p-4 shadow-sm border border-gray-300">
+        <h2 class="font-bold text-lg text-center mb-4">Done</h2>
+        <div id="done" class="task-list min-h-[200px] rounded-lg bg-gray-100 p-3 shadow-inner border border-gray-200"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="task-modal" class="modal-enter fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded-lg w-96 shadow-lg transition-transform">
+      <h3 class="text-xl font-bold mb-4">Create New Task</h3>
+      <input type="text" id="task-title" placeholder="Task Title" class="w-full p-3 border rounded-lg mb-4" />
+      <textarea id="task-desc" placeholder="Task Description" class="w-full p-3 border rounded-lg mb-4"></textarea>
+      <div class="flex justify-end">
+        <button id="add-task-btn" class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-600">
+          Add Task
+        </button>
+        <button id="close-modal" class="bg-red-500 text-white px-4 py-2 rounded-lg ml-3 shadow-md hover:bg-red-600">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let tasks = JSON.parse(localStorage.getItem('kanbanTasks')) || {};
+
+    // Modal handling
+    const createTaskBtn = document.getElementById('create-task-btn');
+    const modal = document.getElementById('task-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const addTaskBtn = document.getElementById('add-task-btn');
+
+    // Open the modal
+    createTaskBtn.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+      modal.classList.remove('modal-close');
+      setTimeout(() => modal.classList.add('modal-open'), 10);
+    });
+
+    // Close the modal
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.remove('modal-open');
+      modal.classList.add('modal-close');
+      setTimeout(() => modal.classList.add('hidden'), 300); // Allow the transition to finish
+    });
+
+    // Task creation
+    addTaskBtn.addEventListener('click', () => {
+      const title = document.getElementById('task-title').value.trim();
+      const description = document.getElementById('task-desc').value.trim();
+
+      if (title && description) {
+        const taskId = Date.now().toString();
+        const newTask = createTaskElement(taskId, title, description, 'stories');
+        document.getElementById('stories').appendChild(newTask);  // Add to 'Stories' by default
+
+        // Add task to local storage
+        tasks[taskId] = { title, description, column: 'stories' };
+        saveTasks();
+
+        modal.classList.remove('modal-open');
+        modal.classList.add('modal-close');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+        
+        // Clear input fields
+        document.getElementById('task-title').value = '';
+        document.getElementById('task-desc').value = '';
+      } else {
+        alert('Please enter both title and description.');
+      }
+    });
+
+    // Helper to create a new task element
+    function createTaskElement(id, title, description, column) {
+      const taskDiv = document.createElement('div');
+      taskDiv.classList.add('task-card', 'p-4', 'rounded-lg', 'shadow-lg', 'mb-4', 'cursor-pointer', 'fade-in');
+      taskDiv.setAttribute('draggable', true);
+      taskDiv.setAttribute('data-id', id);
+
+      const taskTitle = document.createElement('h4');
+      taskTitle.classList.add('font-bold', 'mb-2');
+      taskTitle.innerText = title;
+
+      const taskDesc = document.createElement('p');
+      taskDesc.classList.add('text-gray-700');
+      taskDesc.innerText = description;
+
+      taskDiv.appendChild(taskTitle);
+      taskDiv.appendChild(taskDesc);
+
+      if (column === 'stories') {
+        addDeleteButton(taskDiv);  // Add delete button if in stories
+      }
+
+      // Set the color of the task card based on its column
+      updateTaskColor(taskDiv, column);
+
+      return taskDiv;
+    }
+
+    // Add a delete button to a task
+    function addDeleteButton(taskDiv) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.innerText = 'Delete';
+      deleteBtn.classList.add('bg-red-500', 'text-white', 'px-2', 'py-1', 'rounded-lg', 'hover:bg-red-600', 'ml-auto', 'mt-2');
+      deleteBtn.addEventListener('click', () => {
+        removeTask(taskDiv);
+      });
+      taskDiv.appendChild(deleteBtn);
+    }
+
+    // Function to remove a task
+    function removeTask(taskDiv) {
+      taskDiv.classList.add('fade-out');  // Add transition effect
+      setTimeout(() => {
+        const taskId = taskDiv.getAttribute('data-id');
+        delete tasks[taskId];  // Remove from tasks
+        saveTasks();  // Update local storage
+        taskDiv.remove();
+      }, 200);
+    }
+
+    // Save tasks to local storage
+    function saveTasks() {
+      localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
+    }
+
+    // Load tasks from local storage on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      Object.keys(tasks).forEach(taskId => {
+        const { title, description, column } = tasks[taskId];
+        const taskElement = createTaskElement(taskId, title, description, column);
+        document.getElementById(column).appendChild(taskElement);
+      });
+    });
+
+    // Color mapping based on column
+    const columnColorMap = {
+      'stories': 'bg-red-300',
+      'in-progress': 'bg-blue-300',
+      'peer-review': 'bg-yellow-300',
+      'in-testing': 'bg-purple-300',
+      'done': 'bg-green-300'
+    };
+
+    // Initialize Sortable for each task list
+    const sortableOptions = {
+      group: 'kanban',
+      animation: 200,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onAdd: function (/**Event*/evt) {
+        const itemEl = evt.item; // dragged HTMLElement
+        const newColumnId = evt.to.id;
+        updateTaskColor(itemEl, newColumnId);
+        const taskId = itemEl.getAttribute('data-id');
+        tasks[taskId].column = newColumnId;  // Update the column in local storage
+        saveTasks();
+      }
+    };
+
+    const taskLists = document.querySelectorAll('.task-list');
+    taskLists.forEach(list => {
+      new Sortable(list, sortableOptions);
+    });
+
+    // Function to update task color based on the new column
+    function updateTaskColor(taskElement, columnId) {
+      // Remove existing color classes
+      Object.values(columnColorMap).forEach(colorClass => {
+        taskElement.classList.remove(colorClass);
+      });
+      // Add the new color class
+      const newColorClass = columnColorMap[columnId];
+      if (newColorClass) {
+        taskElement.classList.add(newColorClass);
+      }
+
+      // Handle delete button based on the column
+      const deleteBtn = taskElement.querySelector('button');
+      if (columnId === 'stories') {
+        // Re-add the delete button if moved back to stories
+        if (!deleteBtn) {
+          addDeleteButton(taskElement);
+        }
+      } else {
+        // Remove delete button if moved out of Stories
+        if (deleteBtn) {
+          deleteBtn.remove();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
