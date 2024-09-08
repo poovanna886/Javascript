@@ -1,395 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Football Draft Game</title>
     <style>
-        /* General Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
             display: flex;
             justify-content: space-between;
-            padding: 20px;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Arial', sans-serif;
-            background-color: #f9fafb;
+            align-items: flex-start;
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
         }
+
         .player {
             width: 45%;
             text-align: center;
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-        .player:hover {
-            transform: translateY(-5px);
-        }
-        h2 {
-            font-size: 24px;
-            color: #34495e;
-            margin-bottom: 20px;
         }
 
-        /* Cards */
-        .cards {
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .team-container {
+            border: 2px solid #ddd;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cards,
+        .team {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+            justify-content: space-around;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
         }
-        .card {
-            width: 120px;
-            height: 180px;
-            background-color: grey;
-            cursor: pointer;
-            perspective: 1000px;
-            transition: transform 0.5s ease, box-shadow 0.3s ease;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-        .card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.6s ease;
-            transform-style: preserve-3d;
-        }
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 15px;
-        }
-        .card-back {
-            background-color: #1e272e;
+
+        .card,
+        .team-card {
+            width: 90px;
+            height: 140px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        .card-front {
-            background-color: white;
-            transform: rotateY(180deg);
-        }
-        .card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 15px;
-        }
-
-        /* Teams */
-        .team {
-            margin-top: 20px;
-        }
-        .team-list {
-            list-style: none;
-            padding: 0;
-        }
-        .team-list li {
-            background-color: #3498db;
-            color: #fff;
-            margin: 5px 0;
-            padding: 10px;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
             cursor: pointer;
-            border-radius: 8px;
-            transition: background-color 0.3s ease;
-        }
-        .team-list li:hover {
-            background-color: #2980b9;
         }
 
-        /* Buttons */
-        .steal-button, #draftPlayer1, #draftPlayer2 {
-            margin-top: 20px;
-            padding: 12px 20px;
-            background-color: #2ecc71;
+        .card img,
+        .team-card img {
+            width: 60px;
+            height: 80px;
+            object-fit: cover;
+            margin-bottom: 5px;
+        }
+
+        .card p,
+        .team-card p {
+            font-size: 12px;
+            color: #333;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            background-color: #007BFF;
             color: white;
             border: none;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+            margin: 10px 0;
         }
-        .steal-button:hover, #draftPlayer1:hover, #draftPlayer2:hover {
-            background-color: #27ae60;
-            transform: translateY(-3px);
-        }
-        .steal-button:disabled, #draftPlayer1:disabled, #draftPlayer2:disabled {
-            background-color: #95a5a6;
+
+        button:disabled {
+            background-color: #ccc;
             cursor: not-allowed;
-            box-shadow: none;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
         }
 
         /* Modal styling */
         .modal {
             display: none;
+            /* Hidden by default */
             position: fixed;
-            top: 0;
+            z-index: 1;
             left: 0;
+            top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black background with opacity */
             justify-content: center;
             align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
         }
+
         .modal-content {
-            background-color: white;
+            background-color: #fff;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 300px;
         }
+
         .modal-content h2 {
-            margin: 0 0 20px;
-            font-size: 24px;
-            color: #27ae60;
+            margin-bottom: 15px;
         }
+
         .modal-content button {
-            padding: 12px 20px;
-            background-color: #2ecc71;
-            color: #fff;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-        .modal-content button:hover {
-            background-color: #27ae60;
-            transform: translateY(-3px);
         }
 
-        /* Show modal */
-        .modal.show {
-            display: flex;
-            opacity: 1;
+        .modal-content button:hover {
+            background-color: #218838;
         }
     </style>
 </head>
-<body>
 
-    <!-- Player 1 Section -->
-    <div class="player">
-        <h2>Player 1</h2>
-        <button id="draftPlayer1">Draft Players</button>
-        <div id="cardsPlayer1" class="cards"></div>
-        <div class="team">
-            <h3>Player 1's Team</h3>
-            <ul id="teamPlayer1" class="team-list"></ul>
-            <button id="stealPlayer1" class="steal-button" style="display:none;">Steal from Player 2</button>
+<body>
+    <h1>Football Draft Game</h1>
+    <div class="container">
+        <div class="player" id="player1">
+            <h2>Player 1</h2>
+            <div class="cards" id="player1-cards"></div>
+            <div class="team-container">
+                <h3>Team</h3>
+                <div class="team" id="player1-team"></div>
+            </div>
+            <button id="player1-draft" disabled>Draft Cards</button>
+        </div>
+
+        <div class="player" id="player2">
+            <h2>Player 2</h2>
+            <div class="cards" id="player2-cards"></div>
+            <div class="team-container">
+                <h3>Team</h3>
+                <div class="team" id="player2-team"></div>
+            </div>
+            <button id="player2-draft">Draft Cards</button>
         </div>
     </div>
 
-    <!-- Player 2 Section -->
-    <div class="player">
-        <h2>Player 2</h2>
-        <button id="draftPlayer2">Draft Players</button>
-        <div id="cardsPlayer2" class="cards"></div>
-        <div class="team">
-            <h3>Player 2's Team</h3>
-            <ul id="teamPlayer2" class="team-list"></ul>
-            <button id="stealPlayer2" class="steal-button" style="display:none;">Steal from Player 1</button>
-        </div>
+    <div class="steal-button" style="display: none;">
+        <button id="start-steal-mode">Start Steal Mode</button>
     </div>
 
     <!-- Modal for winner -->
-    <div id="winnerModal" class="modal">
+    <div id="congratsModal" class="modal">
         <div class="modal-content">
             <h2 id="winnerMessage">Congratulations!</h2>
-            <button id="closeModal">Close</button>
+            <button onclick="closeModal()">Close</button>
         </div>
     </div>
 
     <script>
-        const players = [
-            { name: "Leonel Messi", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/MESSIU.webp?v=1684950584&width=360" },
-            { name: "Christiano Ronaldo", ovr: 90, image: "https://sportsclassicstore.com/cdn/shop/files/RONALDO_1.webp?v=1684776295&width=360" },
-            { name: "Karim Benzema", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/BENZEMAU.webp?v=1684950847&width=360" },
-            { name: "Robert Lewandowski", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/LEWANDOWSKIU.webp?v=1684951081&width=360" },
-            { name: "Kylian Mbappe", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/MBAPPEU.webp?v=1684950429&width=360" },
-            { name: "Neymar Jr", ovr: 89, image: "https://sportsclassicstore.com/cdn/shop/files/NEYMARU.webp?v=1684950648&width=360" },
-            { name: "Erling Haaland", ovr: 88, image: "https://sportsclassicstore.com/cdn/shop/products/HAALANDU.webp?v=1684950289&width=360" },
-            { name: "Thomas Muller", ovr: 87, image: "https://sportsclassicstore.com/cdn/shop/files/MULLERU.webp?v=1684951367&width=360" },
-            { name: "Bruno Fernandes", ovr: 86, image: "https://sportsclassicstore.com/cdn/shop/files/BRUNOEU.webp?v=1684951526&width=360" },
-            { name: "Vinicius Jr", ovr: 86, image: "https://sportsclassicstore.com/cdn/shop/files/VINIJRU.webp?v=1684950737&width=360" }
-        ];
+       
+ const players = [
+        {name: "Leonel Messi", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/MESSIU.webp?v=1684950584&width=360"},
+	{name:"Christiano Ronaldo", ovr:90 , image: "https://sportsclassicstore.com/cdn/shop/files/RONALDO_1.webp?v=1684776295&width=360"},
+	{name:"Karim Benzema", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/BENZEMAU.webp?v=1684950847&width=360"},
+	{name:"Robert Lewandowski", ovr:91 , image: "https://sportsclassicstore.com/cdn/shop/files/LEWANDOWSKIU.webp?v=1684951081&width=360"},
+	{name:"Kylian Mbappe", ovr:91 , image: "https://sportsclassicstore.com/cdn/shop/files/MBAPPEU.webp?v=1684950429&width=360"},
+	{name:"Neymar Jr", ovr: 89, image: "https://sportsclassicstore.com/cdn/shop/files/NEYMARU.webp?v=1684950648&width=360"},
+	{name:"Erling Haaland", ovr:88 , image: "https://sportsclassicstore.com/cdn/shop/products/HAALANDU.webp?v=1684950289&width=360"},
+	{name: "Thomas Muller", ovr:87, image: "https://sportsclassicstore.com/cdn/shop/files/MULLERU.webp?v=1684951367&width=360"},
+	{name:"Bruno Fernandes", ovr:86 , image: "https://sportsclassicstore.com/cdn/shop/files/BRUNOEU.webp?v=1684951526&width=360"},
+	{name:"Vinicius Jr", ovr:86 , image: "https://sportsclassicstore.com/cdn/shop/files/VINIJRU.webp?v=1684950737&width=360"},
+	{name:"Gavi", ovr: 79 , image: "https://sportsclassicstore.com/cdn/shop/files/GAVIU.webp?v=1684950999&width=360"},
+	{name:"Pedri", ovr:85 , image: "https://sportsclassicstore.com/cdn/shop/files/PEDRIU.webp?v=1684951132&width=360"},
+	{name:"Kai Havertz", ovr:84 , image: "https://sportsclassicstore.com/cdn/shop/files/HAVERTZU.webp?v=1684955886&width=360"},
+	{name:"Jack Grealish", ovr: 84 , image: "https://sportsclassicstore.com/cdn/shop/files/GREALISHU.webp?v=1684955468&width=360"},
+	{name:"Odegaard", ovr: 84, image: "https://sportsclassicstore.com/cdn/shop/files/ODEGAARDEU.webp?v=1684956270&width=360"},
+	{name:"Mason Mount", ovr: 84, image: "https://sportsclassicstore.com/cdn/shop/files/MOUNTU.webp?v=1684955974&width=360"},
+	{name:"Darwin Nunez", ovr:82 , image:"https://sportsclassicstore.com/cdn/shop/files/NUNEZU.webp?v=1684955675&width=360"},
+	{name:"Bukayo saka", ovr:82 , image: "https://sportsclassicstore.com/cdn/shop/files/SAKAEU.webp?v=1684956192&width=360"},
+	{name:"Marcus Rashford", ovr: 81, image: "https://sportsclassicstore.com/cdn/shop/files/RASHFORDEU.webp?v=1684951590&width=360"},
+	{name:"Martinelli", ovr: 78 , image: "https://sportsclassicstore.com/cdn/shop/files/MARTINELLIEU.webp?v=1684956336&width=360"},
+    ];
 
-        let player1HasStolen = false;
-        let player2HasStolen = false;
 
-        function draftPlayers() {
-            let shuffledPlayers = [...players].sort(() => 0.5 - Math.random());
-            return shuffledPlayers.slice(0, 3);
+        let currentPlayer = 1; // Start with Player 1's turn
+        let draftedPlayers = []; // Track drafted players
+        let player1TeamData = [];
+        let player2TeamData = [];
+        let hasPlayer1Stolen = false;
+        let hasPlayer2Stolen = false;
+
+        const player1Cards = document.getElementById("player1-cards");
+        const player2Cards = document.getElementById("player2-cards");
+        const player1DraftBtn = document.getElementById("player1-draft");
+        const player2DraftBtn = document.getElementById("player2-draft");
+
+        const player1Team = document.getElementById('player1-team');
+        const player2Team = document.getElementById('player2-team');
+        const stealButton = document.getElementById("start-steal-mode");
+
+        // Utility to generate random cards for a player
+        function generateCards() {
+            const availablePlayers = players.filter(player => !draftedPlayers.includes(player.name));
+            const randomCards = [];
+
+            while (randomCards.length < 3 && availablePlayers.length > 0) {
+                const randomIndex = Math.floor(Math.random() * availablePlayers.length);
+                const card = availablePlayers[randomIndex];
+                if (!randomCards.includes(card)) {
+                    randomCards.push(card);
+                }
+            }
+
+            return randomCards;
         }
 
-        function displayCards(playerId, cards) {
-            const cardContainer = document.getElementById(playerId);
-            cardContainer.innerHTML = ''; // Clear previous cards
-            cards.forEach((card) => {
-                let cardDiv = document.createElement('div');
-                cardDiv.classList.add('card');
-                cardDiv.innerHTML = `
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <img src="${card.image}" alt="Player Image" data-player='${JSON.stringify(card)}'>
-                        </div>
-                        <div class="card-back">Flip Me</div>
-                    </div>`;
-                cardDiv.addEventListener('click', () => revealCard(playerId, card));
-                cardContainer.appendChild(cardDiv);
-                setTimeout(() => {
-                    cardDiv.classList.add('flipped');
-                }, 200);
+        // Display cards for the current player
+        function displayCards(cards, cardContainer, player) {
+            cardContainer.innerHTML = ''; // Clear any previous cards
+
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card');
+
+                // Card structure (image, name, OVR)
+                cardElement.innerHTML = `
+                    <img src="${card.image}" alt="${card.name}" style="width: 150px; height: 170px;" />
+               
+                `;
+
+                cardElement.addEventListener('click', () => {
+                    // Add selected card to the player's team
+                    addPlayerToTeam(card, player);
+                    draftedPlayers.push(card.name); // Mark player as drafted
+
+                    // Automatically assign the remaining card if it's the last one
+                    if (cards.length === 2) {
+                        const remainingCard = cards.find(c => c.name !== card.name);
+                        const otherPlayer = player === 1 ? 2 : 1;
+                        addPlayerToTeam(remainingCard, otherPlayer);
+                        draftedPlayers.push(remainingCard.name);
+
+                        // Clear both card containers
+                        player1Cards.innerHTML = '';
+                        player2Cards.innerHTML = '';
+
+                        // Show steal button
+                        document.querySelector(".steal-button").style.display = "block";
+                    } else {
+                        handleCardSelection(player);
+                    }
+
+                    // Clear the card container (remove the remaining cards)
+                    cardContainer.innerHTML = '';
+                });
+
+                cardContainer.appendChild(cardElement);
             });
         }
 
-        function revealCard(playerId, card) {
-            const teamList = document.getElementById(playerId === 'cardsPlayer1' ? 'teamPlayer1' : 'teamPlayer2');
-            let teamItem = document.createElement('li');
-            teamItem.innerText = `${card.name} (OVR: ${card.ovr})`;
-            teamItem.dataset.player = JSON.stringify(card);
-            teamList.appendChild(teamItem);
+        // Add selected player to the team's display
+        function addPlayerToTeam(card, player) {
+            const team = player === 1 ? player1Team : player2Team;
+            const playerTeamData = player === 1 ? player1TeamData : player2TeamData;
 
-            // After selecting the card, it should be removed from the available cards
-            const availablePlayers = [...players].filter(player => player.name !== card.name);
+            const playerCard = document.createElement('div');
+            playerCard.classList.add('team-card');
 
-            // Check if drafting is done and show steal buttons
-            if (teamList.children.length === 5) {
-                document.getElementById('stealPlayer1').style.display = 'block';
-                document.getElementById('stealPlayer2').style.display = 'block';
-            }
+            playerCard.innerHTML = `
+                <img src="${card.image}" alt="${card.name}" style="width: 80px; height: 80px;" />
+                <p>${card.name}</p>
+                <p>OVR: ${card.ovr}</p>
+            `;
+
+            playerTeamData.push(card); // Add the card to the player's team data
+            team.appendChild(playerCard);
         }
 
-        document.getElementById('stealPlayer1').addEventListener('click', () => {
-            if (!player1HasStolen) {
-                activateStealMode(1, 2);
-                document.getElementById('stealPlayer1').disabled = true;  // Disable after click
-            }
-        });
+        // Handle card selection and manage turns
+        function handleCardSelection(player) {
+            const remainingPlayers = players.filter(player => !draftedPlayers.includes(player.name));
 
-        document.getElementById('stealPlayer2').addEventListener('click', () => {
-            if (!player2HasStolen) {
-                activateStealMode(2, 1);
-                document.getElementById('stealPlayer2').disabled = true;  // Disable after click
-            }
-        });
-
-        function activateStealMode(playerStealing, opponentPlayer) {
-            const opponentTeam = document.getElementById(opponentPlayer === 1 ? 'teamPlayer1' : 'teamPlayer2');
-            Array.from(opponentTeam.children).forEach(card => {
-                card.style.cursor = 'pointer';
-                card.addEventListener('click', event => stealCard(event, playerStealing, opponentPlayer));
-            });
-        }
-
-        function stealCard(event, playerStealing, opponentPlayer) {
-            const stolenCard = event.currentTarget;  // Get the clicked li element
-            const playerTeam = document.getElementById(playerStealing === 1 ? 'teamPlayer1' : 'teamPlayer2');
-            const opponentTeam = document.getElementById(playerStealing === 1 ? 'teamPlayer2' : 'teamPlayer1');
-
-            // Add the stolen card to the current player's team
-            playerTeam.appendChild(stolenCard.cloneNode(true));  // Clone to avoid moving
-
-            // Remove the stolen card from the opponent's team
-            opponentTeam.removeChild(stolenCard);
-
-            // Track the stolen card
-            if (playerStealing === 1) {
-                player1HasStolen = true;
+            if (remainingPlayers.length === 2) {
+                // Only two players left, show both cards
+                if (currentPlayer === 1) {
+                    displayCards(remainingPlayers, player1Cards, 1);
+                } else {
+                    displayCards(remainingPlayers, player2Cards, 2);
+                }
+                player1DraftBtn.disabled = true;
+                player2DraftBtn.disabled = true;
             } else {
-                player2HasStolen = true;
-            }
-
-            // Disable further stealing and stop steal mode if both have stolen
-            if (player1HasStolen && player2HasStolen) {
-                stopStealMode();
+                // Continue the draft
+                if (player === 1) {
+                    player1DraftBtn.disabled = true;
+                    player2DraftBtn.disabled = false;
+                } else {
+                    player2DraftBtn.disabled = true;
+                    player1DraftBtn.disabled = false;
+                }
             }
         }
 
-        // Stop the steal mode by disabling further stealing for both players
-        function stopStealMode() {
-            document.getElementById('stealPlayer1').disabled = true;
-            document.getElementById('stealPlayer2').disabled = true;
+        // Steal mode: Allow each player to steal one card from the other team
+        stealButton.addEventListener('click', () => {
+            stealButton.style.display = "none";
+            let p1 =  false;
+            
+            if (p1 === false){
+            enableStealMode(p1);
+            p1=true;
+            }
+            else{
+                enableStealMode(p1)
+            }
+        });
 
-            // Remove event listeners and reset cursor
-            const player1Team = document.getElementById('teamPlayer1');
-            const player2Team = document.getElementById('teamPlayer2');
+        function enableStealMode(p1) {
+            // Enable stealing from the other player's team
+           
+            
+            if (p1 === false){
 
-            Array.from(player1Team.children).forEach(card => {
-                card.style.cursor = 'default';
-                card.removeEventListener('click', stealCard);
+            displayStealableCards(player2TeamData, player2Team, 1); // Player 1 can steal from Player 2
+         
+            }
+            else{
+                displayStealableCards(player1TeamData, player1Team, 2); // Player 2 can steal from Player 1
+            
+        }
+    }
+
+        function displayStealableCards(teamData, teamElement, stealingPlayer) {
+            teamElement.innerHTML = ''; // Clear the team display
+            console.log(teamData)
+            teamData.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('team-card');
+                cardElement.innerHTML = `
+            <img src="${card.image}" alt="${card.name}" style="width: 50px; height: 70px;" />
+            <p>${card.name}</p>
+            <p>OVR: ${card.ovr}</p>
+        `;
+
+                cardElement.addEventListener('click', () => {
+                    if (stealingPlayer === 1 && !hasPlayer1Stolen) {
+                        stealCard(card, 1);
+                        hasPlayer1Stolen = true;
+                        console.log('stealing p1')
+                        // Disable Player 1's stealing option
+                        disableStealing(1);
+                      
+                    } else if (stealingPlayer === 2 && !hasPlayer2Stolen) {
+                        stealCard(card, 2);
+                        hasPlayer2Stolen = true;
+                        console.log('stealing p2')
+                        // Disable Player 2's stealing option
+                        disableStealing(2);
+                       
+                    }
+
+                    // Once both players have stolen, determine the winner
+                    if (hasPlayer1Stolen && hasPlayer2Stolen) {
+                        determineWinner();
+                    }
+                });
+
+                teamElement.appendChild(cardElement);
             });
-
-            Array.from(player2Team.children).forEach(card => {
-                card.style.cursor = 'default';
-                card.removeEventListener('click', stealCard);
-            });
-
-            // Determine winner after steal mode ends
-            determineWinner();
         }
 
+
+        // Steal the card from the opponent
+        function stealCard(card, stealingPlayer) {
+            if (stealingPlayer === 1) {
+                // Remove from Player 2's team and add to Player 1's team
+                player2TeamData = player2TeamData.filter(c => c.name !== card.name);
+                player1TeamData.push(card);
+                console.log(player1TeamData)
+               
+            } else {
+                // Remove from Player 1's team and add to Player 2's team
+                player1TeamData = player1TeamData.filter(c => c.name !== card.name);
+                player2TeamData.push(card);
+                console.log(player2TeamData)
+               return;
+            }
+
+            // Update the team display
+            updateTeamDisplay();
+        }
+
+        function disableStealing(player) {
+            if (player === 1) {
+                player2Team.querySelectorAll('.team-card').forEach(card => {
+                    card.style.pointerEvents = 'none'; // Disable stealing for Player 1
+                });
+            } else if (player === 2) {
+                player1Team.querySelectorAll('.team-card').forEach(card => {
+                    card.style.pointerEvents = 'none'; // Disable stealing for Player 2
+                });
+            }
+        }
+
+
+        // Update team display after stealing
+        function updateTeamDisplay() {
+            player1Team.innerHTML = '';
+            player2Team.innerHTML = '';
+
+            player1TeamData.forEach(card => {
+                addPlayerToTeam(card, 1);
+            });
+
+            player2TeamData.forEach(card => {
+                addPlayerToTeam(card, 2);
+            });
+        }
+
+        // Calculate total OVR and determine the winner
         function determineWinner() {
-            const player1Team = document.getElementById('teamPlayer1').children;
-            const player2Team = document.getElementById('teamPlayer2').children;
+            const player1TotalOVR = player1TeamData.reduce((total, card) => total + card.ovr, 0);
+            const player2TotalOVR = player2TeamData.reduce((total, card) => total + card.ovr, 0);
 
-            let player1TotalOVR = Array.from(player1Team).reduce((sum, item) => {
-                const playerData = JSON.parse(item.dataset.player);
-                return sum + playerData.ovr;
-            }, 0);
-
-            let player2TotalOVR = Array.from(player2Team).reduce((sum, item) => {
-                const playerData = JSON.parse(item.dataset.player);
-                return sum + playerData.ovr;
-            }, 0);
-
-            let winnerMessage = '';
-
+            let winner;
             if (player1TotalOVR > player2TotalOVR) {
-                winnerMessage = 'Congratulations Player 1, You Won!';
+                winner = "Player 1 Wins!";
             } else if (player2TotalOVR > player1TotalOVR) {
-                winnerMessage = 'Congratulations Player 2, You Won!';
+                winner = "Player 2 Wins!";
             } else {
-                winnerMessage = 'It\'s a Tie!';
+                winner = "It's a tie!";
             }
 
-            showWinnerModal(winnerMessage);
+            // Show the winner in the modal
+            document.getElementById("winnerMessage").innerText = winner;
+            document.getElementById("congratsModal").style.display = "flex"; // Show the modal
         }
 
-        function showWinnerModal(message) {
-            const modal = document.getElementById('winnerModal');
-            document.getElementById('winnerMessage').innerText = message;
-            modal.classList.add('show');  // Show modal
+        // Close modal
+        function closeModal() {
+            document.getElementById("congratsModal").style.display = "none";
         }
 
-        document.getElementById('closeModal').addEventListener('click', () => {
-            document.getElementById('winnerModal').classList.remove('show');
+        // Draft event handlers for both players
+        player1DraftBtn.addEventListener('click', () => {
+            const cards = generateCards();
+            displayCards(cards, player1Cards, 1);
         });
 
-        document.getElementById('draftPlayer1').addEventListener('click', () => {
-            const draftedPlayers = draftPlayers();
-            displayCards('cardsPlayer1', draftedPlayers);
+        player2DraftBtn.addEventListener('click', () => {
+            const cards = generateCards();
+            displayCards(cards, player2Cards, 2);
         });
 
-        document.getElementById('draftPlayer2').addEventListener('click', () => {
-            const draftedPlayers = draftPlayers();
-            displayCards('cardsPlayer2', draftedPlayers);
-        });
+        // Initialize the game
+        function initGame() {
+            player1DraftBtn.disabled = false; // Player 1 starts first
+            player2DraftBtn.disabled = true;  // Disable Player 2's button
+        }
+
+        initGame();
     </script>
 </body>
+
 </html>
