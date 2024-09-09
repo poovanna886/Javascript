@@ -3,117 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leitner Flashcard System</title>
-<link rel="stylesheet" href="style.css">
+<title>Maze Ball Game</title>
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #f0f0f0;
+    }
+    #gameArea {
+        width: 500px;
+        height: 500px;
+        background: url('maze.png'); /* Assume we have a maze image */
+        background-size: cover;
+        position: relative;
+        overflow: hidden;
+        transform-style: preserve-3d;
+    }
+    #ball {
+        width: 20px;
+        height: 20px;
+        background: red;
+        border-radius: 50%;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        transition: all 0.1s;
+    }
+    #goal {
+        width: 50px;
+        height: 50px;
+        background: green;
+        position: absolute;
+        top: 225px;
+        left: 225px;
+        border-radius: 5px;
+    }
+    #winMessage {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        z-index: 10;
+    }
+</style>
 </head>
 <body>
-<div id="game-container">
-  <div id="flashcard">
-    <div id="card-front">Question will appear here</div>
-    <div id="card-back">Answer will appear here</div>
-  </div>
-  <button onclick="flipCard()">Flip Card</button>
-  <button onclick="markCorrect()">Mark as Correct</button>
-  <button onclick="markIncorrect()">Mark as Incorrect</button>
-  <div id="progress">Cards left: <span id="cards-left">15</span></div>
-  <button onclick="resetProgress()">Reset Progress</button>
+<div id="gameArea">
+    <div id="ball"></div>
+    <div id="goal"></div>
 </div>
-<div id="scoreGraph" style="width:80%; height:200px;"></div>
+<div id="winMessage">You Win!</div>
 
-<script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 <script>
-let currentCard;
-let cards = {
-  easy: [...Array(5)].map((_, i) => ({q: `Easy Q${i+1}`, a: `Easy A${i+1}`, box: 1})),
-  medium: [...Array(5)].map((_, i) => ({q: `Medium Q${i+1}`, a: `Medium A${i+1}`, box: 2})),
-  hard: [...Array(5)].map((_, i) => ({q: `Hard Q${i+1}`, a: `Hard A${i+1}`, box: 3}))
-};
-let currentDeck = [];
-let flipped = false;
+document.addEventListener('DOMContentLoaded', (event) => {
+    const gameArea = document.getElementById('gameArea');
+    const ball = document.getElementById('ball');
+    const winMessage = document.getElementById('winMessage');
+    let tiltX = 0, tiltY = 0;
+    let posX = 10, posY = 10;
+    const ballSize = 20;
+    const gravity = 0.5;
+    const friction = 0.98;
 
-function setup() {
-  if (!localStorage.getItem('flashcards')) {
-    localStorage.setItem('flashcards', JSON.stringify(cards));
-  } else {
-    cards = JSON.parse(localStorage.getItem('flashcards'));
-  }
-  selectCard();
-}
+    function moveBall() {
+        posY += gravity + tiltY;
+        posX += tiltX;
 
-function selectCard() {
-  // Simplified frequency logic for demonstration
-  let boxWeights = [1, 3, 5]; // easy, medium, hard
-  let totalWeight = boxWeights.reduce((a, b) => a + b, 0);
-  let randomWeight = Math.random() * totalWeight;
-  let cumulativeWeight = 0;
-  
-  for(let i = 0; i < boxWeights.length; i++) {
-    cumulativeWeight += boxWeights[i];
-    if(randomWeight < cumulativeWeight && cards[['easy', 'medium', 'hard'][i]].length > 0) {
-      currentDeck = cards[['easy', 'medium', 'hard'][i]];
-      currentCard = currentDeck[Math.floor(Math.random() * currentDeck.length)];
-      break;
+        // Simplified collision detection with walls (assuming maze walls align with game area)
+        if (posY + ballSize >= gameArea.offsetHeight || posY <= 0) {
+            posY = Math.max(0, Math.min(gameArea.offsetHeight - ballSize, posY));
+            tiltY *= -0.5; // Bounce effect
+        }
+        if (posX + ballSize >= gameArea.offsetWidth || posX <= 0) {
+            posX = Math.max(0, Math.min(gameArea.offsetWidth - ballSize, posX));
+            tiltX *= -0.5; // Bounce effect
+        }
+
+        // Check if ball reached the goal
+        const goal = document.getElementById('goal');
+        const rect1 = ball.getBoundingClientRect();
+        const rect2 = goal.getBoundingClientRect();
+        if (!(rect1.right < rect2.left || 
+            rect1.left > rect2.right || 
+            rect1.bottom < rect2.top || 
+            rect1.top > rect2.bottom)) {
+            winMessage.style.display = 'block';
+            return;
+        }
+
+        ball.style.top = `${posY}px`;
+        ball.style.left = `${posX}px`;
+        requestAnimationFrame(moveBall);
     }
-  }
-  document.getElementById('card-front').innerText = currentCard.q;
-  document.getElementById('cards-left').innerText = currentDeck.length;
-  flipped = false;
-}
 
-function flipCard() {
-  flipped = !flipped;
-  document.getElementById('card-front').style.display = flipped ? 'none' : 'block';
-  document.getElementById('card-back').style.display = flipped ? 'block' : 'none';
-  if(flipped) document.getElementById('card-back').innerText = currentCard.a;
-}
+    gameArea.addEventListener('mousemove', (e) => {
+        const rect = gameArea.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        tiltX = (e.clientX - rect.left - centerX) / centerX * 5;
+        tiltY = -(e.clientY - rect.top - centerY) / centerY * 5;
+    });
 
-function markCorrect() {
-  // Move to next box or keep in hard if already there
-  if(currentCard.box < 3) currentCard.box++;
-  selectCard();
-}
+    gameArea.addEventListener('mouseleave', () => {
+        tiltX = tiltY = 0;
+    });
 
-function markIncorrect() {
-  currentCard.box = 1; // Move to easy
-  selectCard();
-}
-
-function resetProgress() {
-  localStorage.removeItem('flashcards');
-  setup();
-}
-
-// p5.js for animations
-function draw() {
-  // Here you would implement animations with p5.js
-}
-
-// Setup for score graph
-let ctx = document.getElementById('scoreGraph').getContext('2d');
-let myChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: [],
-    datasets: [{
-      label: 'Score',
-      data: [],
-      fill: false,
-      borderColor: 'rgb(75, 192, 192)',
-      tension: 0.1
-    }]
-  },
-  options: {
-    scales: {
-      y: {
-        beginAtZero: true
-      }
-    }
-  }
+    moveBall();
 });
-
-// Call setup when page loads
-window.onload = setup;
 </script>
 </body>
 </html>
