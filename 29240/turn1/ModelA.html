@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hurdles Race Game</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #f0f0f0; font-family: 'Arial', sans-serif; }
+  #gameCanvas { background: url('https://png.pngtree.com/thumb_back/fh260/background/20220215/pngtree-poster-of-track-and-field-race-in-campus-games-image_925132.jpg') no-repeat center center; background-size: cover; display: block; margin: auto; }
+  #countdown, #gameOver, #timer, #highScore { position: absolute; width: 100%; text-align: center; }
+  #countdown, #gameOver { font-size: 3em; top: 40%; }
+  #timer, #highScore { top: 10px; }
+</style>
+</head>
+<body>
+<div id="gameCanvas"></div>
+<div id="countdown"></div>
+<div id="gameOver"></div>
+<div id="timer">Time: 0.00s</div>
+<div id="highScore">Best Time: <span id="bestTime">0.00s</span></div>
+
+<script>
+// Game setup
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 400;
+
+// Images
+const playerImg = new Image(); playerImg.src = 'https://freesvg.org/storage/img/thumb/Pixel-Guy.png';
+const hurdleImg = new Image(); hurdleImg.src = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQs8rU3JxW_JPjxAuLnG3ivB4iHyFyC5iAH3A&s';
+
+// Game variables
+let player = {x: 50, y: canvas.height - 50, width: 40, height: 50, dy: 0, jumping: false};
+let hurdles = [];
+let gameRunning = false;
+let time = 0;
+let interval;
+let highScore = localStorage.getItem('highScore') || Infinity;
+
+// Player controls
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'w' && !player.jumping) { player.jumping = true; player.dy = -10; }
+    if (e.key === 'a') { player.x -= 10; }
+    if (e.key === 'd') { player.x += 10; }
+});
+
+// Game loop
+function gameLoop() {
+    if (gameRunning) {
+        update();
+        draw();
+        checkCollision();
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+// Update game state
+function update() {
+    // Player jump physics
+    if (player.jumping) {
+        player.y += player.dy;
+        player.dy += 0.5; // Gravity
+        if (player.y > canvas.height - player.height) {
+            player.y = canvas.height - player.height;
+            player.jumping = false;
+        }
+    }
+    
+    // Hurdles movement
+    hurdles.forEach(hurdle => {
+        hurdle.x -= 2; // Move hurdle
+    });
+    
+    // Spawn new hurdles
+    if (Math.random() < 0.02) hurdles.push({x: canvas.width, y: canvas.height - 50, width: 30, height: 50});
+}
+
+// Draw game objects
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+    hurdles.forEach(hurdle => {
+        ctx.drawImage(hurdleImg, hurdle.x, hurdle.y, hurdle.width, hurdle.height);
+    });
+}
+
+// Collision detection
+function checkCollision() {
+    hurdles.forEach((hurdle, index) => {
+        if (player.x < hurdle.x + hurdle.width && 
+            player.x + player.width > hurdle.x && 
+            player.y < hurdle.y + hurdle.height && 
+            player.y + player.height > hurdle.y) {
+            gameRunning = false;
+            setTimeout(() => gameRunning = true, 2000); // 2 second delay
+            hurdles.splice(index, 1); // Remove hurdle
+        }
+    });
+}
+
+// Start countdown
+function startCountdown() {
+    let count = 3;
+    const countdownElement = document.getElementById('countdown');
+    const countdown = setInterval(() => {
+        countdownElement.textContent = count > 0 ? count : 'GO!';
+        if (count <= 0) {
+            clearInterval(countdown);
+            startGame();
+        }
+        count--;
+    }, 1000);
+}
+
+// Start game
+function startGame() {
+    gameRunning = true;
+    interval = setInterval(() => time += 0.01, 10);
+    gameLoop();
+}
+
+// Game over
+function gameOver() {
+    gameRunning = false;
+    clearInterval(interval);
+    if (time < highScore) {
+        localStorage.setItem('highScore', time);
+        highScore = time;
+    }
+    document.getElementById('gameOver').textContent = `Game Over! Time: ${time.toFixed(2)}s`;
+    document.getElementById('bestTime').textContent = highScore.toFixed(2) + 's';
+}
+
+// Initialize game
+document.getElementById('highScore').style.display = 'none'; // Hide high score initially
+startCountdown();
+
+</script>
+</body>
+</html>

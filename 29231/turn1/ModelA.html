@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pizza Delivery Game</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+    body { font-family: 'Arial', sans-serif; background: #f0f0f0; }
+    #game-area { width: 800px; height: 600px; border: 2px solid #000; margin: auto; position: relative; background: url('https://media.istockphoto.com/id/522379689/vector/board-game-with-path-on-the-city.jpg?s=612x612&w=0&k=20&c=ide0ukB6pR8UYQE9y3oLpaCvdMXmNV2Kp-w6jRzguEY='); background-size: cover; }
+    #timer, #score { position: absolute; top: 10px; width: 100%; text-align: center; z-index: 100; }
+    #score { top: 30px; }
+    .house { position: absolute; width: 50px; height: 50px; background: url('https://freesvg.org/storage/img/thumb/village-house.png'); background-size: contain; }
+    #pizza { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; background: url('https://freesvg.org/storage/img/thumb/pizza2-1447860.png'); background-size: contain; cursor: grab; }
+    #game-over { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 2px solid #000; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="game-area">
+    <div id="timer">Time: 60</div>
+    <div id="score">Score: 0</div>
+    <div id="pizza" draggable="true"></div>
+    <div id="game-over">
+        <h2>Game Over!</h2>
+        <p>Your Score: <span id="final-score">0</span></p>
+        <p>High Score: <span id="high-score">0</span></p>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+</div>
+
+<script>
+// Game logic
+document.addEventListener('DOMContentLoaded', function() {
+    let score = 0;
+    let timeLeft = 60;
+    const gameArea = document.getElementById('game-area');
+    const pizza = document.getElementById('pizza');
+    const timerDiv = document.getElementById('timer');
+    const scoreDiv = document.getElementById('score');
+    const gameOverDiv = document.getElementById('game-over');
+    let houses = [];
+
+    function spawnHouse() {
+        const house = document.createElement('div');
+        house.className = 'house';
+        house.style.left = Math.random() * (gameArea.offsetWidth - 50) + 'px';
+        house.style.top = Math.random() * (gameArea.offsetHeight - 100) + 'px';
+        gameArea.appendChild(house);
+        houses.push(house);
+
+        // Increase house spawning rate over time
+        setTimeout(spawnHouse, 2000 - (score * 100));
+    }
+
+    function startGame() {
+        spawnHouse();
+        const timer = setInterval(function() {
+            timeLeft--;
+            timerDiv.textContent = 'Time: ' + timeLeft;
+            if(timeLeft <= 0) {
+                clearInterval(timer);
+                endGame();
+            }
+        }, 1000);
+
+        // Pizza drag event handlers
+        pizza.addEventListener('dragstart', dragStart);
+        gameArea.addEventListener('dragover', dragOver);
+        gameArea.addEventListener('drop', drop);
+    }
+
+    function dragStart(e) {
+        e.dataTransfer.setData('text/plain', 'pizza');
+    }
+
+    function dragOver(e) {
+        e.preventDefault();
+    }
+
+    function drop(e) {
+        e.preventDefault();
+        const data = e.dataTransfer.getData('text');
+        if (data === 'pizza') {
+            const pizzaRect = pizza.getBoundingClientRect();
+            houses.forEach(house => {
+                const houseRect = house.getBoundingClientRect();
+                if (isOverlapping(pizzaRect, houseRect)) {
+                    score++;
+                    scoreDiv.textContent = 'Score: ' + score;
+                    house.remove();
+                    houses = houses.filter(h => h !== house);
+                    pizza.style.left = '50%';
+                    pizza.style.top = 'auto';
+                    pizza.style.bottom = '10px';
+                }
+            });
+        }
+    }
+
+    function isOverlapping(rect1, rect2) {
+        return !(rect1.right < rect2.left || 
+                 rect1.left > rect2.right || 
+                 rect1.bottom < rect2.top || 
+                 rect1.top > rect2.bottom);
+    }
+
+    function endGame() {
+        document.getElementById('final-score').textContent = score;
+        const highScore = localStorage.getItem('highScore') || 0;
+        if (score > highScore) {
+            localStorage.setItem('highScore', score);
+        }
+        document.getElementById('high-score').textContent = localStorage.getItem('highScore');
+        gameOverDiv.style.display = 'block';
+    }
+
+    startGame();
+});
+</script>
+
+</body>
+</html>

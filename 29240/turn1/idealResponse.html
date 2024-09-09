@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hurdle Race</title>
+<style>
+body { margin: 0; background: #f0f0f0; overflow: hidden; }
+canvas { display: block; background: url('https://png.pngtree.com/thumb_back/fh260/background/20220215/pngtree-poster-of-track-and-field-race-in-campus-games-image_925132.jpg') no-repeat center center; background-size: cover; }
+#ui { position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; }
+#countdown, #gameOver { position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.7); color: white; font-size: 4em; }
+#gameOver { flex-direction: column; }
+</style>
+</head>
+<body>
+<div id="ui">
+    <div id="timer">Time: 0.00</div>
+    <div id="highScore">High Score: <span id="highScoreValue">0.00</span></div>
+</div>
+<div id="countdown"></div>
+<div id="gameOver" style="display:none;">
+    <div>Game Over!</div>
+    <div>Your Time: <span id="finalTime"></span></div>
+    <div>Best Time: <span id="bestTime"></span></div>
+</div>
+<canvas id="gameCanvas"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Fullscreen canvas setup
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();  // Set the canvas size on load
+
+const playerImg = new Image();
+playerImg.src = 'https://freesvg.org/storage/img/thumb/Pixel-Guy.png'; // Assume this image exists
+
+const hurdleImg = new Image();
+hurdleImg.src = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQs8rU3JxW_JPjxAuLnG3ivB4iHyFyC5iAH3A&s'; // Assume this image exists
+
+// Load the finish line image
+const finishLineImg = new Image();
+finishLineImg.src = 'https://freesvg.org/img/Checkered-Racing-Flags.png'; // Assume this image exists
+
+let player = {x: 50, y: canvas.height - 300, width: 50, height: 100, speed: 7, jump: false, jumpSpeed: 15, gravity: 0.8}; // Increased jumpSpeed
+let hurdles = [];
+let totalHurdles = 5; // Total number of hurdles
+let hurdleSpacing = 300; // Space between hurdles
+let finishLine = {x: canvas.width + totalHurdles * hurdleSpacing, y: canvas.height - 300, width: 100, height: 100}; // Positioned after hurdles
+let gameRunning = false;
+let timer = 0;
+let intervalId;
+let countdown = 3;
+let delayAfterCollision = 0;
+
+// Retrieve high score from localStorage and convert it to a number, default to Infinity if not set
+let highScore = parseFloat(localStorage.getItem('highScore')) || Infinity;
+
+// Display the retrieved high score (or 0.00 if no high score)
+document.getElementById('highScoreValue').textContent = highScore !== Infinity ? highScore.toFixed(2) : "0.00";
+
+function drawPlayer() {
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+}
+
+function createHurdle() {
+    if (hurdles.length < totalHurdles) {
+        hurdles.push({
+            x: canvas.width + hurdles.length * hurdleSpacing,
+            y: canvas.height - 300, // Adjust height based on the player's height
+            width: 60,
+            height: 80
+        });
+    }
+}
+
+function drawHurdles() {
+    hurdles.forEach(hurdle => ctx.drawImage(hurdleImg, hurdle.x, hurdle.y, hurdle.width, hurdle.height));
+}
+
+function drawFinishLine() {
+    // Draw the finish line image instead of a red rectangle
+    ctx.drawImage(finishLineImg, finishLine.x, finishLine.y, finishLine.width, finishLine.height);
+}
+
+function update() {
+    if (!gameRunning) return;
+
+    if (delayAfterCollision > 0) {
+        delayAfterCollision -= 1;
+        return;
+    }
+
+    // Move player
+    if (keys['a'] && player.x > 0) player.x -= player.speed;
+    if (keys['d'] && player.x < canvas.width - player.width) player.x += player.speed;
+
+    // Jump logic with gravity
+    if (player.jump) {
+        player.y -= player.jumpSpeed;
+        player.jumpSpeed -= player.gravity;  // Gravity pulling the player down
+        if (player.y >= canvas.height - 300) {
+            player.y = canvas.height - 300;
+            player.jump = false;
+            player.jumpSpeed = 15;  // Reset jump speed for the next jump
+        }
+    }
+
+    // Move hurdles
+    hurdles.forEach((hurdle, index) => {
+        hurdle.x -= 5;
+        if (hurdle.x + hurdle.width < 0) {
+            hurdles.splice(index, 1);
+        }
+        // Collision detection
+        if (player.x < hurdle.x + hurdle.width && 
+            player.x + player.width > hurdle.x && 
+            player.y < hurdle.y + hurdle.height && 
+            player.y + player.height > hurdle.y) {
+            hurdles.splice(index, 1);
+            delayAfterCollision = 120; // 2 seconds delay at 60fps
+        }
+    });
+
+    // Move finish line after all hurdles are done
+    if (hurdles.length === 0 && finishLine.x > canvas.width - finishLine.width) {
+        finishLine.x -= 5;
+    }
+
+    // Check if player reaches the finish line
+    if (player.x + player.width >= finishLine.x) {
+        endGame();
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPlayer();
+    drawHurdles();
+
+    // Draw the finish line only after all hurdles are cleared
+    if (hurdles.length === 0) {
+        drawFinishLine();
+    }
+}
+
+function gameLoop() {
+    update();
+    draw();
+    timer += 1/60; // Assuming 60 FPS
+    document.getElementById('timer').textContent = `Time: ${timer.toFixed(2)}`;
+}
+
+function startGame() {
+    gameRunning = true;
+    intervalId = setInterval(gameLoop, 1000/60);
+    for (let i = 0; i < totalHurdles; i++) {
+        setTimeout(createHurdle, i * 2000);  // Spacing between hurdles
+    }
+}
+
+function endGame() {
+    clearInterval(intervalId);
+    gameRunning = false;
+    document.getElementById('gameOver').style.display = 'flex';
+    document.getElementById('finalTime').textContent = timer.toFixed(2);
+
+    // Update the high score if the current time is better
+    if (timer < highScore) {
+        highScore = timer;
+        localStorage.setItem('highScore', highScore.toFixed(2));
+        document.getElementById('highScoreValue').textContent = highScore.toFixed(2);
+    }
+
+    // Display best time
+    document.getElementById('bestTime').textContent = highScore.toFixed(2);
+}
+
+function startCountdown() {
+    let count = document.getElementById('countdown');
+    let countInterval = setInterval(() => {
+        if (countdown > 0) {
+            count.textContent = countdown;
+            countdown--;
+        } else {
+            count.textContent = 'GO!';
+            clearInterval(countInterval);
+            setTimeout(() => {
+                count.style.display = 'none';
+                startGame();
+            }, 1000);
+        }
+    }, 1000);
+}
+
+let keys = {};
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'w' && !player.jump) player.jump = true;  // Only jump when not already jumping
+    keys[e.key] = true;
+});
+document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+startCountdown();
+</script>
+</body>
+</html>
