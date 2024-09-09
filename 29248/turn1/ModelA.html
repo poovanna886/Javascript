@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2 Player Ping Pong</title>
+    <style>
+        #gameArea {
+            width: 800px;
+            height: 400px;
+            background: black;
+            position: relative;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+        .paddle {
+            width: 10px;
+            height: 80px;
+            background: white;
+            position: absolute;
+        }
+        #paddle1 { left: 0; }
+        #paddle2 { right: 0; }
+        #ball {
+            width: 15px;
+            height: 15px;
+            background: red;
+            position: absolute;
+            border-radius: 50%;
+        }
+        .score {
+            color: white;
+            position: absolute;
+            font-size: 30px;
+        }
+        #score1 { left: 25%; }
+        #score2 { right: 25%; }
+        #controls button {
+            margin: 10px;
+            padding: 10px 20px;
+        }
+        #winnerModal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div id="gameArea">
+    <div id="paddle1" class="paddle"></div>
+    <div id="paddle2" class="paddle"></div>
+    <div id="ball"></div>
+    <div id="score1" class="score">0</div>
+    <div id="score2" class="score">0</div>
+</div>
+<div id="controls">
+    <button onclick="startGame()">Start</button>
+    <button onclick="pauseGame()">Pause</button>
+    <button onclick="restartGame()">Restart</button>
+</div>
+<div id="winnerModal">
+    <div class="modal-content">
+        <p id="winnerText"></p>
+        <button onclick="document.getElementById('winnerModal').style.display='none'">Close</button>
+    </div>
+</div>
+
+<script>
+    // Game elements
+    const gameArea = document.getElementById('gameArea');
+    const paddle1 = document.getElementById('paddle1');
+    const paddle2 = document.getElementById('paddle2');
+    const ball = document.getElementById('ball');
+    const score1 = document.getElementById('score1');
+    const score2 = document.getElementById('score2');
+    
+    // Game state
+    let gameRunning = false;
+    let paddleSpeed = 5;
+    let ballSpeedX = 3, ballSpeedY = 3;
+    let player1Score = 0, player2Score = 0;
+
+    // Paddle positions
+    let paddle1Y = 160, paddle2Y = 160;
+    const paddleHeight = 80;
+
+    // Ball position and direction
+    let ballX = 400, ballY = 200;
+
+    // Key press states
+    const keys = {
+        w: false,
+        s: false,
+        ArrowUp: false,
+        ArrowDown: false
+    };
+
+    // Key event listeners
+    document.addEventListener('keydown', function(e) {
+        if (e.key in keys) keys[e.key] = true;
+    });
+    document.addEventListener('keyup', function(e) {
+        if (e.key in keys) keys[e.key] = false;
+    });
+
+    function startGame() {
+        if (!gameRunning) {
+            gameRunning = true;
+            resetBall();
+            requestAnimationFrame(gameLoop);
+        }
+    }
+
+    function pauseGame() {
+        gameRunning = !gameRunning;
+    }
+
+    function restartGame() {
+        player1Score = player2Score = 0;
+        updateScore();
+        pauseGame();
+    }
+
+    function resetBall() {
+        ballX = gameArea.clientWidth / 2;
+        ballY = gameArea.clientHeight / 2;
+        ballSpeedX = (Math.random() > 0.5 ? 1 : -1) * 3;
+        ballSpeedY = (Math.random() * 2 - 1) * 3; // Random Y direction
+    }
+
+    function updateScore() {
+        score1.textContent = player1Score;
+        score2.textContent = player2Score;
+    }
+
+    function gameLoop() {
+        if (gameRunning) {
+            // Move paddles
+            if (keys.w && paddle1Y > 0) paddle1Y -= paddleSpeed;
+            if (keys.s && paddle1Y < gameArea.clientHeight - paddleHeight) paddle1Y += paddleSpeed;
+            if (keys.ArrowUp && paddle2Y > 0) paddle2Y -= paddleSpeed;
+            if (keys.ArrowDown && paddle2Y < gameArea.clientHeight - paddleHeight) paddle2Y += paddleSpeed;
+
+            // Update paddle positions
+            paddle1.style.top = `${paddle1Y}px`;
+            paddle2.style.top = `${paddle2Y}px`;
+
+            // Move ball
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Ball collision with top and bottom
+            if (ballY <= 0 || ballY >= gameArea.clientHeight - 15) ballSpeedY = -ballSpeedY;
+
+            // Ball collision with paddles or scoring
+            if (ballX <= 10) {
+                if (ballY > paddle1Y && ballY < paddle1Y + paddleHeight) {
+                    ballSpeedX = -ballSpeedX;
+                } else {
+                    player2Score++;
+                    resetBall();
+                }
+            }
+            if (ballX >= gameArea.clientWidth - 25) {
+                if (ballY > paddle2Y && ballY < paddle2Y + paddleHeight) {
+                    ballSpeedX = -ballSpeedX;
+                } else {
+                    player1Score++;
+                    resetBall();
+                }
+            }
+
+            // Update ball position
+            ball.style.left = `${ballX}px`;
+            ball.style.top = `${ballY}px`;
+
+            // Check for win
+            if (player1Score === 10 || player2Score === 10) {
+                gameRunning = false;
+                document.getElementById('winnerText').textContent = `Player ${player1Score === 10 ? '1' : '2'} wins!`;
+                document.getElementById('winnerModal').style.display = 'block';
+            }
+
+            updateScore();
+            requestAnimationFrame(gameLoop);
+        }
+    }
+</script>
+</body>
+</html>

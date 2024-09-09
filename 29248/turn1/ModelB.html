@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2 Player Ping Pong</title>
+<style>
+body { font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0; }
+#gameCanvas { background: black; display: block; margin: 0 auto; }
+#buttons { position: absolute; top: 10px; width: 600px; text-align: center; }
+button { margin: 0 5px; padding: 10px; font-size: 16px; cursor: pointer; }
+#score { position: absolute; top: 50px; width: 600px; text-align: center; font-size: 24px; color: white; }
+.modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+.modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 50%; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div id="buttons">
+        <button onclick="startGame()">Start</button>
+        <button onclick="pauseGame()">Pause</button>
+        <button onclick="restartGame()">Restart</button>
+    </div>
+    <div id="score">Player 1: 0 | Player 2: 0</div>
+</div>
+
+<div id="winModal" class="modal">
+    <div class="modal-content">
+        <p id="winMessage">Player X Wins!</p>
+        <button onclick="document.getElementById('winModal').style.display='none'">Close</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+const winModal = document.getElementById('winModal');
+const winMessage = document.getElementById('winMessage');
+
+let ball = {x: canvas.width / 2, y: canvas.height / 2, radius: 10, speed: 5, dx: 5, dy: 5};
+let paddleHeight = 100, paddleWidth = 10;
+let leftPaddle = {x: 0, y: canvas.height / 2 - paddleHeight / 2, dy: 5, score: 0};
+let rightPaddle = {x: canvas.width - paddleWidth, y: canvas.height / 2 - paddleHeight / 2, dy: 5, score: 0};
+let gameState = 'paused';
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw paddles
+    ctx.fillStyle = 'white';
+    ctx.fillRect(leftPaddle.x, leftPaddle.y, paddleWidth, paddleHeight);
+    ctx.fillRect(rightPaddle.x, rightPaddle.y, paddleWidth, paddleHeight);
+    
+    // Draw ball
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    ctx.closePath();
+    
+    // Score
+    scoreDisplay.textContent = `Player 1: ${leftPaddle.score} | Player 2: ${rightPaddle.score}`;
+}
+
+function moveBall() {
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+
+    // Ball collision with top and bottom walls
+    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+        ball.dy = -ball.dy;
+    }
+
+    // Ball collision with paddles or scoring
+    let paddle = (ball.x < canvas.width / 2) ? leftPaddle : rightPaddle;
+    if (collision(paddle)) {
+        ball.dx = -ball.dx;
+    } else if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+        if (ball.x > canvas.width / 2) leftPaddle.score++;
+        else rightPaddle.score++;
+        resetBall();
+    }
+
+    // Check for win
+    if (leftPaddle.score >= 10 || rightPaddle.score >= 10) {
+        gameState = 'ended';
+        winMessage.textContent = `Player ${leftPaddle.score >= 10 ? '1' : '2'} Wins!`;
+        winModal.style.display = 'block';
+    }
+}
+
+function collision(paddle) {
+    return ball.x < paddle.x + paddleWidth && ball.x > paddle.x && 
+           ball.y > paddle.y && ball.y < paddle.y + paddleHeight;
+}
+
+function resetBall() {
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.dx = -ball.dx; // Alternate direction
+    ball.dy = Math.random() > 0.5 ? 5 : -5; // Randomize vertical direction
+}
+
+function gameLoop() {
+    if (gameState === 'running') {
+        moveBall();
+        movePaddles();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+function movePaddles() {
+    if (keys['w'] && leftPaddle.y > 0) leftPaddle.y -= leftPaddle.dy;
+    if (keys['s'] && leftPaddle.y < canvas.height - paddleHeight) leftPaddle.y += leftPaddle.dy;
+    if (keys['ArrowUp'] && rightPaddle.y > 0) rightPaddle.y -= rightPaddle.dy;
+    if (keys['ArrowDown'] && rightPaddle.y < canvas.height - paddleHeight) rightPaddle.y += rightPaddle.dy;
+}
+
+let keys = {};
+
+document.addEventListener('keydown', (e) => keys[e.key] = true);
+document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+function startGame() {
+    if (gameState !== 'running') {
+        gameState = 'running';
+        gameLoop();
+    }
+}
+
+function pauseGame() {
+    gameState = gameState === 'running' ? 'paused' : 'running';
+}
+
+function restartGame() {
+    leftPaddle.score = rightPaddle.score = 0;
+    resetBall();
+    gameState = 'running';
+    winModal.style.display = 'none';
+    gameLoop();
+}
+
+// Start the game loop for the first time
+startGame();
+</script>
+
+</body>
+</html>

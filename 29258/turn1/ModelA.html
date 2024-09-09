@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hangman Game</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        flex-direction: column;
+    }
+    .game-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+    }
+    #wordDisplay {
+        letter-spacing: 5px;
+        margin: 20px 0;
+        font-size: 1.5em;
+    }
+    #hangman {
+        font-family: monospace;
+        margin: 20px 0;
+    }
+    #guessedLetters {
+        margin: 10px 0;
+        color: red;
+    }
+    .life {
+        width: 30px;
+        height: 30px;
+        margin: 5px;
+    }
+    input[type="text"] {
+        padding: 10px;
+        margin-right: 10px;
+    }
+    button {
+        padding: 10px 20px;
+        background-color: #5cb85c;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    button:hover {
+        background-color: #4cae4c;
+    }
+    @media (max-width: 600px) {
+        .life {
+            width: 20px;
+            height: 20px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>Hangman</h1>
+    <p id="hint"></p>
+    <div id="wordDisplay"></div>
+    <div id="hangman">Start guessing!</div>
+    <div>Wrong guesses: <span id="guessedLetters"></span></div>
+    <div>Lives: 
+        <img src="https://freesvg.org/storage/img/thumb/1646656079PixelArt-Heart-1.png" class="life" id="life6">
+        <img src="https://freesvg.org/storage/img/thumb/1646656079PixelArt-Heart-1.png" class="life" id="life5">
+        <img src="https://freesvg.org/storage/img/thumb/1646656079PixelArt-Heart-1.png" class="life" id="life4">
+        <img src="https://freesvg.org/storage/img/thumb/1646656079PixelArt-Heart-1.png" class="life" id="life3">
+        <img src="https://freesvg.org/storage/img/thumb/1646656079PixelArt-Heart-1.png" class="life" id="life2">
+        <img src="https://freesvg.org/storage/img/thumb/1646656079PixelArt-Heart-1.png" class="life" id="life1">
+    </div>
+    <input type="text" id="guessInput" maxlength="1" placeholder="Guess a letter">
+    <button onclick="guessLetter()">Guess</button>
+    <button onclick="newGame()">New Game</button>
+</div>
+
+<script>
+const words = [
+    {word: "JAVASCRIPT", hint: "A popular programming language"},
+    {word: "PYTHON", hint: "A snake or a coding language"},
+    {word: "ALGORITHM", hint: "A process or set of rules to be followed"},
+    {word: "DATABASE", hint: "Where information is stored"},
+    {word: "COMPUTER", hint: "An electronic device for storing and processing data"}
+];
+
+let currentWord, 
+    guessedLetters = [],
+    lives = 6,
+    gameOver = false;
+
+function initializeGame() {
+    let randomIndex = Math.floor(Math.random() * words.length);
+    currentWord = words[randomIndex].word.split('');
+    document.getElementById('hint').textContent = words[randomIndex].hint;
+    updateWordDisplay();
+    document.getElementById('guessedLetters').textContent = '';
+    lives = 6;
+    guessedLetters = [];
+    gameOver = false;
+    for(let i = 1; i <= 6; i++) {
+        document.getElementById(`life${i}`).src = 'https://freesvg.org/storage/img/thumb/1646656079PixelArt-Heart-1.png';
+    }
+    document.getElementById('hangman').textContent = 'Start guessing!';
+}
+
+function updateWordDisplay() {
+    const display = currentWord.map(letter => guessedLetters.includes(letter) ? letter : '_').join(' ');
+    document.getElementById('wordDisplay').textContent = display;
+}
+
+function guessLetter() {
+    if (gameOver) return;
+    const guess = document.getElementById('guessInput').value.toUpperCase();
+    document.getElementById('guessInput').value = '';
+
+    if (!guess.match(/[A-Z]/)) return; // Only allow letters
+
+    if (guessedLetters.includes(guess)) {
+        alert('You already guessed that letter!');
+        return;
+    }
+
+    guessedLetters.push(guess);
+    if (currentWord.includes(guess)) {
+        updateWordDisplay();
+        if (!document.getElementById('wordDisplay').textContent.includes('_')) {
+            gameOver = true;
+            alert('You win! The word was ' + currentWord.join(''));
+        }
+    } else {
+        lives--;
+        document.getElementById(`life${lives + 1}`).src = 'https://freesvg.org/storage/img/thumb/heart-outline.png';
+        document.getElementById('guessedLetters').textContent += guess + ' ';
+        drawHangman();
+        checkGameOver();
+    }
+}
+
+function drawHangman() {
+    const stages = [
+        "  _______\n  |       \n  |       \n  |       \n  |       \n  |       \n__|__",
+        "  _______\n  |     | \n  |       \n  |       \n  |       \n  |       \n__|__",
+        "  _______\n  |     | \n  |     O \n  |       \n  |       \n  |       \n__|__",
+        "  _______\n  |     | \n  |     O \n  |     | \n  |       \n  |       \n__|__",
+        "  _______\n  |     | \n  |     O \n  |    /| \n  |       \n  |       \n__|__",
+        "  _______\n  |     | \n  |     O \n  |    /|\\\n  |       \n  |       \n__|__",
+        "  _______\n  |     | \n  |     O \n  |    /|\\\n  |    /  \n  |       \n__|__",
+        "  _______\n  |     | \n  |     O \n  |    /|\\\n  |    / \\\n  |       \n__|__"
+    ];
+    document.getElementById('hangman').textContent = stages[6 - lives];
+}
+
+function checkGameOver() {
+    if (lives === 0) {
+        gameOver = true;
+        alert('Game Over! The word was ' + currentWord.join(''));
+    }
+}
+
+function newGame() {
+    initializeGame();
+}
+
+initializeGame();
+</script>
+
+</body>
+</html>
