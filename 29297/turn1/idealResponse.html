@@ -5,31 +5,44 @@
     <meta charset="utf-8">
     <title>Fighter Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Permanent+Marker" rel="stylesheet">
     <style>
         body {
             margin: 0;
             overflow: hidden;
         }
 
-        canvas {
-            background: #eee;
-            display: push;
+        canvas {          
+            display: block;
             margin: 0 auto;
             background: #cdcdcd;
             background-image: url('https://www.destructoid.com/wp-content/uploads/2020/12/252733-h1.jpg');
             background-size: cover;
             background-repeat: none;
         }
+        .instructions{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: "Permanent Marker", cursive;
+        }
     </style>
-
 </head>
 
 <body>
-    <canvas width="800" height="500" id="ourCanvas"></canvas>
-
+    <canvas width="800" height="500" id="Canvas"></canvas>
+    <div class="instructions">
+        <p>
+        Player 1: Use w,a,s,d keys to move and j,k,l to attack
+    </p>
+    <p>
+        Player 2: Use Arrow keys to move and 1,2,3 to attack
+    </p>
+    </div>
     <script>
         //Grabs a handle on the canvas element
-        var ctx = document.getElementById("ourCanvas").getContext("2d");
+        var ctx = document.getElementById("Canvas").getContext("2d");
 
         //defines out list of characters
         var characters = [];
@@ -53,7 +66,7 @@
         })
         //right wall
         walls.push({
-            x: ourCanvas.width,
+            x: Canvas.width,
             y: 0,
             width: 30,
             height: 1000,
@@ -92,8 +105,8 @@
 
         characters.push({
             player: "Red",
-            x: ourCanvas.width / 4, // Center Red player on the left side of the canvas
-            y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
+            x: Canvas.width / 4, // Center Red player on the left side of the canvas
+            y: Canvas.height / 2 - 60, // Adjust y position to vertically center the image
             width: 50, 
             height: 100, 
             attacks: [],
@@ -110,8 +123,8 @@
 
         characters.push({
             player: "Blue",
-            x: (ourCanvas.width / 4) * 3 - 50, // Center Blue player on the right side of the canvas
-            y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
+            x: (Canvas.width / 4) * 3 - 50, // Center Blue player on the right side of the canvas
+            y: Canvas.height / 2 - 60, // Adjust y position to vertically center the image
             width: 50, // Width of the character image
             height: 100, // Height of the character image
             attacks: [],
@@ -165,13 +178,13 @@
             ctx.fillStyle = "red";
             ctx.fillRect(20, 20, characters[0].hp * 2, 20); // scale hp by 2 for width
             ctx.strokeStyle = "black";
-            ctx.strokeRect(20, 20, 200, 20); // health bar outline for red
+            ctx.strokeRect(20, 20, 200, 20); 
 
             // Blue character's health bar on the right
             ctx.fillStyle = "blue";
-            ctx.fillRect(ourCanvas.width - 220, 20, characters[1].hp * 2, 20); // scale hp by 2 for width
+            ctx.fillRect(Canvas.width - 220, 20, characters[1].hp * 2, 20); // scale hp by 2 for width
             ctx.strokeStyle = "black";
-            ctx.strokeRect(ourCanvas.width - 220, 20, 200, 20); // health bar outline for blue
+            ctx.strokeRect(Canvas.width - 220, 20, 200, 20); // health bar outline for blue
         }
 
         //function to draw our rectangle characters
@@ -434,8 +447,8 @@
         function gravity(char) {
             char.y -= char.jumpForce;
             char.jumpForce -= 1;
-            if (char.y + char.height * 1.5 >= ourCanvas.height) {  // *1.5 to account for image scaling
-                char.y = ourCanvas.height - char.height * 1.5;  
+            if (char.y + char.height * 1.5 >= Canvas.height) {  // *1.5 to account for image scaling
+                char.y = Canvas.height - char.height * 1.5;  
                 char.numJumps = 2;  // Reset jumps when the character lands
                 char.jumpForce = 0;  
                 char.jumping = false; 
@@ -456,8 +469,8 @@
             remBox({
                 x: 0,
                 y: 0,
-                width: ourCanvas.width,
-                height: ourCanvas.height
+                width: Canvas.width,
+                height: Canvas.height
             });
 
             // Draw health bars
@@ -478,8 +491,8 @@
                     remBox({
                         x: 0,
                         y: 0,
-                        width: ourCanvas.width,
-                        height: ourCanvas.height
+                        width: Canvas.width,
+                        height: Canvas.height
                     });
                     drawWinner();
                     setTimeout(refresh, 3000);
@@ -497,9 +510,9 @@
             for (var i in characters) {
                 var char = characters[i];
                 if (char.hp > 0) {
-                    ctx.font = "30px Arial";
+                    ctx.font = "70px Arial";
                     ctx.fillStyle = char.color;
-                    ctx.fillText(char.player + " Wins!", ourCanvas.height / 3, 50);
+                    ctx.fillText(char.player + " Wins!", 200, 400 );
                 }
             }
         }

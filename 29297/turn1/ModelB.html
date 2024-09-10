@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2D Combat Game</title>
+<style>
+    body { 
+        font-family: 'Arial', sans-serif; 
+        background-color: #f0f0f0; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    #gameArea {
+        position: relative;
+        width: 800px;
+        height: 400px;
+        background: #fff;
+        border: 2px solid #000;
+        overflow: hidden;
+    }
+    .player {
+        width: 50px;
+        height: 100px;
+        position: absolute;
+        bottom: 0;
+        transition: all 0.1s;
+    }
+    #player1 { 
+        background-color: blue; 
+        left: 50px;
+    }
+    #player2 { 
+        background-color: red; 
+        right: 50px;
+    }
+    .health {
+        position: absolute;
+        top: 10px;
+        font-size: 20px;
+    }
+    #health1 { left: 10px; }
+    #health2 { right: 10px; }
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+    <div id="player1" class="player"></div>
+    <div id="player2" class="player"></div>
+    <div id="health1" class="health">Player 1: 100 HP</div>
+    <div id="health2" class="health">Player 2: 100 HP</div>
+</div>
+
+<script>
+document.addEventListener('keydown', movePlayer);
+document.addEventListener('keyup', stopPlayer);
+
+const gameArea = document.getElementById('gameArea');
+const player1 = document.getElementById('player1');
+const player2 = document.getElementById('player2');
+let p1 = {x: 50, y: 300, hp: 100, keys: {up: 'w', down: 's', left: 'a', right: 'd', punch: 'q', beam: 'e', push: 'r'}, speed: 5, jumping: false, crouching: false};
+let p2 = {x: 700, y: 300, hp: 100, keys: {up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', punch: 'Enter', beam: '0', push: '1'}, speed: 5, jumping: false, crouching: false};
+
+function movePlayer(e) {
+    let key = e.key;
+    if(key === p1.keys.up && !p1.jumping) { jump(p1); }
+    if(key === p1.keys.down) { crouch(p1); }
+    if(key === p1.keys.left) { p1.x = Math.max(p1.x - p1.speed, 0); }
+    if(key === p1.keys.right) { p1.x = Math.min(p1.x + p1.speed, gameArea.clientWidth - 50); }
+    if(key === p2.keys.up && !p2.jumping) { jump(p2); }
+    if(key === p2.keys.down) { crouch(p2); }
+    if(key === p2.keys.left) { p2.x = Math.max(p2.x - p2.speed, 0); }
+    if(key === p2.keys.right) { p2.x = Math.min(p2.x + p2.speed, gameArea.clientWidth - 50); }
+    
+    // Attack moves
+    if(key === p1.keys.punch || key === p1.keys.beam || key === p1.keys.push) { attack(p1, p2, key); }
+    if(key === p2.keys.punch || key === p2.keys.beam || key === p2.keys.push) { attack(p2, p1, key); }
+
+    updatePositions();
+}
+
+function stopPlayer(e) {
+    if ([p1.keys.down, p2.keys.down].includes(e.key)) {
+        e.target === document ? document.activeElement.blur() : null; // To reset focus from buttons if any
+        p1.crouching = p2.crouching = false;
+        updatePositions();
+    }
+}
+
+function jump(player) {
+    if (!player.jumping) {
+        player.jumping = true;
+        let jumpHeight = 100;
+        let jumpCount = 0;
+        let jumpInterval = setInterval(() => {
+            if (jumpCount >= jumpHeight) {
+                clearInterval(jumpInterval);
+                let fallInterval = setInterval(() => {
+                    if (player.y < 300) {
+                        player.y += 5;
+                        updatePositions();
+                    } else {
+                        player.jumping = false;
+                        clearInterval(fallInterval);
+                    }
+                }, 10);
+            } else {
+                player.y -= 5;
+                jumpCount += 5;
+                updatePositions();
+            }
+        }, 10);
+    }
+}
+
+function crouch(player) {
+    player.crouching = true;
+    player.y = 320; // Slightly lower position for crouching
+    updatePositions();
+}
+
+function attack(attacker, defender, key) {
+    if (Math.abs(attacker.x - defender.x) < 70 && !defender.jumping && !defender.crouching) {
+        let damage = 10;
+        if (key === attacker.keys.push) {
+            defender.x += (defender === p1) ? 50 : -50; // Push back
+            damage = 0;
+        }
+        defender.hp = Math.max(defender.hp - damage, 0);
+        document.getElementById(`health${defender === p1 ? '1' : '2'}`).innerText = `Player ${defender === p1 ? '1' : '2'}: ${defender.hp} HP`;
+        if (defender.hp <= 0) gameOver(attacker === p1 ? 'Player 1' : 'Player 2');
+    }
+}
+
+function updatePositions() {
+    player1.style.left = p1.x + 'px';
+    player1.style.bottom = p1.y + 'px';
+    player2.style.left = p2.x + 'px';
+    player2.style.bottom = p2.y + 'px';
+}
+
+function gameOver(winner) {
+    alert(`${winner} wins!`);
+    location.reload(); // Simple game reset
+}
+
+</script>
+</body>
+</html>
