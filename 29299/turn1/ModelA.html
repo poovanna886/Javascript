@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Archery Game</title>
+<style>
+    canvas { 
+        background: #e0e0e0; 
+        display: block; 
+        margin: 0 auto; 
+    }
+    #score {
+        text-align: center;
+        font-size: 24px;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+<div id="score">Score: 0</div>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2, centerY = canvas.height / 2;
+    let score = 0, angle = 0, shooting = false, arrowPos = {x: centerX, y: centerY};
+
+    // Bow properties
+    const bow = {
+        length: 100,
+        width: 10,
+        swingSpeed: 0.01
+    };
+
+    // Target properties
+    const target = {
+        x: 700,
+        y: centerY,
+        radius: 50,
+        zones: [10, 30, 50] // radii for different scoring zones
+    };
+
+    function drawBow() {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angle);
+        ctx.fillStyle = 'brown';
+        ctx.fillRect(-bow.width/2, -bow.length, bow.width, bow.length * 2);
+        ctx.restore();
+    }
+
+    function drawArrow() {
+        if (!shooting) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(angle);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(-2, -bow.length, 4, bow.length * 0.8);
+            ctx.restore();
+        }
+    }
+
+    function drawTarget() {
+        target.zones.forEach((zoneRadius, index) => {
+            ctx.beginPath();
+            ctx.arc(target.x, target.y, zoneRadius, 0, 2 * Math.PI);
+            ctx.strokeStyle = index % 2 === 0 ? 'red' : 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        });
+    }
+
+    function shootArrow() {
+        if (!shooting) {
+            shooting = true;
+            let velocityX = Math.cos(angle) * 10;
+            let velocityY = Math.sin(angle) * 10;
+            let arrowEndX = centerX + Math.cos(angle) * bow.length;
+            let arrowEndY = centerY + Math.sin(angle) * bow.length;
+            
+            // Simple animation for the arrow
+            (function animateArrow() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBow();
+                drawTarget();
+                ctx.beginPath();
+                ctx.moveTo(arrowEndX, arrowEndY);
+                arrowEndX += velocityX;
+                arrowEndY += velocityY;
+                ctx.lineTo(arrowEndX, arrowEndY);
+                ctx.stroke();
+                
+                // Check collision
+                if (Math.hypot(arrowEndX - target.x, arrowEndY - target.y) < target.radius) {
+                    let distance = Math.hypot(arrowEndX - target.x, arrowEndY - target.y);
+                    score += target.zones.findIndex(z => z > distance) + 1; // +1 because index starts at 0
+                    document.getElementById('score').textContent = 'Score: ' + score;
+                    shooting = false;
+                    return;
+                }
+                
+                if (arrowEndX < 0 || arrowEndX > canvas.width || arrowEndY < 0 || arrowEndY > canvas.height) {
+                    shooting = false;
+                } else {
+                    requestAnimationFrame(animateArrow);
+                }
+            })();
+        }
+    }
+
+    function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        angle = Math.sin(Date.now() * bow.swingSpeed) * Math.PI / 2; // Swinging motion
+        drawBow();
+        drawArrow();
+        drawTarget();
+        if (!shooting) requestAnimationFrame(gameLoop);
+    }
+
+    canvas.onclick = shootArrow;
+    gameLoop();
+</script>
+</body>
+</html>

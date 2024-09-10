@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bow and Arrow Game</title>
+<style>
+body { 
+    background: #f0f0f0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    margin: 0; 
+    font-family: 'Arial', sans-serif;
+}
+canvas { 
+    background: #fff; 
+    border: 2px solid #333; 
+}
+#score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    color: #333;
+}
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="score">Score: 0</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+let score = 0;
+
+class Bow {
+    constructor() {
+        this.x = 100;
+        this.y = canvas.height / 2;
+        this.angle = 0;
+        this.swingSpeed = 0.01;
+        this.maxAngle = Math.PI;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.beginPath();
+        ctx.arc(0, 0, 50, 0, Math.PI);
+        ctx.strokeStyle = 'brown';
+        ctx.lineWidth = 10;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, -50);
+        ctx.lineTo(0, 50);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    update() {
+        this.angle = Math.sin(Date.now() * this.swingSpeed) * this.maxAngle / 2;
+    }
+}
+
+class Arrow {
+    constructor(angle) {
+        this.x = 100;
+        this.y = canvas.height / 2;
+        this.angle = angle;
+        this.speed = 10;
+        this.flying = true;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.beginPath();
+        ctx.moveTo(0, -5);
+        ctx.lineTo(50, 0);
+        ctx.lineTo(0, 5);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    update() {
+        if (this.flying) {
+            this.x += this.speed * Math.cos(this.angle);
+            this.y += this.speed * Math.sin(this.angle);
+            if (this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.flying = false;
+        }
+    }
+}
+
+class Target {
+    constructor() {
+        this.x = canvas.width - 100;
+        this.y = canvas.height / 2;
+        this.radius = 50;
+    }
+
+    draw() {
+        for(let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius - (i * 10), 0, 2 * Math.PI);
+            ctx.strokeStyle = i % 2 === 0 ? 'black' : 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+
+    checkCollision(arrow) {
+        const distance = Math.hypot(this.x - arrow.x, this.y - arrow.y);
+        if (distance < this.radius) {
+            const zone = Math.floor((this.radius - distance) / 10);
+            score += (5 - zone) * 10;
+            scoreDisplay.textContent = `Score: ${score}`;
+            return true;
+        }
+        return false;
+    }
+}
+
+const bow = new Bow();
+const target = new Target();
+let arrow = null;
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    bow.update();
+    bow.draw();
+    target.draw();
+
+    if (arrow) {
+        arrow.update();
+        arrow.draw();
+        if (!arrow.flying || target.checkCollision(arrow)) {
+            arrow = null;
+        }
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+canvas.onclick = function(e) {
+    if (!arrow) {
+        arrow = new Arrow(bow.angle);
+    }
+};
+
+gameLoop();
+</script>
+</body>
+</html>

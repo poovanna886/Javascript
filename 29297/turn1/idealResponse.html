@@ -73,7 +73,6 @@
             color: "rgb(0,0,0)"
         })
 
-
         keys.includesKey = function (val) {
             var found = false;
             for (var i = 0; i < this.length; i++) {
@@ -125,8 +124,8 @@
             player: "Blue",
             x: (Canvas.width / 4) * 3 - 50, // Center Blue player on the right side of the canvas
             y: Canvas.height / 2 - 60, // Adjust y position to vertically center the image
-            width: 50, // Width of the character image
-            height: 100, // Height of the character image
+            width: 50, 
+            height: 100, 
             attacks: [],
             color: "rgb(0,0,255)",
             dir: -1,
@@ -138,8 +137,6 @@
             jumping: false,
             blocking: false
         });
-
-
 
         // Function to draw the characters with consistent scaling
         function drawCharacter(char) {
@@ -594,8 +591,6 @@
 
         document.addEventListener("keydown", keyPressed);
         document.addEventListener("keyup", keyReleased);
-
-
     </script>
 </body>
 
