@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Fighter Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+        type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Permanent+Marker" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            background: #cdcdcd;
+            background-image: url('https://static1.1.sqspcdn.com/static/f/721581/26734501/1450151739620/tk7fr_12360178_10153716976037978_1122474704166050209_n.jpg?token=KVWIcO29QAa0pY8STZwXJrL9YYk%3D');
+        }
+    </style>
+
+</head>
+
+<body>
+    <canvas width="600" height="400" id="ourCanvas"></canvas>
+
+    <script>
+        //Grabs a handle on the canvas element
+        var ctx = document.getElementById("ourCanvas").getContext("2d");
+
+        //defines out list of characters
+        var characters = [];
+        var keys = [];
+        var walls = [];
+
+        //left wall
+        walls.push({
+            x: -30,
+            y: 0,
+            width: 30,
+            height: 1000,
+            color: "rgb(0,0,0)"
+        })
+        //right wall
+        walls.push({
+            x: ourCanvas.width,
+            y: 0,
+            width: 30,
+            height: 1000,
+            color: "rgb(0,0,0)"
+        })
+
+
+        keys.includesKey = function (val) {
+            var found = false;
+            for (var i = 0; i < this.length; i++) {
+                if (this[i].key == val) {
+                    found = true;
+                    break;
+                }
+            }
+            return found;
+        };
+        keys.getKeys = function (val, checkUsedFlag = false) {
+            var foundKeys = [];
+            for (var i = 0; i < this.length; i++) {
+                if (this[i].key == val) {
+                    if (!checkUsedFlag || !this[i].used) {
+                        foundKeys.push(this[i].key);
+                    }
+                }
+            }
+            return foundKeys;
+        };
+        keys.setUsed = function (val) {
+            for (var i = 0; i < this.length; i++) {
+                if (this[i].key == val) {
+                    this[i].used = true;
+                }
+            }
+        };
+
+        //Adds our red player
+        characters.push({
+            player: "Red",
+            x: 50,
+            y: 50,
+            width: 15,
+            height: 30,
+            color: "rgb(255,0,0)",
+            attacks: [],
+            dir: 1,
+            hp: 100,
+            lastRangedAttackTime: 0,
+            jumpForce: 0,
+            numJumps: 2,
+            crouching: false,
+            jumping: false,
+            blocking: false
+        });
+
+        //adds our blue player
+        characters.push({
+            player: "Blue",
+            x: 150,
+            y: 50,
+            width: 15,
+            height: 30,
+            color: "rgb(0,0,255)",
+            attacks: [],
+            dir: -1,
+            hp: 100,
+            lastRangedAttackTime: 0,
+            jumpForce: 0,
+            numJumps: 2,
+            crouching: false,
+            jumping: false,
+            blocking: false
+        });
+
+        function drawCharacter(char) {
+            drawBox(char);
+        }
+
+        function drawAttacks(char) {
+            for (var i in char.attacks) {
+                drawBox(char.attacks[i]);
+            }
+        }
+
+        function currentTime() {
+            var d = new Date();
+            return d.getTime();
+        }
+
+        function refresh() {
+            gameRunning = true;
+            characters[0].x = 50;
+            characters[0].hp = 100;
+            characters[1].x = 150;
+            characters[1].hp = 100;
+            window.requestAnimationFrame(gameLoop);
+        }
+
+        // Function to draw the health bars for both characters
+        function drawHealthBars() {
+            // Red character's health bar on the left
+            ctx.fillStyle = "red";
+            ctx.fillRect(20, 20, characters[0].hp * 2, 20); // scale hp by 2 for width
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(20, 20, 200, 20); // health bar outline for red
+
+            // Blue character's health bar on the right
+            ctx.fillStyle = "blue";
+            ctx.fillRect(ourCanvas.width - 220, 20, characters[1].hp * 2, 20); // scale hp by 2 for width
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(ourCanvas.width - 220, 20, 200, 20); // health bar outline for blue
+        }
+
+        //function to draw our rectangle characters
+        function drawBox(box) {
+            ctx.fillStyle = box.color;
+            ctx.fillRect(box.x, box.y, box.width, box.height);
+        }
+
+        function remCharacter(char) {
+            remBox(char);
+        }
+
+        //function to blank out the space around our rectangle characters
+        function remBox(box) {
+            ctx.clearRect(box.x - 2, box.y - 2, box.width + 4, box.height + 4);
+        }
+
+        function doAttack(char, type) {
+            var newAttack = {
+                x: char.x + char.width * char.dir,
+                y: char.y + char.height / 4,
+                width: 15,
+                height: 5,
+                color: "rgb(255,100,0)",
+                duration: 3,
+                numhits: 1,
+                dmg: 10,
+                dir: char.dir,
+                move: function () { },
+                type: type,
+                blocked: false
+            };
+
+            if (type == "punch") {
+                newAttack.width = 15;
+                newAttack.height = 5;
+                newAttack.dmg = 10;
+            } else if (type == "hadouken") {
+                if (char.lastRangedAttackTime + 500 > currentTime()) {
+                    return;
+                } else {
+                    char.lastRangedAttackTime = currentTime();
+                }
+                newAttack.move = function () {
+                    this.x = this.x + (this.width / 10) * this.dir;
+                };
+                newAttack.width = 15;
+                newAttack.height = 15;
+                newAttack.dmg = 10;
+                newAttack.duration = 100;
+                newAttack.dmg = 10;
+            } else if (type == "block") {
+                newAttack.width = 20;
+                newAttack.height = 20;
+                newAttack.dmg = 0;
+                newAttack.duration = 10000;
+                newAttack.move = function () {
+                    this.x = char.x + char.width * char.dir;
+                    this.y = char.y + char.height / 4;
+                }
+            }
+            char.attacks.push(newAttack);
+        }
+
+        function decayAttacks(char) {
+            for (var i in char.attacks) {
+                char.attacks[i].duration--;
+                if (char.attacks[i].duration < 0) {
+                    char.attacks.splice(i, 1);
+                }
+            }
+        }
+
+        function moveCharacter(char) {
+            if (checkCollisions(characters[0], characters[1])) {
+                characters[0].x += 1 * characters[0].dir;
+                characters[1].x += -1 * characters[0].dir;
+            }
+
+            if (char.blocking) {
+                return;
+            }
+            var moveSpeed = 5;
+            if (char.crouching) {
+                moveSpeed = 2.5;
+            }
+            if (char.player == "Red") {
+
+                if (keys.includesKey("a")) {
+                    char.dir = -1;
+                    char.x -= moveSpeed;
+                    if (checkCollisions(char, characters[1])) {
+                        char.x += moveSpeed;
+                    }
+                }
+                if (keys.includesKey("d")) {
+                    char.dir = 1;
+                    char.x += moveSpeed;
+                    if (checkCollisions(char, characters[1])) {
+                        char.x -= moveSpeed;
+                    }
+                }
+                if (keys.includesKey("w") && char.numJumps > 0 && char.jumpForce < 5 && !char.jumping) {
+                    char.jumpForce = 15;
+                    char.jumping = true;
+                    char.numJumps--;
+                    if (checkCollisions(char, characters[1])) {
+                        char.numJumps++;
+                    }
+                }
+
+                if (keys.includesKey("s") && char.crouching == false) {
+                    char.height /= 2;
+                    char.crouching = true;
+                }
+                if (keys.includesKey("j")) {
+                    var unusedKeys = keys.getKeys("j", true);
+                    if (unusedKeys.length > 0) {
+                        keys.setUsed("j");
+                        doAttack(char, "punch");
+                    }
+                }
+
+                if (keys.includesKey("k")) {
+                    var unusedKeys = keys.getKeys("k", true);
+                    if (unusedKeys.length > 0) {
+                        keys.setUsed("k");
+                        doAttack(char, "hadouken");
+                    }
+                }
+
+                if (keys.includesKey("l") && char.blocking == false) {
+                    var unusedKeys = keys.getKeys("l", true);
+                    if (unusedKeys.length > 0) {
+                        keys.setUsed("l");
+                        doAttack(char, "block");
+                        char.blocking = true;
+                    }
+                }
+            }
+
+            if (char.player == "Blue") {
+                if (keys.includesKey("ArrowLeft")) {
+                    char.dir = -1;
+                    char.x -= moveSpeed;
+                    if (checkCollisions(char, characters[0])) {
+                        char.x += moveSpeed;
+                    }
+                }
+                if (keys.includesKey("ArrowRight")) {
+                    char.dir = 1;
+                    char.x += moveSpeed;
+                    if (checkCollisions(char, characters[0])) {
+                        char.x -= moveSpeed;
+                    }
+                }
+
+                if (keys.includesKey("ArrowUp") &&
+                    char.numJumps > 0 &&
+                    char.jumpForce < 5 && !char.jumping
+                ) {
+                    char.jumpForce = 15;
+                    char.jumping = true;
+                    char.numJumps--;
+                    if (checkCollisions(char, characters[0])) {
+                        char.numJumps++;
+                    }
+                }
+
+                if (keys.includesKey("ArrowDown") && char.crouching == false) {
+                    char.height /= 2;
+                    char.crouching = true;
+                }
+                if (keys.includesKey("1")) {
+                    var unusedKeys = keys.getKeys("1", true);
+                    if (unusedKeys.length > 0) {
+                        keys.setUsed("1");
+                        doAttack(char, "punch");
+                    }
+                }
+
+                if (keys.includesKey("2")) {
+                    var unusedKeys = keys.getKeys("2", true);
+                    if (unusedKeys.length > 0) {
+                        keys.setUsed("2");
+                        doAttack(char, "hadouken");
+                    }
+                }
+
+                if (keys.includesKey("3")) {
+                    var unusedKeys = keys.getKeys("3", true);
+                    if (unusedKeys.length > 0) {
+                        keys.setUsed("3");
+                        doAttack(char, "block");
+                        char.blocking = true;
+                    }
+                }
+            }
+        }
+
+
+        function checkCollisions(rect1, rect2) {
+            if (
+                rect1.x < rect2.x + rect2.width &&
+                rect1.x + rect1.width > rect2.x &&
+                rect1.y < rect2.y + rect2.height &&
+                rect1.y + rect1.height > rect2.y
+            ) {
+                // collision detected!
+                return true;
+            }
+            return false;
+        }
+
+        function checkHits(char) {
+            for (var a in char.attacks) {
+                var attack = char.attacks[a];
+
+                if (attack.numhits <= 0) {
+                    continue;
+                }
+
+                for (var c in characters) {
+                    if (char.player == characters[c].player) {
+                        continue;
+                    }
+
+                    if (attack.type == "hadouken") {
+                        for (var CsAs in characters[c].attacks) {
+                            var thisCharsAttack = characters[c].attacks[CsAs];
+
+                            if (thisCharsAttack.type != "hadouken" && thisCharsAttack.type != "block") {
+                                continue;
+                            }
+                            if (checkCollisions(attack, thisCharsAttack)) {
+                                if (thisCharsAttack.type == "block" && attack.blocked == false) {
+                                    attack.dmg /= 2;
+                                    attack.blocked = true;
+                                } else {
+                                    char.attacks.splice(a, 1);
+                                    characters[c].attacks.splice(CsAs, 1);
+                                }
+                            }
+                        }
+                    }
+
+                    if (checkCollisions(attack, characters[c])) {
+                        characters[c].hp -= attack.dmg;
+                        attack.numhits -= 1;
+                        characters[c].x -= 5 * -attack.dir;
+
+                        if (attack.numhits >= 0) {
+                            char.attacks.splice(a, 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        function gravity(char) {
+            char.y -= char.jumpForce;
+            char.jumpForce -= 1;
+            if (char.y + char.height >= ourCanvas.height) {
+                char.y = ourCanvas.height - char.height;
+                char.numJumps = 2;
+            }
+        }
+
+        function wallbounds(char) {
+            for (var w in walls) {
+                if (checkCollisions(char, walls[w])) {
+                    char.x -= 5 * char.dir;
+                }
+                drawBox(walls[w]);
+            }
+        }
+
+        gameRunning = true;
+        function gameLoop() {
+            remBox({
+                x: 0,
+                y: 0,
+                width: ourCanvas.width,
+                height: ourCanvas.height
+            });
+
+            // Draw health bars
+            drawHealthBars();
+
+            for (var i in characters) {
+                var char = characters[i];
+                moveCharacter(char);
+                wallbounds(char);
+                drawCharacter(char);
+                decayAttacks(char);
+                moveAttacks(char);
+                drawAttacks(char);
+                checkHits(char);
+                gravity(char);
+                if (char.hp < 0) {
+                    gameRunning = false;
+                    remBox({
+                        x: 0,
+                        y: 0,
+                        width: ourCanvas.width,
+                        height: ourCanvas.height
+                    });
+                    drawWinner();
+                    setTimeout(refresh, 3000);
+                }
+            }
+
+            if (gameRunning == true) {
+                window.requestAnimationFrame(gameLoop);
+            }
+        }
+
+        window.requestAnimationFrame(gameLoop);
+
+        function drawWinner() {
+    for (var i in characters) {
+        var char = characters[i];
+        if (char.hp > 0) {
+            ctx.font = "30px Arial";
+            ctx.fillStyle = char.color;
+            ctx.fillText(char.player + " Wins!", ourCanvas.height / 3, 50);
+        }
+    }
+}
+        function remAttacks(char) {
+            for (var a in char.attacks) {
+                remBox(char.attacks[a]);
+            }
+        }
+
+        function moveAttacks(char) {
+            for (var a in char.attacks) {
+                var attack = char.attacks[a];
+                attack.move();
+            }
+        }
+
+        function handleKeyUp(key) {
+            var char = characters[0];
+            if (key == "l") {
+                char.blocking = false;
+                for (var a in char.attacks) {
+                    var attack = char.attacks[a];
+                    if (attack.type == "block") {
+                        char.attacks.splice(a, 1);
+                    }
+                }
+            }
+            if (key == "s" && char.crouching) {
+                char.height *= 2;
+                char.crouching = false;
+            }
+            if (key == "w" && char.jumping) {
+                char.jumping = false;
+            }
+
+            var char = characters[1];
+
+            if (key == "3") {
+                char.blocking = false;
+                for (var a in char.attacks) {
+                    var attack = char.attacks[a];
+                    if (attack.type == "block") {
+                        char.attacks.splice(a, 1);
+                    }
+                }
+            }
+
+            if (key == "ArrowDown" && char.crouching) {
+                char.height *= 2;
+                char.crouching = false;
+            }
+
+            if (key == "ArrowUp" && char.jumping) {
+                char.jumping = false;
+            }
+        }
+
+        function keyReleased(e) {
+            for (var i in keys) {
+                if (keys[i].key == e.key) {
+                    keys.splice(i, 1);
+                    handleKeyUp(e.key);
+                }
+            }
+
+            if (keys.includesKey(e.key)) {
+                keyReleased(e);
+            }
+        }
+
+        function keyPressed(e) {
+            if (!e.repeat) {
+                keys.push({
+                    key: e.key,
+                    used: false
+                });
+            }
+        }
+
+        document.addEventListener("keydown", keyPressed);
+        document.addEventListener("keyup", keyReleased);
+
+
+    </script>
+</body>
+
+</html>
