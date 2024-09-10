@@ -23,7 +23,7 @@
 </head>
 
 <body>
-    <canvas width="600" height="400" id="ourCanvas"></canvas>
+    <canvas width="800" height="500" id="ourCanvas"></canvas>
 
     <script>
         //Grabs a handle on the canvas element
@@ -33,6 +33,13 @@
         var characters = [];
         var keys = [];
         var walls = [];
+
+        // Define the images for the characters
+var redCharacterImg = new Image();
+var blueCharacterImg = new Image();
+redCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
+blueCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
+
 
         //left wall
         walls.push({
@@ -120,8 +127,13 @@
         });
 
         function drawCharacter(char) {
-            drawBox(char);
-        }
+    if (char.player === "Red") {
+        ctx.drawImage(redCharacterImg, char.x, char.y, char.width * 3, char.height * 3); // scale image size
+    } else if (char.player === "Blue") {
+        ctx.drawImage(blueCharacterImg, char.x, char.y, char.width * 3, char.height * 3); // scale image size
+    }
+}
+
 
         function drawAttacks(char) {
             for (var i in char.attacks) {
