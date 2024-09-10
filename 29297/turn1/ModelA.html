@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>2D Combat Game</title>
+    <style>
+    body {
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    #gameArea {
+        width: 800px;
+        height: 300px;
+        background: #fff;
+        border: 2px solid #000;
+        position: relative;
+        overflow: hidden;
+    }
+    .player {
+        width: 40px;
+        height: 80px;
+        position: absolute;
+        bottom: 0;
+    }
+    #player1 {
+        background-color: blue;
+        left: 50px;
+    }
+    #player2 {
+        background-color: red;
+        right: 50px;
+    }
+    #healthBar1, #healthBar2 {
+        position: absolute;
+        top: 10px;
+        color: white;
+        padding: 5px;
+        background: rgba(0, 0, 0, 0.5);
+    }
+    #healthBar1 {
+        left: 10px;
+    }
+    #healthBar2 {
+        right: 10px;
+    }
+</style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="player1" class="player"></div>
+        <div id="player2" class="player"></div>
+        <div id="healthBar1">Player 1 HP: 100</div>
+        <div id="healthBar2">Player 2 HP: 100</div>
+    </div>
+    <script>
+        // Player objects
+        const player1 = {
+            el: document.getElementById('player1'),
+            hp: 100,
+            x: 50,
+            y: 220,
+            width: 40,
+            height: 80,
+            keys: {jump: 'w', crouch: 's', punch: 'e', beam: 'r', push: 't'}
+        };
+        const player2 = {
+            el: document.getElementById('player2'),
+            hp: 100,
+            x: 710,
+            y: 220,
+            width: 40,
+            height: 80,
+            keys: {jump: 'ArrowUp', crouch: 'ArrowDown', punch: '1', beam: '2', push: '3'}
+        };
+    
+        // Game state
+        let gameLoop;
+        const speed = 5;
+        const jumpSpeed = 15;
+        const gravity = 0.8;
+    
+        function updatePosition(player) {
+            player.el.style.left = player.x + 'px';
+            player.el.style.bottom = player.y + 'px';
+        }
+    
+        function gameOver(winner) {
+            clearInterval(gameLoop);
+            alert(`Game Over! ${winner} wins!`);
+        }
+    
+        function checkCollision(p1, p2) {
+            return p1.x < p2.x + p2.width &&
+                   p1.x + p1.width > p2.x &&
+                   p1.y < p2.y + p2.height &&
+                   p1.y + p1.height > p2.y;
+        }
+    
+        // Movement and actions
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                // Player 1 movements
+                case 'a': player1.x -= speed; break;
+                case 'd': player1.x += speed; break;
+                case player1.keys.jump: if(player1.y >= 220) player1.y += jumpSpeed; break;
+                // Player 2 movements
+                case 'ArrowLeft': player2.x -= speed; break;
+                case 'ArrowRight': player2.x += speed; break;
+                case player2.keys.jump: if(player2.y >= 220) player2.y += jumpSpeed; break;
+                // Attacks would be handled here similarly
+            }
+            // Keep players within bounds
+            player1.x = Math.max(0, Math.min(player1.x, 760));
+            player2.x = Math.max(0, Math.min(player2.x, 760));
+        });
+    
+        // Gravity effect
+        function applyGravity(player) {
+            if (player.y > 220) {
+                player.y = 220;
+            } else if (player.y < 220) {
+                player.y += gravity;
+            }
+        }
+    
+        // Start game loop
+        gameLoop = setInterval(() => {
+            applyGravity(player1);
+            applyGravity(player2);
+            updatePosition(player1);
+            updatePosition(player2);
+            // Here you would check for attacks, collisions, and update HP
+            if (checkCollision(player1, player2)) {
+                // Handle collision logic (like pushing back)
+            }
+            // Update HP bars
+            document.getElementById('healthBar1').textContent = `Player 1 HP: ${player1.hp}`;
+            document.getElementById('healthBar2').textContent = `Player 2 HP: ${player2.hp}`;
+            // Check for game over
+            if (player1.hp <= 0 || player2.hp <= 0) {
+                gameOver(player1.hp > player2.hp ? "Player 1" : "Player 2");
+            }
+        }, 1000/60); // Approximately 60 FPS
+    </script>
+</body>
+</html>

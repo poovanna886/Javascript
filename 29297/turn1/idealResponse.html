@@ -5,9 +5,6 @@
     <meta charset="utf-8">
     <title>Fighter Game</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
-        type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Permanent+Marker" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -15,8 +12,13 @@
         }
 
         canvas {
+            background: #eee;
+            display: push;
+            margin: 0 auto;
             background: #cdcdcd;
-            background-image: url('https://static1.1.sqspcdn.com/static/f/721581/26734501/1450151739620/tk7fr_12360178_10153716976037978_1122474704166050209_n.jpg?token=KVWIcO29QAa0pY8STZwXJrL9YYk%3D');
+            background-image: url('https://www.destructoid.com/wp-content/uploads/2020/12/252733-h1.jpg');
+            background-size: cover;
+            background-repeat: none;
         }
     </style>
 
@@ -37,8 +39,8 @@
         // Define the images for the characters
         var redCharacterImg = new Image();
         var blueCharacterImg = new Image();
-        redCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
-        blueCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
+        redCharacterImg.src = 'https://freesvg.org/storage/img/thumb/PixelCharacter.png';  // Replace with actual image URL
+        blueCharacterImg.src = 'https://freesvg.org/storage/img/thumb/PixelCharacter2.png';  // Replace with actual image URL
 
 
         //left wall
@@ -88,61 +90,54 @@
             }
         };
 
- 
+        characters.push({
+            player: "Red",
+            x: ourCanvas.width / 4, // Center Red player on the left side of the canvas
+            y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
+            width: 50, 
+            height: 100, 
+            attacks: [],
+            color: "rgb(255,0,0)",
+            dir: 1,
+            hp: 100,
+            lastRangedAttackTime: 0,
+            jumpForce: 0,
+            numJumps: 2,
+            crouching: false,
+            jumping: false,
+            blocking: false
+        });
 
-                   // Center the red player and blue player at the middle of the canvas
-characters.push({
-    player: "Red",
-    x: ourCanvas.width / 4, // Center Red player on the left side of the canvas
-    y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
-    width: 50, // Width of the character image
-    height: 100, // Height of the character image
-    attacks: [],
-    color: "rgb(0,0,255)",
-    dir: 1,
-    hp: 100,
-    lastRangedAttackTime: 0,
-    jumpForce: 0,
-    numJumps: 2,
-    crouching: false,
-    jumping: false,
-    blocking: false
-});
-
-characters.push({
-    player: "Blue",
-    x: (ourCanvas.width / 4) * 3 - 50, // Center Blue player on the right side of the canvas
-    y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
-    width: 50, // Width of the character image
-    height: 100, // Height of the character image
-    attacks: [],
-    color: "rgb(0,0,255)",
-    dir: -1,
-    hp: 100,
-    lastRangedAttackTime: 0,
-    jumpForce: 0,
-    numJumps: 2,
-    crouching: false,
-    jumping: false,
-    blocking: false
-});
+        characters.push({
+            player: "Blue",
+            x: (ourCanvas.width / 4) * 3 - 50, // Center Blue player on the right side of the canvas
+            y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
+            width: 50, // Width of the character image
+            height: 100, // Height of the character image
+            attacks: [],
+            color: "rgb(0,0,255)",
+            dir: -1,
+            hp: 100,
+            lastRangedAttackTime: 0,
+            jumpForce: 0,
+            numJumps: 2,
+            crouching: false,
+            jumping: false,
+            blocking: false
+        });
 
 
 
-// Function to draw the characters with consistent scaling
-function drawCharacter(char) {
-    var scale = 1.5;  // Adjust the scale factor to fit the canvas
+        // Function to draw the characters with consistent scaling
+        function drawCharacter(char) {
+            var scale = 1.5;  // Adjust the scale factor to fit the canvas
 
-    if (char.player === "Red") {
-        ctx.drawImage(redCharacterImg, char.x, char.y, char.width * scale, char.height * scale); 
-    } else if (char.player === "Blue") {
-        ctx.drawImage(blueCharacterImg, char.x, char.y, char.width * scale, char.height * scale); 
-    }
-}
-
-
-
-
+            if (char.player === "Red") {
+                ctx.drawImage(redCharacterImg, char.x, char.y, char.width * scale, char.height * scale);
+            } else if (char.player === "Blue") {
+                ctx.drawImage(blueCharacterImg, char.x, char.y, char.width * scale, char.height * scale);
+            }
+        }
 
         function drawAttacks(char) {
             for (var i in char.attacks) {
@@ -211,10 +206,10 @@ function drawCharacter(char) {
             };
 
             if (type == "punch") {
-                newAttack.width = 15;
-                newAttack.height = 5;
+                newAttack.width = 30;
+                newAttack.height = 15;
                 newAttack.dmg = 10;
-            } else if (type == "hadouken") {
+            } else if (type == "beam") {
                 if (char.lastRangedAttackTime + 500 > currentTime()) {
                     return;
                 } else {
@@ -223,12 +218,12 @@ function drawCharacter(char) {
                 newAttack.move = function () {
                     this.x = this.x + (this.width / 10) * this.dir;
                 };
-                newAttack.width = 15;
-                newAttack.height = 15;
+                newAttack.width = 35;
+                newAttack.height = 35;
                 newAttack.dmg = 10;
                 newAttack.duration = 100;
                 newAttack.dmg = 10;
-            } else if (type == "block") {
+            } else if (type == "push") {
                 newAttack.width = 20;
                 newAttack.height = 20;
                 newAttack.dmg = 0;
@@ -280,7 +275,7 @@ function drawCharacter(char) {
                     }
                 }
                 if (keys.includesKey("w") && char.numJumps > 0 && char.jumpForce < 5 && !char.jumping) {
-                    char.jumpForce = 15;
+                    char.jumpForce = 20;
                     char.jumping = true;
                     char.numJumps--;
                     if (checkCollisions(char, characters[1])) {
@@ -304,7 +299,7 @@ function drawCharacter(char) {
                     var unusedKeys = keys.getKeys("k", true);
                     if (unusedKeys.length > 0) {
                         keys.setUsed("k");
-                        doAttack(char, "hadouken");
+                        doAttack(char, "beam");
                     }
                 }
 
@@ -312,7 +307,7 @@ function drawCharacter(char) {
                     var unusedKeys = keys.getKeys("l", true);
                     if (unusedKeys.length > 0) {
                         keys.setUsed("l");
-                        doAttack(char, "block");
+                        doAttack(char, "push");
                         char.blocking = true;
                     }
                 }
@@ -362,7 +357,7 @@ function drawCharacter(char) {
                     var unusedKeys = keys.getKeys("2", true);
                     if (unusedKeys.length > 0) {
                         keys.setUsed("2");
-                        doAttack(char, "hadouken");
+                        doAttack(char, "beam");
                     }
                 }
 
@@ -370,7 +365,7 @@ function drawCharacter(char) {
                     var unusedKeys = keys.getKeys("3", true);
                     if (unusedKeys.length > 0) {
                         keys.setUsed("3");
-                        doAttack(char, "block");
+                        doAttack(char, "push");
                         char.blocking = true;
                     }
                 }
@@ -404,15 +399,15 @@ function drawCharacter(char) {
                         continue;
                     }
 
-                    if (attack.type == "hadouken") {
+                    if (attack.type == "beam") {
                         for (var CsAs in characters[c].attacks) {
                             var thisCharsAttack = characters[c].attacks[CsAs];
 
-                            if (thisCharsAttack.type != "hadouken" && thisCharsAttack.type != "block") {
+                            if (thisCharsAttack.type != "beam" && thisCharsAttack.type != "push") {
                                 continue;
                             }
                             if (checkCollisions(attack, thisCharsAttack)) {
-                                if (thisCharsAttack.type == "block" && attack.blocked == false) {
+                                if (thisCharsAttack.type == "push" && attack.blocked == false) {
                                     attack.dmg /= 2;
                                     attack.blocked = true;
                                 } else {
@@ -439,9 +434,11 @@ function drawCharacter(char) {
         function gravity(char) {
             char.y -= char.jumpForce;
             char.jumpForce -= 1;
-            if (char.y + char.height >= ourCanvas.height) {
-                char.y = ourCanvas.height - char.height;
-                char.numJumps = 2;
+            if (char.y + char.height * 1.5 >= ourCanvas.height) {  // *1.5 to account for image scaling
+                char.y = ourCanvas.height - char.height * 1.5;  
+                char.numJumps = 2;  // Reset jumps when the character lands
+                char.jumpForce = 0;  
+                char.jumping = false; 
             }
         }
 
@@ -525,7 +522,7 @@ function drawCharacter(char) {
                 char.blocking = false;
                 for (var a in char.attacks) {
                     var attack = char.attacks[a];
-                    if (attack.type == "block") {
+                    if (attack.type == "push") {
                         char.attacks.splice(a, 1);
                     }
                 }
@@ -544,7 +541,7 @@ function drawCharacter(char) {
                 char.blocking = false;
                 for (var a in char.attacks) {
                     var attack = char.attacks[a];
-                    if (attack.type == "block") {
+                    if (attack.type == "push") {
                         char.attacks.splice(a, 1);
                     }
                 }
