@@ -35,10 +35,10 @@
         var walls = [];
 
         // Define the images for the characters
-var redCharacterImg = new Image();
-var blueCharacterImg = new Image();
-redCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
-blueCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
+        var redCharacterImg = new Image();
+        var blueCharacterImg = new Image();
+        redCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
+        blueCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_Rones.png';  // Replace with actual image URL
 
 
         //left wall
@@ -88,51 +88,60 @@ blueCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_
             }
         };
 
-        //Adds our red player
-        characters.push({
-            player: "Red",
-            x: 50,
-            y: 50,
-            width: 15,
-            height: 30,
-            color: "rgb(255,0,0)",
-            attacks: [],
-            dir: 1,
-            hp: 100,
-            lastRangedAttackTime: 0,
-            jumpForce: 0,
-            numJumps: 2,
-            crouching: false,
-            jumping: false,
-            blocking: false
-        });
+ 
 
-        //adds our blue player
-        characters.push({
-            player: "Blue",
-            x: 150,
-            y: 50,
-            width: 15,
-            height: 30,
-            color: "rgb(0,0,255)",
-            attacks: [],
-            dir: -1,
-            hp: 100,
-            lastRangedAttackTime: 0,
-            jumpForce: 0,
-            numJumps: 2,
-            crouching: false,
-            jumping: false,
-            blocking: false
-        });
+                   // Center the red player and blue player at the middle of the canvas
+characters.push({
+    player: "Red",
+    x: ourCanvas.width / 4, // Center Red player on the left side of the canvas
+    y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
+    width: 50, // Width of the character image
+    height: 100, // Height of the character image
+    attacks: [],
+    color: "rgb(0,0,255)",
+    dir: 1,
+    hp: 100,
+    lastRangedAttackTime: 0,
+    jumpForce: 0,
+    numJumps: 2,
+    crouching: false,
+    jumping: false,
+    blocking: false
+});
 
-        function drawCharacter(char) {
+characters.push({
+    player: "Blue",
+    x: (ourCanvas.width / 4) * 3 - 50, // Center Blue player on the right side of the canvas
+    y: ourCanvas.height / 2 - 60, // Adjust y position to vertically center the image
+    width: 50, // Width of the character image
+    height: 100, // Height of the character image
+    attacks: [],
+    color: "rgb(0,0,255)",
+    dir: -1,
+    hp: 100,
+    lastRangedAttackTime: 0,
+    jumpForce: 0,
+    numJumps: 2,
+    crouching: false,
+    jumping: false,
+    blocking: false
+});
+
+
+
+// Function to draw the characters with consistent scaling
+function drawCharacter(char) {
+    var scale = 1.5;  // Adjust the scale factor to fit the canvas
+
     if (char.player === "Red") {
-        ctx.drawImage(redCharacterImg, char.x, char.y, char.width * 3, char.height * 3); // scale image size
+        ctx.drawImage(redCharacterImg, char.x, char.y, char.width * scale, char.height * scale); 
     } else if (char.player === "Blue") {
-        ctx.drawImage(blueCharacterImg, char.x, char.y, char.width * 3, char.height * 3); // scale image size
+        ctx.drawImage(blueCharacterImg, char.x, char.y, char.width * scale, char.height * scale); 
     }
 }
+
+
+
 
 
         function drawAttacks(char) {
@@ -488,15 +497,15 @@ blueCharacterImg.src = 'https://freesvg.org/storage/img/thumb/Ninja_pathetic_by_
         window.requestAnimationFrame(gameLoop);
 
         function drawWinner() {
-    for (var i in characters) {
-        var char = characters[i];
-        if (char.hp > 0) {
-            ctx.font = "30px Arial";
-            ctx.fillStyle = char.color;
-            ctx.fillText(char.player + " Wins!", ourCanvas.height / 3, 50);
+            for (var i in characters) {
+                var char = characters[i];
+                if (char.hp > 0) {
+                    ctx.font = "30px Arial";
+                    ctx.fillStyle = char.color;
+                    ctx.fillText(char.player + " Wins!", ourCanvas.height / 3, 50);
+                }
+            }
         }
-    }
-}
         function remAttacks(char) {
             for (var a in char.attacks) {
                 remBox(char.attacks[a]);
