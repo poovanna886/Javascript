@@ -480,11 +480,7 @@
             rot = "+=4";
           }
 
-          //  Start GSAP's tick so more physics-like movement can take place
           gsap.ticker.add(tick);
-
-
-          // Stop it after some period of time - saves having to write edges and floor logic and the user can shoot every three seconds or so
           TweenMax.delayedCall(2, reset);
 
         };

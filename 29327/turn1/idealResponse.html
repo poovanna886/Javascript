@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Whose that Pokemon</title>
+    <link href="https://fonts.googleapis.com/css?family=Joti+One" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Russo+One" rel="stylesheet">
+ 
+    <style>
+        #pokeImage {
+            width: 300px;
+            height: 300px;
+        }
+
+        .pokeImage {
+            height: 60px;
+            width: 60px;
+        }
+
+        #pokeImage_2 {
+            width: 200px;
+            height: 200px;
+        }
+
+        #fPokemon {
+            width: 100%;
+            height: 200px;
+            display: -webkit-flex;
+            -webkit-flex-wrap: wrap;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .box {
+            background-color: black;
+            border: 2px solid red;
+            width: 100px;
+            height: 100%;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: #00b09b;
+            /* fallback for old browsers */
+            background: -webkit-linear-gradient(to bottom, #00b09b, #96c93d);
+            background: linear-gradient(to bottom, #00b09b, #96c93d);
+            margin: 0px;
+        }
+
+
+        #mTitle {
+            font-size: 48px;
+        }
+
+        .pokemon-header {
+            font-size: 56px;
+        }
+
+        #sTitle {
+            margin-top: 50px;
+            display: none;
+        }
+
+        #menu-title {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #sTitle {
+            width: 100%;
+            height: 100%;
+            display: none;
+            /* 	justify-content: center; */
+            align-items: center;
+            flex-direction: column;
+        }
+
+   
+
+        .back-btn {
+            border: none;
+            background-color: rgba(66, 66, 66, 0.7);
+            font-size: 14px;
+            padding: 10px;
+            border-radius: 20px 20px 20px 20px;
+            color: white;
+            font-family: 'Russo One', sans-serif;
+        }
+ 
+
+        #game-div {
+            display: none;
+        }
+
+        #stats {
+            position: absolute;
+        }
+
+
+        #mDiv {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #pokemon-image {
+            filter: brightness(0);
+        }
+
+        #mHeader,
+        #mButton,
+        #stats,
+        #sHeader,
+        #mTitle,
+        .pokeHeaders,
+        #sButton,
+        #endTitle {
+            font-family: 'Joti One', cursive;
+            color: #FFCB04;
+            text-shadow:
+                3px 3px 0 #39569E,
+                -1px -1px 0 #39569E,
+                1px -1px 0 #39569E,
+                -1px 4px 0 #39569E,
+                1px 1px 0 #39569E;
+        }
+
+        #mHeader {
+            font-size: 32px;
+            margin: 10px;
+
+        }
+
+        #sHeader {
+            font-size: 28px;
+            margin: 10px;
+        }
+
+        #mInput,
+        #sInput {
+            border-radius: 10px 10px 10px 10px;
+            border: none;
+            border: 2px solid #A0D0E0;
+            width: 200px;
+            height: 30px;
+            box-shadow: 0px -2px 0 #4870A0, -1px 0px 0 #4870A0, 1px 0px 0 #4870A0, -0px 4px 0 #4870A0, 0px 0px 0 #4870A0;
+        }
+
+        #mButton,
+        #sButton {
+            margin: 20px;
+            background-color: #0D47A1;
+            border: none;
+            font-size: 24px;
+            border-radius: 10px 10px 10px 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-div">
+        <div id="stats">
+            <h1>Points: <span id="points">0</span></h1>
+            <h1>Round: <span id="rounds">0</span>/10</h1>
+        </div>
+
+        <div id="mDiv">
+
+        </div>
+    </div>
+
+    <div id="menu-title">
+        <h1 id="mTitle">Who's that <br><span class="pokemon-header">POKEMON?</span></h1>
+        <h2 class="pokeHeaders">PRESS ANY KEY TO START</h2>
+
+    </div>
+    <script>
+        var points = 0;
+        var rounds = 0;
+        var roundMax = 10;
+        var mTitle = document.querySelector('#menu-title');
+        var sTitle = document.querySelector('#sTitle');
+        var gDiv = document.querySelector('#game-div'); 
+        var pDiv = document.querySelector('#pokemon-found') 
+        var body = document.querySelectorAll('body');
+        var pokemonFound = []
+        var pokemonStorage = []
+
+        function startGame() {
+            var startMenu = function () {
+                document.querySelector('#menu-title').style.display = 'none'
+                // Removes the event listeners
+                document.body.removeEventListener('keypress', startMenu);
+                document.body.removeEventListener('click', startMenu);
+                gDiv.style.display = `flex`;
+
+                gen = [802]
+                whoseThatPokemon()
+
+            }
+
+            var btnFunc = function () {
+                document.querySelectorAll('html')[0].style.overflow = 'hidden';
+                document.querySelectorAll('body')[0].style.overflow = 'hidden';
+                document.querySelectorAll('html')[0].style.height = '100%';
+                var parent = this.parentElement.getAttribute("id")
+                document.querySelector('#' + parent).style.display = 'none'
+                sTitle.style.display = 'flex'
+
+            };
+
+            document.body.addEventListener('keypress', startMenu);
+            document.body.addEventListener('click', startMenu);
+        }
+
+        function whoseThatPokemon() {
+            document.querySelector('#points').innerHTML = points;
+            document.querySelector('#rounds').innerHTML = rounds;
+            if (rounds === roundMax) {
+                mDiv.innerHTML = '';
+                mDiv.insertAdjacentHTML('beforeend', `<h2 id=${'endTitle'}>${'You got ' + points + ' out of ' + roundMax + '!'}</h2>`);
+                mDiv.insertAdjacentHTML('beforeend', '<button id="mEnd" class="back-btn">Restart Game</button>');
+                rounds = 0;
+                points = 0;
+                var endGame = function () {
+                    gDiv.style.display = 'none'
+                    startGame();
+                }
+
+                var endBtn = document.querySelector('#mEnd')
+                endBtn.addEventListener('click', endGame);
+            } else {
+                // Get a random number (1-802)
+                var randomNum = function () {
+
+                    randomNumber = Math.floor(Math.random() * gen) + 1; // 802 (max)
+                    if (pokemonFound.includes(randomNumber) === true) {
+                        randomNum();
+                    }
+
+                    return randomNumber;
+                }
+
+                var rNum = randomNum();
+                pokemonFound.push(rNum)
+                getThatPokemon(rNum)
+            }
+        }
+
+        function getThatPokemon(pokemonCount) {
+            fetch('https://pokeapi.co/api/v2/pokemon/' + pokemonCount + '/')
+                .then(
+                    function (response) {
+                        if (response.status !== 200) {
+                            console.log('Looks like there was a problem. Status Code: ' +
+                                response.status);
+                            return;
+                        }
+
+                        // Examine the text in the response
+                        response.json().then(function (data) {
+                            var pokemon = {
+                                'name': data.name.toLowerCase(),
+                                'image': data.sprites.front_default,
+                                'id': data.id
+                            }
+
+
+                            // Main div
+                            const mDiv = document.querySelector('#mDiv');
+
+                            // Empty that div!
+                            mDiv.innerHTML = '';
+                            mDiv.insertAdjacentHTML('afterbegin', `<img id=${'pokemon-image'} src=${pokemon.image} height=${300} width=${300}>`);
+                            mDiv.insertAdjacentHTML('beforeend', `<h3 id=${'mHeader'}>${'Who\'s that Pokemon?'}</h3>`);
+                            mDiv.insertAdjacentHTML('beforeend', `<div id=${'iDiv'}></div>`);
+                            const iDiv = document.querySelector('#iDiv');
+
+                            iDiv.insertAdjacentHTML('beforeend', `<input type="text" id=${'mInput'}>`);
+                            iDiv.insertAdjacentHTML('beforeend', `<button id=${'mButton'}>Submit</button>`);
+
+                            // Add a click event listener to the button
+                            const mButton = document.querySelector('#mButton');
+                            var input = ''
+
+                            // Get the inputs value/input
+                            var getInput = function () {
+                                mButton.removeEventListener("click", getInput);
+                                input = document.querySelector('#mInput').value;
+
+                                if (input.toLowerCase() === pokemon['name']) { // If correct
+                                    points++
+                                }
+
+                                rounds++;
+
+                                // Update both points & rounds spans
+                                document.querySelector('#points').innerHTML = points;
+                                document.querySelector('#rounds').innerHTML = rounds;
+
+                                // Reveal the Pokemon
+                                const pImage = document.querySelector('#pokemon-image');
+
+                                var imageA = pImage.animate(
+                                    [
+                                        {
+                                            filter: 'brightness(0)',
+                                        },
+                                        {
+                                            filter: 'brightness(1)',
+                                        }
+                                    ],
+                                    {
+                                        duration: 3000,
+                                        iterations: 1
+                                    }
+                                );
+
+                                var aAnim = function () {
+                                    imageA.pause()
+                                    pImage.style.filter = 'brightness(1)';
+
+                                    var imageA_2 = pImage.animate(
+                                        [{ transform: 'rotate(0)' },
+                                        { transform: 'rotate(-20deg)' },
+                                        { transform: 'rotate(20deg)' },
+                                        { transform: 'rotate(-20deg)' },
+                                        { transform: 'rotate(0)' }
+                                        ], {
+                                        duration: 3000,
+                                    }
+                                    );
+
+                                    mDiv.insertAdjacentHTML('beforeend', `<h3 id=${'sHeader'}>${'It\'s ' + pokemon.name + '!'}</h3>`);
+                                    var header2 = document.querySelector('#sHeader');
+                                    var header_2 = header2.animate(
+                                        [
+                                            { fontSize: '0px' },
+                                            { fontSize: '28px' },
+
+                                        ], {
+                                        duration: 500,
+                                    }
+                                    );
+
+                                }
+
+                                setTimeout(aAnim, 3000);
+                                setTimeout(whoseThatPokemon, 8000); // until rounds === round max
+                            }
+
+                            // Run the 'getInput' function when clicked
+                            mButton.addEventListener("click", getInput);
+
+                        });
+                    }
+                )
+                .catch(function (err) {
+                    console.log('Fetch Error', err);
+                });
+        }
+
+        startGame();
+
+    </script>
+</body>
+
+</html>
