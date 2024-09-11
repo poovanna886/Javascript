@@ -1,170 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>Timer app</title>
+    <title>Timer App</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
-
-
     <style>
-        /* major elements */
+/* major elements */
+body {
+  font-family: 'Play', sans-serif;
+  background: #222;
+  color: #999;
+}
 
-        body {
-            font-family: 'Play', sans-serif;
-            background: #222;
-            color: #999;
-        }
+.container {
+  width: 80%;
+  max-width: 500px;
+  min-width: 250px;
+  margin: 20px auto;
+}
 
-        .container {
-            width: 80%;
-            max-width: 500px;
-            min-width: 250px;
-            margin: 20px auto;
-        }
+h1 {
+  margin-top: 20%;
+  text-align: center;
+  color: #CCC;
+}
 
-        h1 {
-            margin-top: 20%;
-            text-align: center;
-            color: #CCC;
-        }
+.row {
+  overflow: hidden;
+}
 
-        .row {
-            overflow: hidden;
-        }
+.col-half {
+  width: 50%;
+  float: left;
+}
 
-        .col-half {
-            width: 50%;
-            float: left;
-        }
+.knob-wrapper {
+  text-align: center;
+}
 
-        .knob-wrapper {
-            text-align: center;
-        }
+/* button styles */
+.buttons {
+  text-align: center;
+  margin-top: 15px;
+}
 
+.buttons-mute {
+  text-align: center;
+  margin-bottom: 15px;
+}
 
-        /* button styles */
+.btn {
+  display: inline-block;
+  width: 80px;
+  margin: 4px;
+  padding: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
 
-        .buttons {
-            text-align: center;
-            margin-top: 15px;
-        }
+.btn-green {
+  color: #6C6;
+  border: 2px solid #6C6;
+}
 
-        .buttons-mute {
-            text-align: center;
-            margin-bottom: 15px;
-        }
+.btn-green:hover {
+  background-color: #232;
+}
 
-        .btn {
-            display: inline-block;
-            width: 80px;
-            margin: 4px;
-            padding: 6px;
-            text-decoration: none;
-            cursor: pointer;
-        }
+.btn-yellow {
+  color: #CC6;
+  border: 2px solid #CC6;
+}
 
-        .btn-green {
-            color: #6C6;
-            border: 2px solid #6C6;
-        }
+.btn-yellow:hover {
+  background-color: #332;
+}
 
-        .btn-green:hover {
-            background-color: #232;
-        }
+.btn-red {
+  color: #C66;
+  border: 2px solid #C66;
+}
 
-        .btn-yellow {
-            color: #CC6;
-            border: 2px solid #CC6;
-        }
+.btn-red:hover {
+  background-color: #322;
+}
 
-        .btn-yellow:hover {
-            background-color: #332;
-        }
+.btn-mute {
+  width: 20px;
+  margin: 4px;
+  padding: 2px;
+  color: #999;
+  font-size: 16px;
+}
 
-        .btn-red {
-            color: #C66;
-            border: 2px solid #C66;
-        }
+.btn-mute:hover {
+  color: #BBB;
+}
 
-        .btn-red:hover {
-            background-color: #322;
-        }
+/* global override styles */
+.hidden {
+  display: none;
+}
 
-        .btn-mute {
-            width: 20px;
-            margin: 4px;
-            padding: 2px;
-            color: #999;
-            font-size: 16px;
-        }
-
-        .btn-mute:hover {
-            color: #BBB;
-        }
-
-
-        /* global override styles */
-
-        .hidden {
-            display: none;
-        }
     </style>
 </head>
-
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>Pomodoro Timer</h1>
-        </div>
-
-        <div class="row">
-            <div class="col-half knob-wrapper">
-                <h5>Session Length</h5>
-                <input type="text" value="25" size="5" id="session-knob" />
-            </div>
-            <div class="col-half knob-wrapper">
-                <h5>Break Length</h5>
-                <input type="text" value="5" size="5" id="break-knob" />
-            </div>
-        </div>
-
-        <div class="buttons">
-            <a id="cmd-reset" class="btn btn-red"><i class="fa fa-undo"></i> Reset</a>
-            <a id="cmd-pause" class="btn btn-yellow hidden"><i class="fa fa-pause"></i> Pause</a>
-            <a id="cmd-go" class="btn btn-green"><i class="fa fa-play"></i> Start</a>
-        </div>
-
-        <div class="buttons-mute">
-            <a id="cmd-mute" class="btn btn-mute"><i class="fa fa-volume-up"></i></a>
-            <a id="cmd-unmute" class="btn btn-mute hidden"><i class="fa fa-volume-off"></i></a>
-        </div>
-
-        <div class="timer knob-wrapper">
-            <input type="text" value="1500" size="5" id="timer-display" />
-        </div>
-
-
-
+  <div class="container">
+    <div class="header">
+      <h1>Timer App</h1>
     </div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-knob@1.2.13/dist/jquery.knob.min.js"></script>
-    <script>
-        
+    
+    <div class="row">
+      <div class="col-half knob-wrapper">
+        <h5>Session Length</h5>
+        <input type="text" value="25" size="5" id="session-knob" />
+      </div>
+      <div class="col-half knob-wrapper">
+        <h5>Break Length</h5>
+        <input type="text" value="5" size="5" id="break-knob" />
+      </div>
+    </div>
+    
+    <div class="buttons">
+      <a id="cmd-reset" class="btn btn-red"><i class="fa fa-undo"></i> Reset</a>
+      <a id="cmd-pause" class="btn btn-yellow hidden"><i class="fa fa-pause"></i> Pause</a>
+      <a id="cmd-go" class="btn btn-green"><i class="fa fa-play"></i> Start</a>
+    </div>
+    
+    <div class="timer knob-wrapper">
+      <input type="text" value="1500" size="5" id="timer-display" />
+    </div>
+    
+    <!-- Chart container -->
+    <div class="chart-container" style="position: relative; height:40vh; width:80vw; margin-top: 20px;">
+      <canvas id="pomodoroChart"></canvas>
+    </div>
+    
+  </div>
+
+<!-- Load jQuery first -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- Load jQuery Knob plugin -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js" integrity="sha512-NhRZzPdzMOMf005Xmd4JonwPftz4Pe99mRVcFeRDcdCtfjv46zPIi/7ZKScbpHD/V0HB1Eb+ZWigMqw94VUVaw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- Load Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
 $(document).ready(function() {
-  console.log('in script')
+  
   // initialize static data
   var targetTime = undefined;
   var targetDelta = undefined;
   var intervalId = undefined;
   var reset = true;
   var onSession = true;
-
+  var completedSessions = 0;
+  var completedBreaks = 0;
   var breakLength;
   
-  // main timer setup function
+  // Main timer setup function
   function setupTimerDisplay() {
     var config = {};
     var value = 0;
@@ -241,7 +238,28 @@ $(document).ready(function() {
     });
   }
   
-  // periodic timer function
+  // Chart data and initialization
+  var ctx = document.getElementById('pomodoroChart').getContext('2d');
+  var pomodoroChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Sessions', 'Breaks'],
+      datasets: [{
+        label: 'Completed Pomodoros',
+        data: [completedSessions, completedBreaks],
+        backgroundColor: ['#6C6', '#C66']
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // Periodic timer function
   function updateTimer() {
     var now = new Date();
     targetDelta = targetTime.getTime() - now.getTime();
@@ -254,18 +272,21 @@ $(document).ready(function() {
     }
     else {
       if (onSession) {
-        if (!mute) $('#snd-endofsession')[0].play();
         onSession = false;
+        completedSessions++; // Increment sessions
         breakLength = $('#break-knob').val() * 60;
         targetDelta = breakLength * 1000;
-      }
-      else {
-        if (!mute) $('#snd-endofbreak')[0].play();
+      } else {
         onSession = true;
+        completedBreaks++; // Increment breaks
         targetDelta = $('#session-knob').val() * 60000;
       }
       targetTime = new Date(Date.now() + targetDelta);
       setupTimerDisplay();
+      
+      // Update chart data
+      pomodoroChart.data.datasets[0].data = [completedSessions, completedBreaks];
+      pomodoroChart.update(); // Update the chart to reflect the new data
     }
   }
   
@@ -302,16 +323,13 @@ $(document).ready(function() {
     return false;
   });
   
- 
- 
   // initialize timer display
   targetDelta = $('#session-knob').val() * 60000;
   setupTimerDisplay();
-
+  
 });
 
-    </script>
+</script>
 
 </body>
-
 </html>

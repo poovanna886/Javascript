@@ -193,13 +193,13 @@
     </div>
 
     <script>
-       
- const players = [
-        {name: "Leonel Messi", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/MESSIU.webp?v=1684950584&width=360"},
-	{name:"Christiano Ronaldo", ovr:90 , image: "https://sportsclassicstore.com/cdn/shop/files/RONALDO_1.webp?v=1684776295&width=360"},
-	{name:"Karim Benzema", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/BENZEMAU.webp?v=1684950847&width=360"},
-	{name:"Robert Lewandowski", ovr:91 , image: "https://sportsclassicstore.com/cdn/shop/files/LEWANDOWSKIU.webp?v=1684951081&width=360"},
-	];
+
+        const players = [
+            { name: "Leonel Messi", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/MESSIU.webp?v=1684950584&width=360" },
+            { name: "Christiano Ronaldo", ovr: 90, image: "https://sportsclassicstore.com/cdn/shop/files/RONALDO_1.webp?v=1684776295&width=360" },
+            { name: "Karim Benzema", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/BENZEMAU.webp?v=1684950847&width=360" },
+            { name: "Robert Lewandowski", ovr: 91, image: "https://sportsclassicstore.com/cdn/shop/files/LEWANDOWSKIU.webp?v=1684951081&width=360" },
+        ];
 
 
         let currentPlayer = 1; // Start with Player 1's turn
@@ -323,94 +323,87 @@
 
         // Steal mode: Allow each player to steal one card from the other team
         stealButton.addEventListener('click', () => {
-            stealButton.style.display = "none";
-            let p1 =  false;
-            
-            if (p1 === false){
-            enableStealMode(p1);
-            p1=true;
-            }
-            else{
-                enableStealMode(p1)
-            }
-        });
+    stealButton.style.display = "none";
+    enableStealMode(1); // Start with Player 1 stealing
+});
 
-        function enableStealMode(p1) {
-            // Enable stealing from the other player's team
-           
-            
-            if (p1 === false){
-
-            displayStealableCards(player2TeamData, player2Team, 1); // Player 1 can steal from Player 2
-         
-            }
-            else{
-                displayStealableCards(player1TeamData, player1Team, 2); // Player 2 can steal from Player 1
-            
-        }
+function enableStealMode(stealingPlayer) {
+    if (stealingPlayer === 1) {
+        displayStealableCards(player2TeamData, player2Team, 1); // Player 1 can steal from Player 2
+    } else if (stealingPlayer === 2) {
+        displayStealableCards(player1TeamData, player1Team, 2); // Player 2 can steal from Player 1
     }
+}
 
-        function displayStealableCards(teamData, teamElement, stealingPlayer) {
-            teamElement.innerHTML = ''; // Clear the team display
-            console.log(teamData)
-            teamData.forEach(card => {
-                const cardElement = document.createElement('div');
-                cardElement.classList.add('team-card');
-                cardElement.innerHTML = `
+
+function displayStealableCards(teamData, teamElement, stealingPlayer) {
+    teamElement.innerHTML = ''; // Clear the team display
+    teamData.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('team-card');
+        cardElement.innerHTML = `
             <img src="${card.image}" alt="${card.name}" style="width: 50px; height: 70px;" />
             <p>${card.name}</p>
             <p>OVR: ${card.ovr}</p>
         `;
 
-                cardElement.addEventListener('click', () => {
-                    if (stealingPlayer === 1 && !hasPlayer1Stolen) {
-                        stealCard(card, 1);
-                        hasPlayer1Stolen = true;
-                        console.log('stealing p1')
-                        // Disable Player 1's stealing option
-                        disableStealing(1);
-                      
-                    } else if (stealingPlayer === 2 && !hasPlayer2Stolen) {
-                        stealCard(card, 2);
-                        hasPlayer2Stolen = true;
-                        console.log('stealing p2')
-                        // Disable Player 2's stealing option
-                        disableStealing(2);
-                       
-                    }
+        cardElement.addEventListener('click', () => {
+            if (stealingPlayer === 1 && !hasPlayer1Stolen) {
+                stealCard(card, 1);
+                hasPlayer1Stolen = true;
+                disableStealing(1); // Disable stealing for Player 1
+                enableStealMode(2); // Now allow Player 2 to steal
+            } else if (stealingPlayer === 2 && !hasPlayer2Stolen) {
+                stealCard(card, 2);
+                hasPlayer2Stolen = true;
+                disableStealing(2); // Disable stealing for Player 2
 
-                    // Once both players have stolen, determine the winner
-                    if (hasPlayer1Stolen && hasPlayer2Stolen) {
-                        determineWinner();
-                    }
-                });
-
-                teamElement.appendChild(cardElement);
-            });
-        }
-
-
-        // Steal the card from the opponent
-        function stealCard(card, stealingPlayer) {
-            if (stealingPlayer === 1) {
-                // Remove from Player 2's team and add to Player 1's team
-                player2TeamData = player2TeamData.filter(c => c.name !== card.name);
-                player1TeamData.push(card);
-                console.log(player1TeamData)
-               
-            } else {
-                // Remove from Player 1's team and add to Player 2's team
-                player1TeamData = player1TeamData.filter(c => c.name !== card.name);
-                player2TeamData.push(card);
-                console.log(player2TeamData)
-               return;
+                // Both players have stolen, so determine the winner
+                if (hasPlayer1Stolen && hasPlayer2Stolen) {
+                    determineWinner();
+                }
             }
+        });
 
-            // Update the team display
-            updateTeamDisplay();
+        teamElement.appendChild(cardElement);
+    });
+}
+function stealCard(card, stealingPlayer) {
+    if (stealingPlayer === 1) {
+        // Remove the card from Player 2's team
+        player2TeamData = player2TeamData.filter(c => c.name !== card.name);
+        // Add a shallow copy of the card to Player 1's team
+        player1TeamData.push({ ...card });  // Only copy the stolen card, not the whole object reference
+        removeDuplicates(player1TeamData)
+        console.log(player1TeamData)
+        console.log(player2TeamData)
+        updateTeamDisplay(1);
+    } else if (stealingPlayer === 2) {
+        // Remove the card from Player 1's team
+        player1TeamData = player1TeamData.filter(c => c.name !== card.name);
+        // Add a shallow copy of the card to Player 2's team
+        player2TeamData.push({ ...card });  // Only copy the stolen card, not the whole object reference
+        updateTeamDisplay(2);
+    }
+
+  
+}
+
+
+// Function to remove duplicates based on card name
+function removeDuplicates(teamArray) {
+    const uniqueCards = new Set(); // Use a Set to track unique names
+    return teamArray.filter(card => {
+        if (!uniqueCards.has(card.name)) {
+            uniqueCards.add(card.name);
+            return true; // Keep the card if it's not a duplicate
         }
+        return false; // Discard the card if it's a duplicate
+    });
+}
 
         function disableStealing(player) {
+            console.log(`in disableStealing`)
             if (player === 1) {
                 player2Team.querySelectorAll('.team-card').forEach(card => {
                     card.style.pointerEvents = 'none'; // Disable stealing for Player 1
@@ -424,17 +417,33 @@
 
 
         // Update team display after stealing
-        function updateTeamDisplay() {
-            player1Team.innerHTML = '';
+        function updateTeamDisplay(team) {
             player2Team.innerHTML = '';
 
+            player1Team.innerHTML = '';
+        
+            if (team === 1){
+                console.log(`in 1`)
+                
             player1TeamData.forEach(card => {
                 addPlayerToTeam(card, 1);
             });
-
             player2TeamData.forEach(card => {
                 addPlayerToTeam(card, 2);
             });
+            
+        }
+       else if (team === 2){
+        console.log(`in 2`)
+     
+            player2TeamData.forEach(card => {
+                addPlayerToTeam(card, 2);
+            });
+            player1TeamData.forEach(card => {
+                addPlayerToTeam(card, 1);
+            });
+        }
+        
         }
 
         // Calculate total OVR and determine the winner

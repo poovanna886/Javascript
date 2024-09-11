@@ -1,175 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Productivity Timer</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-<style>
-body {
-    font-family: 'Arial', sans-serif;
-    background: #f4f7fa;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    color: #333;
-}
-.timer-container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    text-align: center;
-}
-.knob {
-    margin: 20px 0;
-}
-button {
-    background: #007BFF;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    margin: 5px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-button:hover { background: #0056b3; }
-input[type="range"] {
-    width: 80%;
-}
-.chart-container {
-    margin-top: 20px;
-    width: 100%;
-    max-width: 500px;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Productivity Timer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f4f4f9; color: #333; }
+        .timer-container { max-width: 600px; margin: 40px auto; text-align: center; }
+        .knobs { display: flex; justify-content: space-around; margin: 20px 0; }
+        .knob-label { margin-bottom: 10px; }
+        .timer-circle { position: relative; width: 300px; height: 300px; margin: 20px auto; }
+        .timer-circle svg { transform: rotate(-90deg); }
+        .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; }
+        button { margin: 10px; padding: 10px 20px; border: none; background: #4CAF50; color: white; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #45a049; }
+        #timerChart { max-width: 400px; margin: 0 auto; }
+        .range-slider { width: 200px; }
+    </style>
 </head>
 <body>
-
-<div class="timer-container">
-    <div class="knob">
-        <label for="session">Session (min):</label>
-        <input type="range" id="session" min="1" max="60" value="25">
-        <span id="sessionDisplay">25</span>
+    <div class="timer-container">
+        <div class="knobs">
+            <div>
+                <div class="knob-label">Session Time</div>
+                <input type="range" min="1" max="60" value="25" class="range-slider" id="sessionTime">
+            </div>
+            <div>
+                <div class="knob-label">Break Time</div>
+                <input type="range" min="1" max="30" value="5" class="range-slider" id="breakTime">
+            </div>
+        </div>
+        <div class="timer-circle">
+            <svg width="300" height="300">
+                <circle r="140" cx="150" cy="150" fill="transparent" stroke="#ddd" stroke-width="20" />
+                <circle id="timerPath" r="140" cx="150" cy="150" fill="transparent" stroke="#4CAF50" stroke-width="20" stroke-dasharray="880" stroke-dashoffset="880" />
+            </svg>
+            <div class="timer-text" id="timerDisplay">25:00</div>
+        </div>
+        <button onclick="startTimer()">Start</button>
+        <button onclick="resetTimer()">Reset</button>
+        <canvas id="timerChart"></canvas>
     </div>
-    <div class="knob">
-        <label for="break">Break (min):</label>
-        <input type="range" id="break" min="1" max="30" value="5">
-        <span id="breakDisplay">5</span>
-    </div>
-    <div id="timerDisplay">25:00</div>
-    <button id="startBtn"><i class="fas fa-play"></i> Start</button>
-    <button id="resetBtn"><i class="fas fa-undo"></i> Reset</button>
-    <div class="chart-container">
-        <canvas id="productivityChart"></canvas>
-    </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-let sessionTime = 25 * 60; // in seconds
-let breakTime = 5 * 60;
-let timeLeft = sessionTime;
-let isSession = true;
-let interval;
-let chart;
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let timeLeft, totalTime, timerInterval, isSession = true, chart;
 
-document.getElementById('session').addEventListener('input', function(e) {
-    sessionTime = e.target.value * 60;
-    document.getElementById('sessionDisplay').textContent = e.target.value;
-    if(isSession) timeLeft = sessionTime;
-    updateDisplay();
-});
-
-document.getElementById('break').addEventListener('input', function(e) {
-    breakTime = e.target.value * 60;
-    document.getElementById('breakDisplay').textContent = e.target.value;
-});
-
-document.getElementById('startBtn').addEventListener('click', startTimer);
-document.getElementById('resetBtn').addEventListener('click', resetTimer);
-
-function startTimer() {
-    if(!interval) {
-        interval = setInterval(tick, 1000);
-    }
-}
-
-function resetTimer() {
-    clearInterval(interval);
-    interval = null;
-    timeLeft = sessionTime;
-    isSession = true;
-    updateDisplay();
-}
-
-function tick() {
-    if(timeLeft <= 0) {
-        if(isSession) {
-            timeLeft = breakTime;
-            isSession = false;
-        } else {
-            timeLeft = sessionTime;
-            isSession = true;
-            updateChart();
+        function startTimer() {
+            if (!timeLeft) {
+                totalTime = timeLeft = document.getElementById('sessionTime').value * 60;
+                setupChart();
+            }
+            if (!timerInterval) {
+                timerInterval = setInterval(updateTimer, 1000);
+            }
         }
-    } else {
-        timeLeft--;
-    }
-    updateDisplay();
-}
 
-function updateDisplay() {
-    let minutes = Math.floor(timeLeft / 60);
-    let seconds = timeLeft % 60;
-    document.getElementById('timerDisplay').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-}
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            timeLeft = null;
+            document.getElementById('timerDisplay').textContent = '25:00';
+            document.getElementById('timerPath').style.strokeDashoffset = '880';
+            isSession = true;
+            if(chart) chart.destroy();
+        }
 
-function updateChart() {
-    if(!chart) {
-        chart = new Chart(document.getElementById('productivityChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: [new Date().toLocaleDateString()],
-                datasets: [{
-                    label: 'Session',
-                    data: [sessionTime / 60],
-                    backgroundColor: 'green',
-                }, {
-                    label: 'Break',
-                    data: [breakTime / 60],
-                    backgroundColor: 'red',
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Time (minutes)'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
+        function updateTimer() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                document.getElementById('timerDisplay').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                // Update circle circumference
+                let percent = ((totalTime - timeLeft) / totalTime) * 880;
+                document.getElementById('timerPath').style.strokeDashoffset = (880 - percent).toString();
+            } else {
+                if (isSession) {
+                    // Switch to break
+                    totalTime = timeLeft = document.getElementById('breakTime').value * 60;
+                    document.getElementById('timerPath').style.stroke = '#FF5733';
+                } else {
+                    // Session completed, update chart
+                    updateChart();
+                    totalTime = timeLeft = document.getElementById('sessionTime').value * 60;
+                    document.getElementById('timerPath').style.stroke = '#4CAF50';
+                }
+                isSession = !isSession;
+            }
+        }
+
+        function setupChart() {
+            const ctx = document.getElementById('timerChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Session', 'Break'],
+                    datasets: [{
+                        label: 'Time (minutes)',
+                        data: [document.getElementById('sessionTime').value, document.getElementById('breakTime').value],
+                        backgroundColor: ['rgba(76, 175, 80, 0.2)', 'rgba(255, 87, 51, 0.2)'],
+                        borderColor: ['#4CAF50', '#FF5733'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true }
                     }
                 }
-            }
-        });
-    } else {
-        chart.data.labels.push(new Date().toLocaleDateString());
-        chart.data.datasets[0].data.push(sessionTime / 60);
-        chart.data.datasets[1].data.push(breakTime / 60);
-        chart.update();
-    }
-}
-</script>
+            });
+        }
 
+        function updateChart() {
+            if(chart) {
+                chart.data.datasets[0].data = [document.getElementById('sessionTime').value, document.getElementById('breakTime').value];
+                chart.update();
+            }
+        }
+    </script>
 </body>
 </html>
