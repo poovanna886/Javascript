@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basketball Game</title>
+<style>
+    body { 
+        font-family: Arial, sans-serif; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #f0f0f0;
+    }
+    #gameArea {
+        position: relative;
+        width: 400px;
+        height: 600px;
+        border: 2px solid black;
+        background: lightblue;
+    }
+    #basketball {
+        cursor: grab;
+    }
+    #scoreBoard {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: white;
+        padding: 5px;
+        border-radius: 5px;
+    }
+    #timer {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 5px;
+        border-radius: 5px;
+    }
+    .hidden {
+        display: none;
+    }
+</style>
+</head>
+<body>
+<div id="gameArea">
+    <div id="scoreBoard">Score: <span id="score">0</span> | Attempts: <span id="attempts">0</span></div>
+    <div id="timer">Time: <span id="timeLeft">60</span>s</div>
+    <svg width="400" height="600" viewBox="0 0 400 600">
+        <rect x="350" y="100" width="5" height="150" fill="brown" /> <!-- Backboard -->
+        <rect x="345" y="100" width="15" height="5" fill="red" /> <!-- Hoop -->
+        <circle cx="352.5" cy="115" r="7" stroke="black" stroke-width="1" fill="none" /> <!-- Rim -->
+        <circle id="basketball" cx="200" cy="550" r="20" fill="orange" stroke="black" stroke-width="2" /> <!-- Ball -->
+    </svg>
+</div>
+<script>
+let ball = document.getElementById('basketball');
+let isDragging = false;
+let startX, startY, currentX, currentY;
+let score = 0, attempts = 0;
+let gameTimer, timeLeft = 60;
+
+ball.onmousedown = (e) => {
+    e.preventDefault();
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    currentX = parseInt(ball.getAttribute('cx'));
+    currentY = parseInt(ball.getAttribute('cy'));
+};
+
+document.onmousemove = (e) => {
+    if (!isDragging) return;
+    let newX = currentX + e.clientX - startX;
+    if(newX > 20 && newX < 380) {
+        ball.setAttribute('cx', newX);
+    }
+    startX = e.clientX;
+};
+
+document.onmouseup = (e) => {
+    if (isDragging) {
+        isDragging = false;
+        attempts++;
+        let velocityY = startY - e.clientY;
+        let velocityX = startX - e.clientX;
+        shootBall(velocityX, velocityY);
+    }
+};
+
+function shootBall(velX, velY) {
+    let posX = parseInt(ball.getAttribute('cx'));
+    let posY = parseInt(ball.getAttribute('cy'));
+    let gravity = 0.5;
+    let time = 0;
+
+    function animate() {
+        time += 0.01;
+        posY -= velY * time - 0.5 * gravity * time * time;
+        posX += velX * time;
+        
+        if (posY < 550 && posX > 0 && posX < 400) {
+            ball.setAttribute('cy', posY);
+            ball.setAttribute('cx', posX);
+            requestAnimationFrame(animate);
+        } else {
+            resetBall();
+            checkScore(posX, posY);
+        }
+    }
+
+    animate();
+}
+
+function checkScore(x, y) {
+    if (y < 130 && x > 330 && x < 375) { // Rough estimate of basket area
+        score += 2;
+        document.getElementById('score').textContent = score;
+    }
+    document.getElementById('attempts').textContent = attempts;
+}
+
+function resetBall() {
+    ball.setAttribute('cy', 550);
+    ball.setAttribute('cx', 200);
+}
+
+function startTimer() {
+    gameTimer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timeLeft').textContent = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(gameTimer);
+            document.getElementById('timer').innerHTML += ' - Game Over!';
+            ball.classList.add('hidden');
+        }
+    }, 1000);
+}
+
+startTimer();
+</script>
+</body>
+</html>

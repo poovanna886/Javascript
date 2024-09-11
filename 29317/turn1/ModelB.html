@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Basketball Game</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/3.0.16/svg.min.js"></script>
+<style>
+    body { 
+        font-family: Arial, sans-serif; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        background: #f0f0f0; 
+    }
+    #gameArea {
+        border: 2px solid #000;
+        background: #87CEEB;
+    }
+    #scoreBoard {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 10px;
+        border-radius: 5px;
+    }
+</style>
+</head>
+<body>
+
+<div id="gameArea" width="600" height="400"></div>
+<div id="scoreBoard">
+    <div>Score: <span id="score">0</span></div>
+    <div>Attempts: <span id="attempts">0</span></div>
+    <div>Time: <span id="timer">60</span></s>
+</div>
+
+<script>
+// SVG setup
+let draw = SVG().addTo('#gameArea').size(600, 400);
+let ball = draw.circle(30).move(300, 350).fill('#FF4500');
+let hoop = draw.rect(10, 100).move(500, 150).fill('none').stroke({ color: '#000', width: 2 });
+let backboard = draw.rect(80, 10).move(470, 150).fill('#fff').stroke({ color: '#000', width: 2 });
+
+let isDragging = false;
+let startPos, currentPos;
+
+// Ball drag mechanics
+ball.on('mousedown', function(event) {
+    isDragging = true;
+    startPos = {x: event.clientX, y: event.clientY};
+});
+
+document.addEventListener('mousemove', function(event) {
+    if (!isDragging) return;
+    currentPos = {x: event.clientX, y: event.clientY};
+    let dx = currentPos.x - startPos.x;
+    let newX = ball.cx() + dx;
+    if (newX > 15 && newX < 585) ball.cx(newX);
+    startPos = currentPos;
+});
+
+document.addEventListener('mouseup', function() {
+    if (isDragging) {
+        isDragging = false;
+        shootBall(currentPos);
+    }
+});
+
+// Shooting mechanics
+function shootBall(endPos) {
+    let attempts = document.getElementById('attempts');
+    attempts.textContent = parseInt(attempts.textContent) + 1;
+    
+    let power = (endPos.x - startPos.x) / 10; // Simple power calculation
+    let angle = Math.atan2(endPos.y - startPos.y, endPos.x - startPos.x);
+    
+    // Simple animation for shooting
+    ball.animate(400).move(500 + power * Math.cos(angle), 150 - Math.abs(power) * Math.sin(angle)).after(function() {
+        if (checkScore()) {
+            document.getElementById('score').textContent = parseInt(document.getElementById('score').textContent) + 2;
+        }
+        ball.animate(200).move(300, 350); // Reset ball position
+    });
+}
+
+// Check if score
+function checkScore() {
+    let ballY = ball.cy();
+    if (ballY < 250 && ball.cx() > 490 && ball.cx() < 510) {
+        return true; // Scored
+    }
+    return false; // Missed or hit the rim
+}
+
+// Timer
+let timeLeft = 60;
+let timerId = setInterval(function() {
+    document.getElementById('timer').textContent = --timeLeft;
+    if(timeLeft <= 0) {
+        clearInterval(timerId);
+        alert('Game Over! Final Score: ' + document.getElementById('score').textContent);
+    }
+}, 1000);
+
+</script>
+
+</body>
+</html>

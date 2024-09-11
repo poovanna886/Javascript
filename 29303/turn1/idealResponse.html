@@ -1,307 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Fruit Slicer Game</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
-        <style>
-            html{
-  height: 100%;
-  background: radial-gradient(circle,#fff,rgb(189, 182, 182));
-  background-image: url(https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/bg3%20-%20Copy.jpg);
-  background-size: cover;
-  font-family: cursive, sans-serif;
-}
-#container{
-    width: 750px;
-    height: 600px;
-    margin: 10px auto;
-    padding: 20px;
-    border-radius: 10px;
-    position: relative;
-}
 
-#front{
-    font-size: 40px;
-    color: #d3901d;
-    width: 650px;
-    height: 450px;
-    padding: 10px;
-    margin: 30px auto 20px auto;
-    z-index: 2;
-    display: none;
-}
-#front img{
-    width: 280px;
-}
-#instructions{
-    width: 450px;
-    height: 50px;
-    margin:  10px auto;
-    font-size: 30px;
-
-    background-color:#d3901d;
-    color: #2e1d11;
-    text-align: center;
-    line-height: 50px;
-    border-radius: 20px;
-    box-shadow: 0px 4px 0px 0px #775012;
-}
-#fruitcontainer{
-    background: url(https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/wood-bg2.jpg) ;
-    background-size: cover;
-    width: 650px;
-    height: 450px;
-    padding: 10px;
-    margin: 30px auto 20px auto;
-    background-color: white;
-    color: black;
-    text-align: center;
-    font-family: cursive,sans-serif;
-    overflow: hidden;
-    border-radius: 20px;
-    box-shadow: 0px 4px 0px 0px #4b4b4e;
-    position: relative;
-}
-
-.fruit{
-    display: none;
-    position: absolute;
-}
-#score{
-    display: none;
-}
-.scoreDisplay{
-    z-index: 1;
-    display: flex;
-    background-color: transparent;
-    color: #888e61;
-    position: absolute;
-   font-size: 30px;
-   justify-items:  center;
-}
-
-#score img{
-    width: 40px;
-  align-items: center;
-   padding-right: 5px;
-}
-#trialsleft{
-    margin-top: 7px;
-    display: flex;
-    position: absolute;
-    left:550px;
-    background-color:transparent;
-    z-index: 1;
-}
-.life{
-    width: 30px;
-    padding-right: 5px;
-}
-
-#startReset{
-    position: relative;
-    width: 90px;
-    padding: 10px;
-    margin: 0 auto;
-
-    cursor: pointer;
-    text-align: center;
-    background-color:#8d8315;
-    box-shadow: 0px 4px 0px 0px #5c5619;
-    border-radius: 5px;
-    transition: all .2s;
-}
-#startReset:active{
-    background-color: #69620c;
-    box-shadow: 0px 0px #5c5619;
-    top: 4px;
-    color: white;
-}
-
-#gameOver{
-    box-sizing: border-box;
-    width: 500px;
-    height: 300px;
-    background: transparent;
-    color:#d3901d;
-    text-transform: upperCase;
-    text-align: center;
-    font-size: 3em;
-    position: absolute;
-    top: 170px;
-    left: 150px;
-    z-index: 2;
-}
-        </style>
-    </head>
-    <body>
-        <div id="container">
-            <div id="instructions">
-                Slice Fruits
-            </div>
-        <div id="fruitcontainer">
-            <div id="score">
-                <div class="scoreDisplay"><img src="https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/scr.png" alt="">
-                    <span id="scoreValue">0</span></div>
-            </div>
-            <div id="trialsleft"></div>
-            <div id="front">
-                Are you ready for the ultimate slice action ? <br/>
-                <img src="https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/splash.png" alt="Fruit logo">
-            </div>
-            <img id="fruit1" class="fruit">
-        </div>
-        <div id="startReset">
-            Start Game
-        </div>
-        <!--for game over block-->
-        <div id="gameOver"></div>
-        </div>
-        <!--for audio files-->
-        <audio id="slicesound">
-            <source src="https://github.com/Saumya-07/Fruit-Slicer/blob/master/audio/slicefruit.mp3"></source>
-            <source src="https://github.com/Saumya-07/Fruit-Slicer/blob/master/audio/slicefruit.ogg"></source>
-            <source src="https://github.com/Saumya-07/Fruit-Slicer/blob/master/audio/slicefruit.wav"></source>
-        </audio>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-        <script>
-            var playing = false;
-var score;
-var trialsleft;
-var step;//for random steps
-var action;//for settime interval
-var fruits = ['1','2','3','4','5','6','7','8','9','10'];//for fruits
-
-$(function(){
-    //click on start or reset button
-    $('#front').show();
-    $("#startReset").click(function () {
-        if(playing == true){
-            //if we are playing
-            location.reload();//reload page
-        }else{
-            //if we are not playing from before
-            $('#front').hide();
-            $('#score').show();
-            playing = true;
-            //set score to 0
-            score = 0;
-            $("#scoreValue").html(score);
-
-            //show trials left box
-
-            $('#trialsleft').show();
-            trialsleft=3;
-            addhearts();
-
-            //hide game over box
-            $('#gameOver').hide();
-
-            //change button to reset game
-            $('#startReset').html('Reset Game')
+<head>
+    <title>Fruit Slicer Game</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 
 
-            //start action
-            startAction();
+    <style>
+        /* major elements */
+
+        body {
+            font-family: 'Play', sans-serif;
+            background: #222;
+            color: #999;
         }
-    });
-        //slice a fruit
-        $("#fruit1").mouseover(function () {
-            score++;// increase score
-            $("#scoreValue").html(score);
 
-            //play sound
-            $("#slicesound")[0].play();
+        .container {
+            width: 80%;
+            max-width: 500px;
+            min-width: 250px;
+            margin: 20px auto;
+        }
 
-            //stop fruit
-            clearInterval(action);
+        h1 {
+            margin-top: 20%;
+            text-align: center;
+            color: #CCC;
+        }
 
-            //hide fruit
-            $('#fruit1').hide("explode",500);//slice fruit
+        .row {
+            overflow: hidden;
+        }
 
-            //send new fruit
-            setTimeout(startAction,500);
-        });
+        .col-half {
+            width: 50%;
+            float: left;
+        }
+
+        .knob-wrapper {
+            text-align: center;
+        }
 
 
-  //functions
+        /* button styles */
 
-   //addhearts
-   function addhearts() {
-    $('#trialsleft').empty();
-    for(i = 0 ; i < trialsleft ; i++){
-        $('#trialsleft').append('<img src="https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/wrong.png" , class="life">');
+        .buttons {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .buttons-mute {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 80px;
+            margin: 4px;
+            padding: 6px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-green {
+            color: #6C6;
+            border: 2px solid #6C6;
+        }
+
+        .btn-green:hover {
+            background-color: #232;
+        }
+
+        .btn-yellow {
+            color: #CC6;
+            border: 2px solid #CC6;
+        }
+
+        .btn-yellow:hover {
+            background-color: #332;
+        }
+
+        .btn-red {
+            color: #C66;
+            border: 2px solid #C66;
+        }
+
+        .btn-red:hover {
+            background-color: #322;
+        }
+
+        .btn-mute {
+            width: 20px;
+            margin: 4px;
+            padding: 2px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        .btn-mute:hover {
+            color: #BBB;
+        }
+
+
+        /* global override styles */
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Pomodoro Timer</h1>
+        </div>
+
+        <div class="row">
+            <div class="col-half knob-wrapper">
+                <h5>Session Length</h5>
+                <input type="text" value="25" size="5" id="session-knob" />
+            </div>
+            <div class="col-half knob-wrapper">
+                <h5>Break Length</h5>
+                <input type="text" value="5" size="5" id="break-knob" />
+            </div>
+        </div>
+
+        <div class="buttons">
+            <a id="cmd-reset" class="btn btn-red"><i class="fa fa-undo"></i> Reset</a>
+            <a id="cmd-pause" class="btn btn-yellow hidden"><i class="fa fa-pause"></i> Pause</a>
+            <a id="cmd-go" class="btn btn-green"><i class="fa fa-play"></i> Start</a>
+        </div>
+
+        <div class="buttons-mute">
+            <a id="cmd-mute" class="btn btn-mute"><i class="fa fa-volume-up"></i></a>
+            <a id="cmd-unmute" class="btn btn-mute hidden"><i class="fa fa-volume-off"></i></a>
+        </div>
+
+        <div class="timer knob-wrapper">
+            <input type="text" value="1500" size="5" id="timer-display" />
+        </div>
+
+
+
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-knob@1.2.13/dist/jquery.knob.min.js"></script>
+    <script>
+        
+$(document).ready(function() {
+  
+  // initialize static data
+  var targetTime = undefined;
+  var targetDelta = undefined;
+  var intervalId = undefined;
+  var reset = true;
+  var onSession = true;
+
+  var breakLength;
+  
+  // main timer setup function
+  function setupTimerDisplay() {
+    var config = {};
+    var value = 0;
+    
+    if (onSession === true) {
+      value = $('#session-knob').val() * 60;
+      $('#timer-display').val(value);
+      config.max = value;
+      config.fgColor = '#6C6';
+      config.inputColor = '#6C6';
+      config.format = function(v) {
+        var sec = parseInt(v);
+        var min = Math.floor(sec / 60);
+        sec -= min * 60;
+        return min + ':' + (sec < 10 ? "0" + sec : sec);
+      };
     }
-}
-
-  //start action
-  function startAction(){
-      //generate random fruit
-      $('#fruit1').show();
-
-      //choose random fruit
-      chooseRandom();
-      //random position
-      $('#fruit1').css({
-          'left': Math.round(550 * Math.random()),
-          'top': -50
-      });
-      //generate random step
-      step=1 + Math.round(5 * Math.random());//change steps
-      //descend fruits down by 10ms
-      action = setInterval(function(){
-          //move fruit by one step
-          $('#fruit1').css('top', $('#fruit1').position().top + step);
-
-          //check if the fruit is too low
-          if($('#fruit1').position().top > $('#fruitcontainer').height()-50){
-              //yes it is low
-              // check trails left
-              if(trialsleft > 1){
-                  //generate a fruit
-                  $("#fruit1").show();
-                  //choose random fruit
-                  chooseRandom();
-                  //random position
-                  $('#fruit1').css({
-                      'left': Math.round(550 * Math.random()),
-                      'top': -50
-                  });
-                  //generate random step
-                  step= 1 + Math.round(5 * Math.random());//change steps
-
-                  //reduce trials by one
-                  trialsleft--;
-                  //populate trails left box by one
-                  addhearts();
-
-              }else{
-                  //game over
-                  playing=false;//we are ot playing any more
-                  $("#score").hide();
-                  $('#startreset').html('Start Game');
-                  $('#gameOver').show();
-                  $('#gameOver').html('<p>Game Over!</p><p>Your score is '+ score + '</p>');
-                  $('#trialsleft').hide();
-                  stopAction();//stops Action
-              }
-          }
-      },10);
+    else {
+      var max = $('#break-knob').val() * 60;
+      config.max = max;
+      config.fgColor = '#C66';
+      config.inputColor = '#C66';
+      config.format = function(v) {
+        var sec = parseInt(v);
+        sec = max - sec;
+        var min = Math.floor(sec / 60);
+        sec -= min * 60;
+        return min + ':' + (sec < 10 ? "0" + sec : sec);
+      };
+    }
+    
+    $('#timer-display').trigger('configure', config);
+    $('#timer-display').val(value);
+    $('#timer-display').trigger('change');
   }
+  
+  // if knob failed to load, fall back to regular input display
+  if (jQuery().knob) {
+    $('#session-knob').knob({
+      'min': 0,
+      'max': 120,
+      'step': 1,
+      'width': 100,
+      'height': 100,
+      'fgColor': '#6C6',
+      'bgColor': '#333',
+      'release': function() {
+        if (reset) {
+          targetDelta = $('#session-knob').val() * 60000;
+          setupTimerDisplay();
+        }
+      }
+    });
 
-  //choose random fruits
-  function chooseRandom(){
-      $('#fruit1').attr('src','https://raw.githubusercontent.com/Saumya-07/Fruit-Slicer/master/images/' + fruits[Math.round(9*Math.random())]+'.png');
+    $('#break-knob').knob({
+      'min': 0,
+      'max': 30,
+      'step': 1,
+      'width': 100,
+      'height': 100,
+      'fgColor': '#C66',
+      'bgColor': '#333'
+    });
+
+    $('#timer-display').knob({
+      'min': 0,
+      'max': 1500,
+      'width': 200,
+      'height': 200,
+      'rotation': 'anticlockwise',
+      'fgColor': '#57C',
+      'bgColor': '#222',
+      'readOnly': true
+    });
   }
-   // Stop Action
-   function stopAction(){
-    clearInterval(action);
-    $('#fruit1').hide();
-}
+  
+  // periodic timer function
+  function updateTimer() {
+    var now = new Date();
+    targetDelta = targetTime.getTime() - now.getTime();
+    
+    if (targetDelta > 0) {
+      var sec = Math.ceil(targetDelta / 1000);
+      if (!onSession) sec = breakLength - sec;
+      $('#timer-display').val(sec);
+      $('#timer-display').trigger('change');
+    }
+    else {
+      if (onSession) {
+        if (!mute) $('#snd-endofsession')[0].play();
+        onSession = false;
+        breakLength = $('#break-knob').val() * 60;
+        targetDelta = breakLength * 1000;
+      }
+      else {
+        if (!mute) $('#snd-endofbreak')[0].play();
+        onSession = true;
+        targetDelta = $('#session-knob').val() * 60000;
+      }
+      targetTime = new Date(Date.now() + targetDelta);
+      setupTimerDisplay();
+    }
+  }
+  
+  // button click events
+  $('#cmd-reset').click(function() {
+    targetDelta = $('#session-knob').val() * 60000;
+    if (intervalId) {
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    }
+    reset = true;
+    onSession = true;
+    $('#cmd-pause').addClass('hidden');
+    $('#cmd-go').removeClass('hidden');
+    setupTimerDisplay();
+    return false;
+  });
+  
+  $('#cmd-go').click(function() {
+    targetTime = new Date(Date.now() + targetDelta);
+    intervalId = window.setInterval(updateTimer, 200);
+    reset = false;
+    breakLength = $('#break-knob').val() * 60;
+    $('#cmd-go').addClass('hidden');
+    $('#cmd-pause').removeClass('hidden');
+    return false;
+  });
+  
+  $('#cmd-pause').click(function() {
+    window.clearInterval(intervalId);
+    intervalId = undefined;
+    $('#cmd-pause').addClass('hidden');
+    $('#cmd-go').removeClass('hidden');
+    return false;
+  });
+  
+ 
+ 
+  // initialize timer display
+  targetDelta = $('#session-knob').val() * 60000;
+  setupTimerDisplay();
+
 });
-        </script>
-    </body>
+
+    </script>
+
+</body>
+
 </html>

@@ -2,147 +2,118 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Tilt Maze Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D Maze Ball Game</title>
 <style>
     body { 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        height: 100vh; 
         margin: 0; 
-        background: #f0f0f0; 
+        overflow: hidden; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #f0f0f0;
     }
-    #gameArea {
-        position: relative;
-        width: 400px;
-        height: 400px;
-        border: 2px solid #000;
-        overflow: hidden;
+    canvas { 
+        background: white; 
+        border: 2px solid #333;
     }
-    #maze, #ball, #goal {
+    #winMessage {
         position: absolute;
-    }
-    #ball {
-        width: 20px;
-        height: 20px;
-        background: red;
-        border-radius: 50%;
-    }
-    #goal {
-        width: 50px;
-        height: 50px;
-        background: green;
-        left: 175px;
-        top: 175px;
-        border-radius: 5px;
-    }
-    #message {
-        text-align: center;
-        font-family: Arial, sans-serif;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2em;
+        color: green;
+        display: none;
     }
 </style>
 </head>
 <body>
-<div id="gameArea">
-    <div id="maze"></div>
-    <div id="ball"></div>
-    <div id="goal"></div>
-</div>
-<h2 id="message"></h2>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="winMessage">You Win!</div>
 
 <script>
-    const gameArea = document.getElementById('gameArea');
-    const mazeElement = document.getElementById('maze');
-    const ball = document.getElementById('ball');
-    const goal = document.getElementById('goal');
-    const message = document.getElementById('message');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const winMessage = document.getElementById('winMessage');
 
-    // Game state
-    let tiltX = 0, tiltY = 0;
-    let ballX = 10, ballY = 10; // Starting position
-    const ballRadius = 10;
-    const gravity = 0.2;
-    const friction = 0.98;
+const mazeSize = {width: 40, height: 30};
+const cellSize = 20;
+let maze = generateMaze(mazeSize.width, mazeSize.height);
+let ball = {x: cellSize, y: cellSize, radius: 5, dx: 0, dy: 0};
+const goal = {x: mazeSize.width * cellSize - cellSize, y: mazeSize.height * cellSize - cellSize, size: cellSize};
 
-    // Simple maze structure (you might want to generate this dynamically)
-    const maze = [
-        '##########',
-        '#     #  #',
-        '# #####  #',
-        '#        #',
-        '#  ##### #',
-        '#  #     #',
-        '#  ######',
-        '#        #',
-        '##########'
-    ];
+function generateMaze(width, height) {
+    // Simplified maze generation logic here
+    // This would be replaced with actual maze generation algorithm
+    return Array(height).fill().map(() => Array(width).fill(1));
+}
 
-    function drawMaze() {
-        maze.forEach((row, y) => {
-            [...row].forEach((cell, x) => {
-                if (cell === '#') {
-                    let wall = document.createElement('div');
-                    wall.style.position = 'absolute';
-                    wall.style.left = `${x * 40}px`;
-                    wall.style.top = `${y * 40}px`;
-                    wall.style.width = '40px';
-                    wall.style.height = '40px';
-                    wall.style.background = 'black';
-                    mazeElement.appendChild(wall);
-                }
-            });
-        });
-    }
-
-    function update() {
-        // Tilt effect
-        let forceX = tiltX * gravity;
-        let forceY = tiltY * gravity;
-
-        // Simple movement (no real physics)
-        ballX += forceX;
-        ballY += forceY;
-
-        // Collision detection with walls would go here
-        // Basic bounds checking
-        if (ballX < ballRadius) ballX = ballRadius;
-        if (ballX > gameArea.offsetWidth - ballRadius) ballX = gameArea.offsetWidth - ballRadius;
-        if (ballY < ballRadius) ballY = ballRadius;
-        if (ballY > gameArea.offsetHeight - ballRadius) ballY = gameArea.offsetHeight - ballRadius;
-
-        // Check if ball reached the goal
-        if (Math.abs(ballX - 195) < 25 && Math.abs(ballY - 195) < 25) {
-            message.textContent = 'You Win!';
-            return; // Stop the game
+function drawMaze() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(let y = 0; y < maze.length; y++) {
+        for(let x = 0; x < maze[y].length; x++) {
+            if(maze[y][x] === 1) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
         }
+    }
+}
 
-        // Update ball position
-        ball.style.left = `${ballX - ballRadius}px`;
-        ball.style.top = `${ballY - ballRadius}px`;
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    ctx.closePath();
+}
 
-        requestAnimationFrame(update);
+function drawGoal() {
+    ctx.fillStyle = 'green';
+    ctx.fillRect(goal.x, goal.y, goal.size, goal.size);
+}
+
+function update() {
+    // Basic gravity and tilt effect
+    const tiltX = (canvas.width / 2 - event.clientX) / 100;
+    const tiltY = (canvas.height / 2 - event.clientY) / 100;
+    ball.dx += tiltX * 0.1;
+    ball.dy += tiltY * 0.1 + 0.1; // +0.1 for gravity
+
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+
+    // Collision detection with walls
+    if(ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy *= -0.8; // bounce
+    if(ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) ball.dx *= -0.8;
+
+    // Maze collision would be checked here with more complex logic
+    // Simplified for now:
+    let gridX = Math.floor(ball.x / cellSize);
+    let gridY = Math.floor(ball.y / cellSize);
+    if(maze[gridY] && maze[gridY][gridX] === 1) {
+        // Here you would adjust ball position and velocity based on collision
     }
 
-    function handleTilt(e) {
-        tiltX = e.gamma / 90; // For mobile devices
-        tiltY = e.beta / 90;
+    // Check for win
+    if(Math.hypot(ball.x - (goal.x + goal.size/2), ball.y - (goal.y + goal.size/2)) < ball.radius + goal.size/2) {
+        winMessage.style.display = 'block';
+        return;
     }
 
-    // Event listeners
-    if (window.DeviceOrientationEvent) {
-        window.addEventListener("deviceorientation", handleTilt, true);
-    } else {
-        // Fallback to mouse movement for tilt effect
-        gameArea.addEventListener('mousemove', function(e) {
-            let rect = gameArea.getBoundingClientRect();
-            tiltX = (e.clientX - rect.left - rect.width/2) / (rect.width/2);
-            tiltY = (e.clientY - rect.top - rect.height/2) / (rect.height/2);
-        });
-    }
-
-    // Initialize game
     drawMaze();
-    update();
+    drawGoal();
+    drawBall();
+    requestAnimationFrame(update);
+}
+
+canvas.addEventListener('mousemove', function(event) {
+    // This event listener would typically be used for tilt effect
+});
+
+update();
 </script>
 </body>
 </html>

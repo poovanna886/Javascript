@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Timer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f4f4f9; color: #333; }
+        .container { max-width: 600px; margin: 50px auto; text-align: center; }
+        .knobs { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .knob-label { margin: 10px 0; }
+        input[type="range"] { width: 80%; }
+        .timer { font-size: 2em; margin: 20px 0; }
+        .controls button { margin: 10px; padding: 10px 20px; border: none; background: #007BFF; color: white; cursor: pointer; border-radius: 5px; }
+        .controls button:hover { background: #0056b3; }
+        canvas { background: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Productivity Timer</h1>
+        <div class="knobs">
+            <div>
+                <label class="knob-label">Session Time</label>
+                <input type="range" min="1" max="60" value="25" id="sessionTime" class="slider">
+            </div>
+            <div>
+                <label class="knob-label">Break Time</label>
+                <input type="range" min="1" max="20" value="5" id="breakTime" class="slider">
+            </div>
+        </div>
+        <div class="timer" id="timerDisplay">25:00</div>
+        <div class="controls">
+            <button id="startBtn">Start</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+        <canvas id="myChart" width="400" height="200"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const sessionTime = document.getElementById('sessionTime');
+        const breakTime = document.getElementById('breakTime');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        let timeLeft, timer, isSession = true, interval;
+
+        // Chart setup
+        const ctx = document.getElementById('myChart').getContext('2d');
+        let myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Session',
+                    data: [],
+                    backgroundColor: 'green'
+                }, {
+                    label: 'Break',
+                    data: [],
+                    backgroundColor: 'red'
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Time (minutes)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateChart() {
+            myChart.data.labels.push(new Date().toLocaleDateString());
+            myChart.data.datasets[0].data.push(isSession ? sessionTime.value : 0);
+            myChart.data.datasets[1].data.push(!isSession ? breakTime.value : 0);
+            myChart.update();
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            seconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            if (!interval) {
+                timeLeft = (isSession ? sessionTime.value : breakTime.value) * 60;
+                interval = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.textContent = formatTime(timeLeft);
+                    if (timeLeft <= 0) {
+                        clearInterval(interval);
+                        interval = null;
+                        isSession = !isSession;
+                        updateChart();
+                        if (isSession) startTimer(); // Automatically start break or next session
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(interval);
+            interval = null;
+            isSession = true;
+            timerDisplay.textContent = formatTime(sessionTime.value * 60);
+            myChart.data.labels = [];
+            myChart.data.datasets.forEach(dataset => dataset.data = []);
+            myChart.update();
+        }
+
+        startBtn.onclick = startTimer;
+        resetBtn.onclick = resetTimer;
+    </script>
+</body>
+</html>

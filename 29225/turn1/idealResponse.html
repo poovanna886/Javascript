@@ -14,7 +14,6 @@
       --ball-color: #f06449;
       --end-color: #7d82b8;
       --text-color: #210124;
-
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--background-color);
     }
@@ -83,7 +82,6 @@
       width: 20px;
       height: 20px;
       cursor: grab;
-
       animation-name: glow;
       animation-duration: 0.6s;
       animation-iteration-count: infinite;
@@ -105,7 +103,6 @@
     .joystick-arrow:nth-of-type(1) {
       position: absolute;
       bottom: 55px;
-
       width: 0;
       height: 0;
       border-left: 10px solid transparent;
@@ -117,36 +114,30 @@
     .joystick-arrow:nth-of-type(2) {
       position: absolute;
       top: 55px;
-
       width: 0;
       height: 0;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-
       border-top: 10px solid var(--joystick-color);
     }
 
     .joystick-arrow:nth-of-type(3) {
       position: absolute;
       left: 55px;
-
       width: 0;
       height: 0;
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-
       border-left: 10px solid var(--joystick-color);
     }
 
     .joystick-arrow:nth-of-type(4) {
       position: absolute;
       right: 55px;
-
       width: 0;
       height: 0;
       border-top: 10px solid transparent;
       border-bottom: 10px solid transparent;
-
       border-right: 10px solid var(--joystick-color);
     }
 
@@ -215,7 +206,6 @@
         <div id="joystick-head"></div>
       </div>
       <div id="note">
-        Click the joystick to start!
         <p>Move every ball to the center</p>
       </div>
     </div>
@@ -250,8 +240,6 @@
     const rollAroundCap = (cap, ball) => {
       // The direction the ball can't move any further because the wall holds it back
       let impactAngle = getAngle(ball, cap);
-
-      // The direction the ball wants to move based on it's velocity
       let heading = getAngle(
         { x: 0, y: 0 },
         { x: ball.velocityX, y: ball.velocityY }
@@ -286,7 +274,6 @@
       const velocityY = ball.y - (cap.y + deltaFromCap.y);
       const nextX = x + velocityX;
       const nextY = y + velocityY;
-
       return { x, y, velocityX, velocityY, nextX, nextY };
     };
 
@@ -566,8 +553,6 @@
 
           balls.forEach((ball) => {
             if (velocityChangeX == 0) {
-              // No rotation, the plane is flat
-              // On flat surface friction can only slow down, but not reverse movement
               ball.velocityX = slow(ball.velocityX, frictionDeltaX);
             } else {
               ball.velocityX = ball.velocityX + velocityChangeX;
@@ -578,8 +563,6 @@
             }
 
             if (velocityChangeY == 0) {
-              // No rotation, the plane is flat
-              // On flat surface friction can only slow down, but not reverse movement
               ball.velocityY = slow(ball.velocityY, frictionDeltaY);
             } else {
               ball.velocityY = ball.velocityY + velocityChangeY;
@@ -596,14 +579,10 @@
             walls.forEach((wall, wi) => {
               if (wall.horizontal) {
                 // Horizontal wall
-
                 if (
                   ball.nextY + ballSize / 2 >= wall.y - wallW / 2 &&
                   ball.nextY - ballSize / 2 <= wall.y + wallW / 2
                 ) {
-                  // Ball got within the strip of the wall
-                  // (not necessarily hit it, could be before or after)
-
                   const wallStart = {
                     x: wall.x,
                     y: wall.y
@@ -672,7 +651,6 @@
                   }
 
                   if (ball.nextX >= wallStart.x && ball.nextX <= wallEnd.x) {
-                    // The ball got inside the main body of the wall
                     if (ball.nextY < wall.y) {
                       // Hit horizontal wall from top
                       ball.nextY = wall.y - wallW / 2 - ballSize / 2;
@@ -688,15 +666,10 @@
                   }
                 }
               } else {
-              
-
                 if (
                   ball.nextX + ballSize / 2 >= wall.x - wallW / 2 &&
                   ball.nextX - ballSize / 2 <= wall.x + wallW / 2
                 ) {
-                  // Ball got within the strip of the wall
-                  // (not necessarily hit it, could be before or after)
-
                   const wallStart = {
                     x: wall.x,
                     y: wall.y
@@ -782,19 +755,13 @@
                 }
               }
             });
-
-
-            // Adjust ball metadata
             ball.x = ball.x + ball.velocityX;
             ball.y = ball.y + ball.velocityY;
           });
-
-          // Move balls to their new position on the UI
           balls.forEach(({ x, y }, index) => {
             ballElements[index].style.cssText = `left: ${x}px; top: ${y}px; `;
           });
         }
-
         // Win detection
         if (
           balls.every(

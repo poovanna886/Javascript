@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Productivity Timer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+<style>
+body {
+    font-family: 'Arial', sans-serif;
+    background: #f4f7fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: #333;
+}
+.timer-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.knob {
+    margin: 20px 0;
+}
+button {
+    background: #007BFF;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+button:hover { background: #0056b3; }
+input[type="range"] {
+    width: 80%;
+}
+.chart-container {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 500px;
+}
+</style>
+</head>
+<body>
+
+<div class="timer-container">
+    <div class="knob">
+        <label for="session">Session (min):</label>
+        <input type="range" id="session" min="1" max="60" value="25">
+        <span id="sessionDisplay">25</span>
+    </div>
+    <div class="knob">
+        <label for="break">Break (min):</label>
+        <input type="range" id="break" min="1" max="30" value="5">
+        <span id="breakDisplay">5</span>
+    </div>
+    <div id="timerDisplay">25:00</div>
+    <button id="startBtn"><i class="fas fa-play"></i> Start</button>
+    <button id="resetBtn"><i class="fas fa-undo"></i> Reset</button>
+    <div class="chart-container">
+        <canvas id="productivityChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let sessionTime = 25 * 60; // in seconds
+let breakTime = 5 * 60;
+let timeLeft = sessionTime;
+let isSession = true;
+let interval;
+let chart;
+
+document.getElementById('session').addEventListener('input', function(e) {
+    sessionTime = e.target.value * 60;
+    document.getElementById('sessionDisplay').textContent = e.target.value;
+    if(isSession) timeLeft = sessionTime;
+    updateDisplay();
+});
+
+document.getElementById('break').addEventListener('input', function(e) {
+    breakTime = e.target.value * 60;
+    document.getElementById('breakDisplay').textContent = e.target.value;
+});
+
+document.getElementById('startBtn').addEventListener('click', startTimer);
+document.getElementById('resetBtn').addEventListener('click', resetTimer);
+
+function startTimer() {
+    if(!interval) {
+        interval = setInterval(tick, 1000);
+    }
+}
+
+function resetTimer() {
+    clearInterval(interval);
+    interval = null;
+    timeLeft = sessionTime;
+    isSession = true;
+    updateDisplay();
+}
+
+function tick() {
+    if(timeLeft <= 0) {
+        if(isSession) {
+            timeLeft = breakTime;
+            isSession = false;
+        } else {
+            timeLeft = sessionTime;
+            isSession = true;
+            updateChart();
+        }
+    } else {
+        timeLeft--;
+    }
+    updateDisplay();
+}
+
+function updateDisplay() {
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    document.getElementById('timerDisplay').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+function updateChart() {
+    if(!chart) {
+        chart = new Chart(document.getElementById('productivityChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: [new Date().toLocaleDateString()],
+                datasets: [{
+                    label: 'Session',
+                    data: [sessionTime / 60],
+                    backgroundColor: 'green',
+                }, {
+                    label: 'Break',
+                    data: [breakTime / 60],
+                    backgroundColor: 'red',
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Time (minutes)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        chart.data.labels.push(new Date().toLocaleDateString());
+        chart.data.datasets[0].data.push(sessionTime / 60);
+        chart.data.datasets[1].data.push(breakTime / 60);
+        chart.update();
+    }
+}
+</script>
+
+</body>
+</html>
