@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2D Platform Game</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #87CEEB; /* Sky color */
+    }
+    #gameCanvas {
+        display: block;
+        margin: auto;
+    }
+    .platform {
+        background-color: #228B22; /* Green for platforms */
+        position: absolute;
+    }
+    .player, .enemy, .bullet, .goal {
+        position: absolute;
+    }
+    .player {
+        background-color: #FF4500; /* Orange Red for player */
+    }
+    .enemy {
+        background-color: #8B0000; /* Dark Red for enemies */
+    }
+    .bullet {
+        background-color: black;
+        border-radius: 50%;
+    }
+    .goal {
+        background-color: yellow;
+    }
+    #water {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 50px;
+        background-color: #4682B4; /* Steel Blue for water */
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 600;
+
+let player = {x: 50, y: 50, width: 20, height: 20, speed: 5, dx: 0, dy: 0, alive: true, spawn: {x: 50, y: 50}};
+let platforms = [];
+let enemies = [];
+let bullets = [];
+let goal = {x: 700, y: 50, width: 30, height: 30};
+
+function createPlatforms() {
+    platforms = [
+        {x: 0, y: 550, width: 200, height: 20},
+        {x: 250, y: 500, width: 200, height: 20},
+        {x: 500, y: 450, width: 300, height: 20}
+    ];
+}
+
+function createEnemies() {
+    enemies = [
+        {x: 300, y: 470, width: 20, height: 20, speed: 1, direction: 1, canShoot: true},
+        {x: 550, y: 420, width: 20, height: 20, speed: 1.5, direction: -1}
+    ];
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw water
+    ctx.fillStyle = '#4682B4';
+    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+
+    // Draw platforms
+    ctx.fillStyle = '#228B22';
+    platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+
+    // Draw player
+    if(player.alive) {
+        ctx.fillStyle = '#FF4500';
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // Draw enemies
+    ctx.fillStyle = '#8B0000';
+    enemies.forEach(e => ctx.fillRect(e.x, e.y, e.width, e.height));
+
+    // Draw bullets
+    ctx.fillStyle = 'black';
+    bullets.forEach(b => ctx.fillRect(b.x, b.y, 5, 5));
+
+    // Draw goal
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+}
+
+function update() {
+    if(!player.alive) return;
+
+    // Player movement
+    player.x += player.dx;
+    player.y += player.dy;
+
+    // Gravity
+    player.dy += 0.2;
+
+    // Platform collision
+    platforms.forEach(p => {
+        if(player.y + player.height <= p.y && 
+           player.y + player.height + player.dy > p.y &&
+           player.x + player.width > p.x && 
+           player.x < p.x + p.width) {
+            player.dy = 0;
+            player.y = p.y - player.height;
+        }
+    });
+
+    // Water check
+    if(player.y > canvas.height - 50) {
+        resetPlayer();
+    }
+
+    // Enemy movement and shooting
+    enemies.forEach((enemy, index) => {
+        enemy.x += enemy.speed * enemy.direction;
+        if(enemy.x < 0 || enemy.x + enemy.width > canvas.width) {
+            enemy.direction *= -1;
+        }
+        if(enemy.canShoot && Math.random() < 0.01) {
+            bullets.push({x: enemy.x, y: enemy.y, dx: -3 * enemy.direction, dy: 0});
+        }
+    });
+
+    // Bullet movement and collision
+    bullets.forEach((bullet, bIndex) => {
+        bullet.x += bullet.dx;
+        bullet.y += bullet.dy;
+        if(bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+            bullets.splice(bIndex, 1);
+        }
+        // Check if bullet hits player or enemy
+        if(player.alive && checkCollision(bullet, player)) {
+            resetPlayer();
+            bullets.splice(bIndex, 1);
+        }
+        enemies.forEach((enemy, eIndex) => {
+            if(checkCollision(bullet, enemy)) {
+                enemies.splice(eIndex, 1);
+                bullets.splice(bIndex, 1);
+            }
+        });
+    });
+
+    // Check for enemy collision with player
+    enemies.forEach(() => {
+        if(checkCollision(player, enemy)) resetPlayer();
+    });
+
+    // Check if player reached the goal
+    if(checkCollision(player, goal)) {
+        alert('You win!');
+        resetPlayer();
+    }
+
+    draw();
+    requestAnimationFrame(update);
+}
+
+function checkCollision(obj1, obj2) {
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
+}
+
+function resetPlayer() {
+    player.x = player.spawn.x;
+    player.y = player.spawn.y;
+    player.dx = 0;
+    player.dy = 0;
+    player.alive = true;
+}
+
+document.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowLeft') player.dx = -player.speed;
+    if(e.key === 'ArrowRight') player.dx = player.speed;
+    if(e.key === 'ArrowUp' && player.dy === 0) player.dy = -10; // Jump
+    if(e.key === ' ') bullets.push({x: player.x, y: player.y, dx: 5, dy: 0});
+});
+
+document.addEventListener('keyup', (e) => {
+    if(e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+});
+
+createPlatforms();
+createEnemies();
+update();
+</script>
+</body>
+</html>
