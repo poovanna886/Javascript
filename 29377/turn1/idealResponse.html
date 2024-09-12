@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <link href="https://fonts.googleapis.com/css?family=Joti+One" rel="stylesheet">
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800');
+
+        html,
+        body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .main-title{
+            font-family: 'Joti One', cursive;
+            color: #FFCB04;
+            font-size: 40px;
+            text-shadow:
+                3px 3px 0 #39569E,
+                -1px -1px 0 #39569E,
+                1px -1px 0 #39569E,
+                -1px 4px 0 #39569E,
+                1px 1px 0 #39569E;
+        }
+
+        body {
+            align-items: center;
+            background: #642B73;
+            background: linear-gradient(to bottom, #C6426E, #642B73);
+            display: flex;
+            font-family: 'Open Sans', sans-serif;
+            justify-content: center;
+            overflow: hidden;
+            perspective: 1800px;
+            text-align: center;
+            margin: 0 20px;
+        }
+
+        h1 {
+            color: #3e3e42;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 30px;
+            transform: translateZ(35px);
+        }
+
+        h3 {
+            color: #eb285d;
+            font-size: 16px;
+            margin-bottom: 6px;
+            transform: translateZ(25px);
+        }
+
+        .cards {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0px 10px 20px 20px rgba(0, 0, 0, 0.17);
+            display: inline-block;
+            padding: 30px 35px;
+            perspective: 1800px;
+            text-align: left;
+            transform-origin: 50% 50%;
+            transform-style: preserve-3d;
+            transform: rotateX(11deg) rotateY(16.5deg);
+            min-width: 595px;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 5px 5px 20px -5px rgba(0, 0, 0, 0.6);
+            display: inline-block;
+            height: 250px;
+            overflow: hidden;
+            perspective: 1200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateZ(35px);
+            transition: transform 200ms ease-out;
+            width: 175px;
+            text-align: center;
+        }
+
+        .card:not(:last-child) {
+            margin-right: 30px;
+        }
+
+        .card__img {
+            position: relative;
+            height: 100%;
+        }
+
+        .card__bg {
+            bottom: -50px;
+            left: -50px;
+            position: absolute;
+            right: -50px;
+            top: -50px;
+            transform-origin: 50% 50%;
+            transform: translateZ(-50px);
+            z-index: 0;
+        }
+
+        .card__img {
+            top: 14px;
+            right: -10px;
+            height: 110%;
+        }
+
+        .card__bg {
+            background: url('https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/06485517-936a-481b-b86d-1c02bad4305f/dg5ccx9-4a644d34-551b-4b43-8c85-18e349b1f4b5.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzA2NDg1NTE3LTkzNmEtNDgxYi1iODZkLTFjMDJiYWQ0MzA1ZlwvZGc1Y2N4OS00YTY0NGQzNC01NTFiLTRiNDMtOGM4NS0xOGUzNDliMWY0YjUuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.bCkpbZavCsKKJPwjHsSmH_xFI0mTxK8NAkp5CttU7tY') center / cover no-repeat;
+        }
+
+        .card__text {
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 100%);
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            height: 70px;
+            justify-content: center;
+            position: absolute;
+            width: 100%;
+            z-index: 2;
+        }
+
+        .card__title {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 0 10px;
+            margin-bottom: 3px;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div class="main-title">Poke'mon</div>
+    <div class="card__title">Trading cards</div>
+    <div class="cards">
+        <h3>Cards</h3>
+        <h1>My Collection</h1>
+        <div class="card">
+            <div class="card__bg"></div>
+            <img class="card__img"
+                src="https://dz3we2x72f7ol.cloudfront.net/expansions/obsidian-flames/en-us/SV03_EN_22.png" />
+            <div class="card__text">
+                <p class="card__title">Toadscruel</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card__bg"></div>
+            <img class="card__img"
+                src="https://dz3we2x72f7ol.cloudfront.net/expansions/temporal-forces/en-us/SV05_EN_34.png" />
+            <div class="card__text">
+                <p class="card__title">Incineroar</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card__bg"></div>
+            <img class="card__img"
+                src="https://dz3we2x72f7ol.cloudfront.net/expansions/obsidian-flames/en-us/SV03_EN_135.png" />
+            <div class="card__text">
+                <p class="card__title">Absol</p>
+            </div>
+        </div>
+    </div>
+    <button id="addCardBtn"
+        style="position: fixed; bottom: 20px; right: 20px; background-color: #eb285d; color: white; padding: 20px 40px; border: none; border-radius: 5px; cursor: pointer;">
+        + Add Card
+    </button>
+
+    <div id="cardModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 10px; width: 300px;">
+            <h2>Add New Card</h2>
+            <input id="cardName" type="text" placeholder="Card Name"
+                style="width: auto; padding: 10px; margin-bottom: 10px;">
+            <input id="cardImage" type="file" accept="image/*" style="width: 100%; padding: 10px; margin-bottom: 20px;">
+            <button id="saveCardBtn"
+                style="background-color: #eb285d; color: white; padding: 10px; border: none; cursor: pointer; width: 100%; border-radius: 5px;">
+                Save Card
+            </button>
+            <button id="closeModalBtn" style="background-color: #ccc; color: black; padding: 10px; border: none; cursor: pointer; width: 100%; border-radius: 5px; margin-top: 10px;">
+                Close
+              </button>
+        </div>
+    </div>
+
+</body>
+<script>
+
+    // Button and Modal interaction
+    const addCardBtn = document.getElementById('addCardBtn');
+    const cardModal = document.getElementById('cardModal');
+    const saveCardBtn = document.getElementById('saveCardBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    addCardBtn.addEventListener('click', () => {
+        cardModal.style.display = 'flex';
+    });
+
+  
+
+    saveCardBtn.addEventListener('click', () => {
+        const cardName = document.getElementById('cardName').value;
+        const cardImageInput = document.getElementById('cardImage');
+
+        if (cardName && cardImageInput.files.length > 0) {
+            const cardImage = URL.createObjectURL(cardImageInput.files[0]);
+
+            const newCard = document.createElement('div');
+            newCard.className = 'card';
+            newCard.innerHTML = `
+    <div class="card">
+    <div class="card__bg"></div>
+    <img class="card__img" src="${cardImage}" />
+    <div class="card__text">
+      <p class="card__title">${cardName}</p>
+    </div>
+  </div>
+    `;
+
+            document.querySelector('.cards').appendChild(newCard);
+            cardModal.style.display = 'none';
+            updateParallaxEffect();
+        }
+    });
+
+      // Close modal
+closeModalBtn.addEventListener('click', () => {
+  cardModal.style.display = 'none';
+});
+    // Function to apply parallax effect to cards
+    function updateParallaxEffect() {
+        const cards = document.querySelector(".cards");
+        const images = document.querySelectorAll(".card__img");
+        const backgrounds = document.querySelectorAll(".card__bg");
+        const range = 40;
+
+        const calcValue = (a, b) => (a / b * range - range / 2).toFixed(1);
+
+        let timeout;
+        document.addEventListener('mousemove', ({ x, y }) => {
+            if (timeout) {
+                window.cancelAnimationFrame(timeout);
+            }
+
+            timeout = window.requestAnimationFrame(() => {
+                const yValue = calcValue(y, window.innerHeight);
+                const xValue = calcValue(x, window.innerWidth);
+
+                cards.style.transform = `rotateX(${yValue}deg) rotateY(${xValue}deg)`;
+
+                images.forEach((image) => {
+                    image.style.transform = `translateX(${-xValue}px) translateY(${yValue}px)`;
+                });
+
+                backgrounds.forEach((background) => {
+                    background.style.backgroundPosition = `${xValue * 0.45}px ${-yValue * 0.45}px`;
+                });
+            });
+        }, false);
+    }
+    updateParallaxEffect()
+</script>
+
+</html>

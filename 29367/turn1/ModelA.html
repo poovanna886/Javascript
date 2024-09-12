@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chess Game</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+<style>
+  #board {
+    width: 400px;
+    margin: 20px auto;
+  }
+  .highlight {
+    box-shadow: inset 0 0 3px 3px yellow;
+  }
+  .move-list {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+  .timer {
+    font-size: 20px;
+    margin: 10px 0;
+  }
+  body {
+    font-family: 'Arial', sans-serif;
+    background: #f4f4f4;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div id="board" style="width: 400px"></div>
+<div class="move-list"></div>
+<div class="timer">White: <span id="whiteTimer">5:00</span> | Black: <span id="blackTimer">5:00</span></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+<script>
+let board = null;
+let game = new Chess();
+let $status = $('.move-list');
+let whiteTimer = 300; // 5 minutes in seconds
+let blackTimer = 300;
+let currentTimer = 'white';
+let interval;
+
+function updateTimer() {
+    let minutes = Math.floor((currentTimer === 'white' ? whiteTimer : blackTimer) / 60);
+    let seconds = (currentTimer === 'white' ? whiteTimer : blackTimer) % 60;
+    seconds = seconds < 10 ? '0' + seconds : seconds;
+    $(`#${currentTimer}Timer`).text(`${minutes}:${seconds}`);
+}
+
+function startTimer() {
+    interval = setInterval(function() {
+        if ((currentTimer === 'white' ? whiteTimer : blackTimer) > 0) {
+            currentTimer === 'white' ? whiteTimer-- : blackTimer--;
+            updateTimer();
+        } else {
+            clearInterval(interval);
+            alert(`${currentTimer === 'white' ? 'Black' : 'White'} wins on time!`);
+        }
+    }, 1000);
+}
+
+function makeRandomMove() {
+    let possibleMoves = game.moves();
+    if (possibleMoves.length === 0) return;
+    let randomIdx = Math.floor(Math.random() * possibleMoves.length);
+    game.move(possibleMoves[randomIdx]);
+    board.position(game.fen());
+    $status.append(`<div>Black: ${possibleMoves[randomIdx]}</div>`);
+    currentTimer = 'white';
+    startTimer();
+}
+
+function onDragStart(source, piece, position, orientation) {
+    if (game.game_over() || piece.search(/^b/) !== -1 || currentTimer !== 'white') return false;
+}
+
+function onDrop(source, target) {
+    let move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' // Always promote to a queen for simplicity
+    });
+
+    if (move === null) return 'snapback';
+    
+    $status.append(`<div>White: ${move.san}</div>`);
+    updateTimer();
+    window.setTimeout(makeRandomMove, 250);
+}
+
+function onMouseoverSquare(square, piece) {
+    let moves = game.moves({
+        square: square,
+        verbose: true
+    });
+    for (let i = 0; i < moves.length; i++) {
+        board.addSquareClass(moves[i].to, 'highlight');
+    }
+}
+
+function onMouseoutSquare(square, piece) {
+    board.removeSquareClass('highlight');
+}
+
+$(function() {
+    board = ChessBoard('board', {
+        draggable: true,
+        position: 'start',
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        onMouseoverSquare: onMouseoverSquare,
+        onMouseoutSquare: onMouseoutSquare
+    });
+    startTimer();
+});
+</script>
+
+</body>
+</html>

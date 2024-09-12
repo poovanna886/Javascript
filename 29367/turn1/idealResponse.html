@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .board {
+            width: 400px;
+            margin: auto
+        }
+
+        .right {
+            margin-right: 20%;
+        }
+
+        .time {
+            font-size: 24px;
+            color: #ffffff;
+            background-color: rgb(53, 246, 53);
+            padding: 10%;
+            text-align: center;
+            margin: 10px 0;
+            border: solid 1px white;
+            border-radius: 8px;
+        }
+
+        .clock {
+            padding: 10px;
+            border-radius: 8px;
+            border: solid 1px white;
+            margin-bottom: 30px;
+        }
+
+        .black-time {
+            margin-top: 20px;
+        }
+
+        .move-history {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #333;
+            font-size: 18px;
+            color: #fff;
+            height: 100px;
+            max-height: 100px;
+            width: 400px;
+            overflow-y: scroll;
+        }
+
+        /* clearfix */
+        .clearfix-7da63 {
+            clear: both;
+        }
+
+        /* board */
+        .board-b72b1 {
+            border: 2px solid #404040;
+            -moz-box-sizing: content-box;
+            box-sizing: content-box;
+        }
+
+        /* square */
+        .square-55d63 {
+            float: left;
+            position: relative;
+
+            /* disable any native browser highlighting */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* white square */
+        .white-1e1d7 {
+            background-color: #f0d9b5;
+            color: #b58863;
+        }
+
+        /* black square */
+        .black-3c85d {
+            background-color: #b58863;
+            color: #f0d9b5;
+        }
+
+        /* highlighted square */
+        .highlight1-32417,
+        .highlight2-9c5d2 {
+            -webkit-box-shadow: inset 0 0 3px 3px yellow;
+            -moz-box-shadow: inset 0 0 3px 3px yellow;
+            box-shadow: inset 0 0 3px 3px yellow;
+        }
+
+        /* notation */
+        .notation-322f9 {
+            cursor: default;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            position: absolute;
+        }
+
+        .alpha-d2270 {
+            bottom: 1px;
+            right: 3px;
+        }
+
+        .numeric-fc462 {
+            top: 2px;
+            left: 2px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h3 class="board">
+        Chess Game
+    </h3>
+    <!-- Used to get images -->
+    <div class="container">
+        <base href="https://chessboardjs.com/" />
+
+        <div id="board" class="board"></div>
+        <br>
+        <div class="right">
+            <div class="clock">
+                <div class="time" id="white-time">White: 05:00</div>
+                <div class="time" id="black-time">Black: 05:00</div>
+            </div>
+
+            <div class="info">
+                <div>Move History</div>
+                <div id="move-history" class="move-history">
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+
+    <!-- Add jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.css"
+        integrity="sha512-KRrFrm+GAPOl6xxootmuQHKDoGiR2Gtifqd6XFUH++sluyhWui3vJCkmt0FN0k/H9TQn0f4sZFltC+XnQAKKvQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.js"
+        integrity="sha512-TGU/O51undmqzEuGui6G+td333I3Wufy17Foi8O5TUc4z9rSJg+IpGmRCnLl5s0MUycrdj7vpD6YMsbRppVVzw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Add chess.js CDN for game logic -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.min.js"></script>
+
+    <script>
+        var board,
+            game = new Chess();
+        var whiteTime = 300; // 5 minutes in seconds
+        var blackTime = 300; // 5 minutes in seconds
+        var isWhiteTurn = true;
+        var timerInterval;
+
+
+        function startClock() {
+            timerInterval = setInterval(function () {
+                if (isWhiteTurn) {
+                    whiteTime--;
+                    if (whiteTime <= 0) {
+                        clearInterval(timerInterval);
+                        alert("White's time is up! Black Wins.");
+                        return;
+                    }
+                } else {
+                    blackTime--;
+                    if (blackTime <= 0) {
+                        clearInterval(timerInterval);
+                        alert("Black's time is up! White Wins.");
+                        return;
+                    }
+                }
+
+                updateClockDisplay();
+            }, 1000); // update every second
+        }
+        function updateClockDisplay() {
+            document.getElementById('white-time').textContent = "White: " + formatTime(whiteTime);
+            document.getElementById('black-time').textContent = "Black: " + formatTime(blackTime);
+        }
+
+        // Function to format time in MM:SS format
+        function formatTime(seconds) {
+            var minutes = Math.floor(seconds / 60);
+            var remainingSeconds = seconds % 60;
+            return (minutes < 10 ? '0' : '') + minutes + ':' + (remainingSeconds < 10 ? '0' : '') + remainingSeconds;
+        }
+
+        startClock()
+        /*The "AI" part starts here */
+
+        var calculateBestMove = function (game) {
+
+            var newGameMoves = game.moves();
+
+            return newGameMoves[Math.floor(Math.random() * newGameMoves.length)];
+
+        };
+
+        /* board visualization and games state handling starts here*/
+
+        var onDragStart = function (source, piece, position, orientation) {
+            if (game.in_checkmate() === true || game.in_draw() === true ||
+                piece.search(/^b/) !== -1) {
+                return false;
+            }
+        };
+
+        var makeBestMove = function () {
+            console.log(`in best move`)
+            var bestMove = getBestMove(game);
+            game.move(bestMove);
+            board.position(game.fen());
+            renderMoveHistory(game.history());
+            if (game.game_over()) {
+                clearInterval(timerInterval);
+                alert('Game over');
+                return;
+            }
+            isWhiteTurn = !isWhiteTurn;
+        };
+
+        var getBestMove = function (game) {
+            if (game.game_over()) {
+                clearInterval(timerInterval);
+                alert('Game over');
+            }
+            var bestMove = calculateBestMove(game);
+            return bestMove;
+        };
+
+        var renderMoveHistory = function (moves) {
+            var historyElement = $('#move-history').empty();
+            historyElement.empty();
+            for (var i = 1; i < moves.length; i = i + 2) {
+                historyElement.append('<span>' + i + moves[i] + ' ' + (moves[i + 1] ? moves[i + 1] : ' ') + '</span><br>')
+            }
+            historyElement.scrollTop(historyElement[0].scrollHeight);
+
+        };
+
+        var onDrop = function (source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+
+            renderMoveHistory(game.history());
+
+            window.setTimeout(makeBestMove, 2500); // Trigger black's move after white
+            isWhiteTurn = !isWhiteTurn;
+        };
+
+        var onSnapEnd = function () {
+            board.position(game.fen());
+        };
+
+        var onMouseoverSquare = function (square, piece) {
+            var moves = game.moves({
+                square: square,
+                verbose: true
+            });
+
+            if (moves.length === 0) return;
+
+            greySquare(square);
+
+            for (var i = 0; i < moves.length; i++) {
+                greySquare(moves[i].to);
+            }
+        };
+
+        var onMouseoutSquare = function (square, piece) {
+            removeGreySquares();
+        };
+
+        var removeGreySquares = function () {
+            $('#board .square-55d63').css('background', '');
+        };
+
+        var greySquare = function (square) {
+            var squareEl = $('#board .square-' + square);
+
+            var background = '#a9a9a9';
+            if (squareEl.hasClass('black-3c85d') === true) {
+                background = '#696969';
+            }
+
+            squareEl.css('background', background);
+        };
+
+        var cfg = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onMouseoutSquare: onMouseoutSquare,
+            onMouseoverSquare: onMouseoverSquare,
+            onSnapEnd: onSnapEnd
+        };
+        board = ChessBoard('board', cfg);
+    </script>
+
+</body>
+
+</html>

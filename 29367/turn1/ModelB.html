@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chess Game</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<style>
+    body { font-family: 'Arial', sans-serif; background: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    #chessboard { display: grid; grid-template-columns: repeat(8, 1fr); width: 400px; height: 400px; border: 2px solid #333; }
+    .square { width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; }
+    .white { background: #eeeed2; }
+    .black { background: #769656; }
+    .highlight { background: rgba(255, 255, 0, 0.3); }
+    .piece { cursor: grab; width: 45px; height: 45px; }
+    #moves, #result { margin: 20px; width: 200px; }
+    .timer { font-size: 1.5em; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="chessboard"></div>
+    <div id="side-panel">
+        <div id="moves">Moves:</div>
+        <div class="timer" id="white-timer">White: 5:00</div>
+        <div class="timer" id="black-timer">Black: 5:00</div>
+        <div id="result"></div>
+    </div>
+</div>
+
+<script>
+// Chess logic would be implemented here
+let board = Array(8).fill().map(() => Array(8).fill(null));
+let selectedPiece = null;
+let turn = 'white';
+let whiteTime = 300, blackTime = 300;
+let timerInterval;
+
+// Initialize board with pieces
+function initBoard() {
+    // Setup initial board state...
+    // This function would place pieces in their starting positions
+}
+
+// Drag and Drop functionality
+function setupDragAndDrop() {
+    document.querySelectorAll('.piece').forEach(piece => {
+        piece.addEventListener('dragstart', dragStart);
+    });
+
+    document.querySelectorAll('.square').forEach(square => {
+        square.addEventListener('dragover', dragOver);
+        square.addEventListener('drop', drop);
+    });
+}
+
+function dragStart(e) {
+    if (turn !== 'white') return;
+    selectedPiece = this;
+    e.dataTransfer.setData('text', this.id);
+    // Highlight legal moves
+    highlightLegalMoves(this);
+}
+
+function dragOver(e) {
+    e.preventDefault();
+}
+
+function drop(e) {
+    e.preventDefault();
+    const from = selectedPiece.parentElement.id.split('-').map(Number);
+    const to = e.target.id.split('-').map(Number);
+    
+    if (isValidMove(from, to)) {
+        movePiece(from, to);
+        clearHighlights();
+        switchTurn();
+        if (turn === 'black') makeComputerMove();
+    } else {
+        // Reset piece to original position
+        returnPieceToOriginalPosition();
+    }
+}
+
+function highlightLegalMoves(piece) {
+    // Logic to calculate and highlight legal moves
+}
+
+function isValidMove(from, to) {
+    // Check if the move is legal according to chess rules
+}
+
+function movePiece(from, to) {
+    // Move piece logic
+    updateMoveHistory(from, to);
+}
+
+function switchTurn() {
+    turn = turn === 'white' ? 'black' : 'white';
+    updateTimer();
+}
+
+function updateTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        const timer = turn === 'white' ? whiteTime : blackTime;
+        if (timer > 0) {
+            turn === 'white' ? whiteTime-- : blackTime--;
+            document.getElementById(`${turn}-timer`).textContent = `${Math.floor((turn === 'white' ? whiteTime : blackTime) / 60)}:${(turn === 'white' ? whiteTime : blackTime) % 60 < 10 ? '0' : ''}${(turn === 'white' ? whiteTime : blackTime) % 60}`;
+        } else {
+            endGame(`${turn === 'white' ? 'Black' : 'White'} wins on time!`);
+        }
+    }, 1000);
+}
+
+function makeComputerMove() {
+    // Simple AI logic or random move for now
+    setTimeout(() => {
+        // Placeholder for AI move
+        switchTurn();
+    }, 1000);
+}
+
+function endGame(message) {
+    clearInterval(timerInterval);
+    document.getElementById('result').textContent = message;
+}
+
+function updateMoveHistory(from, to) {
+    const moveText = `Move: ${String.fromCharCode(97 + from[1])}${8 - from[0]} to ${String.fromCharCode(97 + to[1])}${8 - to[0]}`;
+    const movesDiv = document.getElementById('moves');
+    movesDiv.innerHTML += `<p>${moveText}</p>`;
+}
+
+// Initialize game
+initBoard();
+setupDragAndDrop();
+updateTimer();
+</script>
+
+</body>
+</html>
