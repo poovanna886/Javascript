@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <link href="https://fonts.googleapis.com/css?family=Joti+One" rel="stylesheet">
+    <style type="text/css">
+        @import url("https://fonts.googleapis.com/css?family=Audiowide&display=swap");
+
+        * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            background: #060a0f;
+            color: #d7dff0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .title {
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+            font-weight: bold;
+            font-family: "Audiowide", cursive;
+            fill: currentColor;
+        }
+
+        .world {
+            position: relative;
+        }
+
+        .world .controls {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.25s ease-out;
+            transition-delay: 0.2s;
+        }
+
+        .world .controls button {
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            color: inherit;
+            width: 62px;
+            height: 62px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease-out;
+        }
+
+        .world .controls button:hover,
+        .world .controls button:focus {
+            opacity: 1;
+        }
+
+        .world .controls button:first-of-type {
+            transform: rotate(180deg);
+        }
+
+        .world .controls button svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .world>svg {
+            width: 100vw;
+            height: auto;
+            display: block;
+        }
+
+        svg text {
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+            font-weight: bold;
+            font-family: "Audiowide", cursive;
+            fill: currentColor;
+        }
+
+        svg path.country {
+            fill: #33415c;
+            opacity: 0.4;
+            stroke: #060a0f;
+            stroke-width: 0.1px;
+            transition: all 0.2s ease-out;
+        }
+
+        path.country.stage {
+            fill: #ff4e4b;
+        }
+
+        path.country#selection {
+            opacity: 1;
+        }
+
+        /* Styling for race information */
+        .race-info {
+            display: flex;
+            width: 500px;
+            margin-top: 20px;
+            row-gap: 20px;
+            font-family: "Audiowide", cursive;
+            font-size: 1.2rem;
+            background-color: rgba(252, 35, 28, 1);
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px;
+        }
+
+        .race-info p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title">F1 Schedule 2023</div>
+    <!-- container for the visualization -->
+    <div class="world">
+        <!-- include two buttons to control the selection -->
+        <div class="controls">
+            <button aria-labelledby="previous-label" class="prev">
+                <span id="previous-label" hidden>Previous stage</span>
+                <svg viewBox="0 0 100 100" width="32" height="32">
+                    <path d="M 30 20 l 45 30 l -45 30 z" fill="currentColor"></path>
+                </svg>
+            </button>
+            <button aria-labelledby="next-label" class="next">
+                <span id="next-label" hidden>Next stage</span>
+                <svg viewBox="0 0 100 100" width="32" height="32">
+                    <path d="M 30 20 l 45 30 l -45 30 z" fill="currentColor"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Race information section -->
+    <div class="race-info">
+        <div>
+            <p>
+                <span id="raceNumber"
+                    style="height: 80px; width: 80px; background-color: #060a0f; color:white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                </span>
+            </p>
+        </div>
+        <div>
+            <p><span id="raceName" style="font-size: x-large;"></span></p>
+            <p><span id="country" style="font-size: medium;"></span></p>
+            <p><span id="track"></span></p>
+            <p><span id="raceDate"></span></p>
+        </div>
+    </div>
+
+
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.js" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
+
+<script>
+    // JSON file providing a geometry for each country, differentiated by numerical ID
+    const urlJSON = 'https://unpkg.com/world-atlas@1.1.4/world/50m.json';
+    const urlTSV = 'https://unpkg.com/world-atlas@1.1.4/world/50m.tsv';
+
+    const stages = [
+        {
+            raceNumber: 1,
+            raceName: "Bahrain Grand Prix",
+            country: "bahrain",
+            track: "Bahrain International Circuit",
+            date: "2023-03-05"
+        },
+        {
+            raceNumber: 2,
+            raceName: "Saudi Arabian Grand Prix",
+            country: "saudi arabia",
+            track: "Jeddah Corniche Circuit",
+            date: "2023-03-19"
+        },
+        {
+            raceNumber: 3,
+            raceName: "Australian Grand Prix",
+            country: "australia",
+            track: "Albert Park Circuit",
+            date: "2023-04-02"
+        },
+        {
+            raceNumber: 4,
+            raceName: "Azerbaijan Grand Prix",
+            country: "azerbaijan",
+            track: "Baku City Circuit",
+            date: "2023-04-30"
+        },
+        {
+            raceNumber: 5,
+            raceName: "Miami Grand Prix",
+            country: "united states",
+            track: "Miami International Autodrome",
+            date: "2023-05-07"
+        },
+        {
+            raceNumber: 6,
+            raceName: "Emilia Romagna Grand Prix",
+            country: "italy",
+            track: "Imola Circuit",
+            date: "2023-05-21"
+        },
+        {
+            raceNumber: 7,
+            raceName: "Monaco Grand Prix",
+            country: "monaco",
+            track: "Circuit de Monaco",
+            date: "2023-05-28"
+        },
+        {
+            raceNumber: 8,
+            raceName: "Spanish Grand Prix",
+            country: "spain",
+            track: "Circuit de Barcelona-Catalunya",
+            date: "2023-06-04"
+        },
+        {
+            raceNumber: 9,
+            raceName: "Canadian Grand Prix",
+            country: "canada",
+            track: "Circuit Gilles Villeneuve",
+            date: "2023-06-18"
+        },
+        {
+            raceNumber: 10,
+            raceName: "Austrian Grand Prix",
+            country: "austria",
+            track: "Red Bull Ring",
+            date: "2023-07-02"
+        },
+        {
+            raceNumber: 11,
+            raceName: "British Grand Prix",
+            country: "united kingdom",
+            track: "Silverstone Circuit",
+            date: "2023-07-09"
+        },
+        {
+            raceNumber: 12,
+            raceName: "Hungarian Grand Prix",
+            country: "hungary",
+            track: "Hungaroring",
+            date: "2023-07-23"
+        },
+        {
+            raceNumber: 13,
+            raceName: "Belgian Grand Prix",
+            country: "belgium",
+            track: "Circuit de Spa-Francorchamps",
+            date: "2023-07-30"
+        },
+        {
+            raceNumber: 14,
+            raceName: "Dutch Grand Prix",
+            country: "netherlands",
+            track: "Zandvoort Circuit",
+            date: "2023-08-27"
+        },
+        {
+            raceNumber: 15,
+            raceName: "Italian Grand Prix",
+            country: "italy",
+            track: "Monza Circuit",
+            date: "2023-09-03"
+        },
+        {
+            raceNumber: 16,
+            raceName: "Singapore Grand Prix",
+            country: "singapore",
+            track: "Marina Bay Street Circuit",
+            date: "2023-09-17"
+        },
+        {
+            raceNumber: 17,
+            raceName: "Japanese Grand Prix",
+            country: "japan",
+            track: "Suzuka International Racing Course",
+            date: "2023-09-24"
+        },
+        {
+            raceNumber: 18,
+            raceName: "Qatar Grand Prix",
+            country: "qatar",
+            track: "Lusail International Circuit",
+            date: "2023-10-08"
+        },
+        {
+            raceNumber: 19,
+            raceName: "United States Grand Prix",
+            country: "united states",
+            track: "Circuit of the Americas",
+            date: "2023-10-22"
+        },
+        {
+            raceNumber: 20,
+            raceName: "Mexican Grand Prix",
+            country: "mexico",
+            track: "Autódromo Hermanos Rodríguez",
+            date: "2023-10-29"
+        },
+        {
+            raceNumber: 21,
+            raceName: "Brazilian Grand Prix",
+            country: "brazil",
+            track: "Interlagos Circuit",
+            date: "2023-11-05"
+        },
+        {
+            raceNumber: 22,
+            raceName: "Las Vegas Grand Prix",
+            country: "united states",
+            track: "Las Vegas Street Circuit",
+            date: "2023-11-18"
+        },
+        {
+            raceNumber: 23,
+            raceName: "Abu Dhabi Grand Prix",
+            country: "united arab emirates",
+            track: "Yas Marina Circuit",
+            date: "2023-11-26"
+        }
+    ];
+
+    // Variable describing the current selection
+    let selection = stages[0].country;
+
+    // Add an SVG element in which to plot the world map
+    const width = 500;
+    const height = 250;
+
+    const world = d3
+        .select('.world')
+        .append('svg')
+        .attr('viewBox', `0 0 ${width} ${height}`);
+        
+    // Helper function to normalize country names (lowercase, trim spaces)
+    function normalizeCountryName(name) {
+        return name.trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    // Function to update race information below the map
+    function updateRaceInfo(selectedStage) {
+        document.getElementById('raceNumber').textContent = selectedStage.raceNumber;
+        document.getElementById('raceName').textContent = selectedStage.raceName;
+        document.getElementById('country').textContent = selectedStage.country;
+        document.getElementById('track').textContent = selectedStage.track;
+        document.getElementById('raceDate').textContent = selectedStage.date;
+    }
+
+    // Function to update the selection based on direction (next or previous)
+    function updateSelection(direction) {
+        // Find the index of the current selection based on the raceNumber
+        let index = stages.findIndex(stage => stage.raceNumber === selection);
+
+        // Update the selection based on the direction
+        if (direction === 'prev') {
+            index = (index === 0) ? stages.length - 1 : index - 1;
+        } else {
+            index = (index === stages.length - 1) ? 0 : index + 1;
+        }
+
+        const selectedStage = stages[index];
+
+        // Update the selection in the map and text element
+        d3.selectAll('path.stage')
+            .attr('id', ({ name }) => stages.some(stage => stage.raceNumber === selectedStage.raceNumber && normalizeCountryName(name) === normalizeCountryName(stage.country)) ? 'selection' : null);
+
+        d3.select('text').text(selectedStage.country);
+
+        // Update the race information
+        updateRaceInfo(selectedStage);
+
+        // Update the global selection variable with the raceNumber
+        selection = selectedStage.raceNumber;
+    }
+
+
+    // Function to add countries through the d3.geo module
+    function addCountries(countries) {
+        const projection = d3.geoEquirectangular()
+            .fitSize([width, height], countries)
+            .scale([80])
+            .translate([width / 2, height / 2 + 40]);
+
+        const geoPath = d3.geoPath().projection(projection);
+
+        world.append('text')
+            .attr('x', width / 3)
+            .attr('y', 30)
+            .attr('text-anchor', 'middle')
+            .text(selection);
+
+        world.selectAll('path.country')
+            .data(countries.features)
+            .enter()
+            .append('path')
+            .attr('class', ({ name }) => (stages.some(stage => stage.country.toLowerCase() === name.toLowerCase()) ? 'country stage' : 'country'))
+            .attr('id', ({ name }) => (selection.toLowerCase() === name.toLowerCase()) ? 'selection' : null)
+            .attr('d', geoPath);
+
+        d3.selectAll('path.stage')
+            .on('mouseenter', function ({ name }) {
+                // Ensure `name` exists before proceeding
+                if (name) {
+                    d3.selectAll('path.stage').attr('id', '');
+                    d3.select(this).attr('id', 'selection');
+
+                    const selectedStage = stages.find(stage => stage.country.toLowerCase() === name.toLowerCase());
+
+                    if (selectedStage) {
+                        d3.select('text').text(name);
+                        selection = name.toLowerCase();
+
+                        updateRaceInfo(selectedStage);
+                    }
+                }
+            });
+
+        d3.select('.controls').style('visibility', 'visible').style('opacity', 1);
+
+        d3.select('.controls .prev').on('click', () => updateSelection('prev'));
+        d3.select('.controls .next').on('click', () => updateSelection('next'));
+
+        // Initially update the race info with the first selection
+        updateRaceInfo(stages[0]);
+    }
+
+    // Retrieve the data from the JSON and TSV references
+    Promise.all([d3.json(urlJSON), d3.tsv(urlTSV)])
+        .then(([json, tsv]) => {
+            const countries = topojson.feature(json, json.objects.countries);
+            console.log(countries)
+
+            countries.features.forEach((feature) => {
+                const { name } = tsv.find(({ iso_n3: id }) => id === feature.id);
+                if (name.toLowerCase() === 'ashmore and cartier is.') {
+                    feature.name = 'Australia';
+                } else {
+                    feature.name = name;
+                }
+            });
+
+            addCountries(countries);
+        })
+        .catch(err => console.error(err));
+
+</script>
+
+</html>

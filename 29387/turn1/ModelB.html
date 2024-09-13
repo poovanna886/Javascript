@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formula 1 Race Schedule</title>
+<link href="https://fonts.googleapis.com/css?family=Titillium+Web:900" rel="stylesheet"> <!-- Assuming a similar font to F1 -->
+<style>
+    body {
+        font-family: 'Titillium Web', sans-serif;
+        background: #15151e;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    #map-container {
+        width: 70%;
+        height: 60vh;
+    }
+    #info-container {
+        width: 30%;
+        padding: 20px;
+    }
+    .arrow {
+        cursor: pointer;
+        font-size: 2em;
+        user-select: none;
+    }
+    .highlight {
+        fill: #e10600; /* Formula 1 red */
+    }
+</style>
+</head>
+<body>
+
+<div id="map-container"></div>
+<div id="info-container">
+    <span class="arrow" onclick="prevCountry()">&#8592;</span>
+    <span class="arrow" onclick="nextCountry()">&#8594;</span>
+    <h2 id="race-name"></h2>
+    <p id="track-name"></p>
+    <p id="country-name"></p>
+    <p id="race-date"></p>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://d3js.org/topojson.v3.min.js"></script>
+<script>
+    const width = 960, height = 500;
+    const svg = d3.select("#map-container")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    const projection = d3.geoMercator().scale(130).translate([width / 2, height / 1.5]);
+    const path = d3.geoPath().projection(projection);
+
+    // Formula 1 race data - this should ideally come from an API or a dynamic source
+    const raceData = [
+  {
+    raceNumber: 1,
+    raceName: "Bahrain Grand Prix",
+    country: "Bahrain",
+    track: "Bahrain International Circuit",
+    date: "2023-03-05"
+  },
+  {
+    raceNumber: 2,
+    raceName: "Saudi Arabian Grand Prix",
+    country: "Saudi Arabia",
+    track: "Jeddah Corniche Circuit",
+    date: "2023-03-19"
+  },
+  {
+    raceNumber: 3,
+    raceName: "Australian Grand Prix",
+    country: "Australia",
+    track: "Albert Park Circuit",
+    date: "2023-04-02"
+  },
+  {
+    raceNumber: 4,
+    raceName: "Azerbaijan Grand Prix",
+    country: "Azerbaijan",
+    track: "Baku City Circuit",
+    date: "2023-04-30"
+  },
+  {
+    raceNumber: 5,
+    raceName: "Miami Grand Prix",
+    country: "United States",
+    track: "Miami International Autodrome",
+    date: "2023-05-07"
+  },
+  {
+    raceNumber: 6,
+    raceName: "Emilia Romagna Grand Prix",
+    country: "Italy",
+    track: "Imola Circuit",
+    date: "2023-05-21"
+  },
+  {
+    raceNumber: 7,
+    raceName: "Monaco Grand Prix",
+    country: "Monaco",
+    track: "Circuit de Monaco",
+    date: "2023-05-28"
+  },
+  {
+    raceNumber: 8,
+    raceName: "Spanish Grand Prix",
+    country: "Spain",
+    track: "Circuit de Barcelona-Catalunya",
+    date: "2023-06-04"
+  },
+  {
+    raceNumber: 9,
+    raceName: "Canadian Grand Prix",
+    country: "Canada",
+    track: "Circuit Gilles Villeneuve",
+    date: "2023-06-18"
+  },
+  {
+    raceNumber: 10,
+    raceName: "Austrian Grand Prix",
+    country: "Austria",
+    track: "Red Bull Ring",
+    date: "2023-07-02"
+  },
+  {
+    raceNumber: 11,
+    raceName: "British Grand Prix",
+    country: "United Kingdom",
+    track: "Silverstone Circuit",
+    date: "2023-07-09"
+  },
+  {
+    raceNumber: 12,
+    raceName: "Hungarian Grand Prix",
+    country: "Hungary",
+    track: "Hungaroring",
+    date: "2023-07-23"
+  },
+  {
+    raceNumber: 13,
+    raceName: "Belgian Grand Prix",
+    country: "Belgium",
+    track: "Circuit de Spa-Francorchamps",
+    date: "2023-07-30"
+  },
+  {
+    raceNumber: 14,
+    raceName: "Dutch Grand Prix",
+    country: "Netherlands",
+    track: "Zandvoort Circuit",
+    date: "2023-08-27"
+  },
+  {
+    raceNumber: 15,
+    raceName: "Italian Grand Prix",
+    country: "Italy",
+    track: "Monza Circuit",
+    date: "2023-09-03"
+  },
+  {
+    raceNumber: 16,
+    raceName: "Singapore Grand Prix",
+    country: "Singapore",
+    track: "Marina Bay Street Circuit",
+    date: "2023-09-17"
+  },
+  {
+    raceNumber: 17,
+    raceName: "Japanese Grand Prix",
+    country: "Japan",
+    track: "Suzuka International Racing Course",
+    date: "2023-09-24"
+  },
+  {
+    raceNumber: 18,
+    raceName: "Qatar Grand Prix",
+    country: "Qatar",
+    track: "Lusail International Circuit",
+    date: "2023-10-08"
+  },
+  {
+    raceNumber: 19,
+    raceName: "United States Grand Prix",
+    country: "United States",
+    track: "Circuit of the Americas",
+    date: "2023-10-22"
+  },
+  {
+    raceNumber: 20,
+    raceName: "Mexican Grand Prix",
+    country: "Mexico",
+    track: "Autódromo Hermanos Rodríguez",
+    date: "2023-10-29"
+  },
+  {
+    raceNumber: 21,
+    raceName: "Brazilian Grand Prix",
+    country: "Brazil",
+    track: "Interlagos Circuit",
+    date: "2023-11-05"
+  },
+  {
+    raceNumber: 22,
+    raceName: "Las Vegas Grand Prix",
+    country: "United States",
+    track: "Las Vegas Street Circuit",
+    date: "2023-11-18"
+  },
+  {
+    raceNumber: 23,
+    raceName: "Abu Dhabi Grand Prix",
+    country: "United Arab Emirates",
+    track: "Yas Marina Circuit",
+    date: "2023-11-26"
+  }
+];
+
+    let currentIndex = 0;
+
+    function nextCountry() {
+        currentIndex = (currentIndex + 1) % raceData.length;
+        updateDisplay();
+    }
+
+    function prevCountry() {
+        currentIndex = (currentIndex - 1 + raceData.length) % raceData.length;
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        const race = raceData[currentIndex];
+        d3.selectAll('.highlight').classed('highlight', false);
+        d3.select(`#${race.country.replace(/\s+/g, '')}`).classed('highlight', true);
+        d3.select("#race-name").text(race.raceName);
+        d3.select("#track-name").text(race.track);
+        d3.select("#country-name").text(race.country);
+        d3.select("#race-date").text(race.date);
+    }
+
+    d3.json("https://unpkg.com/world-atlas@1.1.4/world/50m.json").then(function(world) {
+        svg.selectAll("path")
+            .data(topojson.feature(world, world.objects.countries).features)
+            .enter().append("path")
+            .attr("d", path)
+            .attr("id", d => d.properties.name.replace(/\s+/g, ''))
+            .attr("class", d => raceData.some(r => r.country === d.properties.name) ? 'country' : 'non-race-country');
+
+        updateDisplay(); // Initial display update
+    });
+</script>
+</body>
+</html>
