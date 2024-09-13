@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Editor</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background: #f4f4f9;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .editor-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        width: 90%;
+        max-width: 800px;
+    }
+    .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .control-item {
+        display: flex;
+        flex-direction: column;
+    }
+    input[type="range"], input[type="text"] {
+        width: 100%;
+    }
+    #imageDisplay {
+        max-width: 100%;
+        height: auto;
+        margin: 20px 0;
+        transition: all 0.3s ease;
+    }
+    button {
+        padding: 10px 15px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</head>
+<body>
+
+<div class="editor-container">
+    <input type="file" id="upload" accept="image/*">
+    <input type="text" id="imageUrl" placeholder="Enter image URL">
+    <button onclick="loadImageFromUrl()">Load Image</button>
+    <div id="imageDisplay"></div>
+    <div class="controls">
+        <div class="control-item"><label>Brightness: <input type="range" min="0" max="200" value="100" id="brightness"></label></div>
+        <div class="control-item"><label>Contrast: <input type="range" min="0" max="200" value="100" id="contrast"></label></div>
+        <div class="control-item"><label>Grayscale: <input type="range" min="0" max="100" value="0" id="grayscale"></label></div>
+        <!-- Add more controls similarly -->
+    </div>
+    <button onclick="downloadImage()">Download Image</button>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script>
+    let currentImage = null;
+    const imgDisplay = $("#imageDisplay");
+
+    function updateImage() {
+        if (currentImage) {
+            const filters = {
+                brightness: $('#brightness').val(),
+                contrast: $('#contrast').val(),
+                grayscale: $('#grayscale').val(),
+                invert: $('#invert').val(),
+                opacity: $('#opacity').val(),
+                saturate: $('#saturate').val(),
+                sepia: $('#sepia').val(),
+                blur: $('#blur').val(),
+                hueRotate: `${$('#hueRotate').val()}deg`
+            };
+            let filterString = Object.keys(filters).map(key => `${key}(${filters[key]}${key === 'hueRotate' ? '' : '%'})`).join(' ');
+            imgDisplay.css('filter', filterString);
+        }
+    }
+
+    document.querySelectorAll('.controls input[type="range"]').forEach(input => {
+        input.addEventListener('input', updateImage);
+    });
+
+    $('#upload').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = new Image();
+                currentImage.src = e.target.result;
+                currentImage.onload = () => {
+                    imgDisplay.empty().append(currentImage);
+                    updateImage();
+                };
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function loadImageFromUrl() {
+        const url = $('#imageUrl').val();
+        if (url) {
+            currentImage = new Image();
+            currentImage.crossOrigin = "anonymous"; // If you're planning to manipulate images from other domains
+            currentImage.src = url;
+            currentImage.onload = () => {
+                imgDisplay.empty().append(currentImage);
+                updateImage();
+            };
+        }
+    }
+
+    function downloadImage() {
+        if (!currentImage) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = currentImage.naturalWidth;
+        canvas.height = currentImage.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.filter = imgDisplay.css('filter');
+        ctx.drawImage(currentImage, 0, 0);
+        const link = document.createElement('a');
+        link.download = 'edited_image.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    imgDisplay.on('wheel', function(e) {
+        e.preventDefault();
+        if (currentImage) {
+            const scale = e.deltaY < 0 ? 1.1 : 0.9;
+            const currentScale = parseFloat(imgDisplay.css('transform').split('(')[1].split(')')[0]) || 1;
+            const newScale = currentScale * scale;
+            imgDisplay.css('transform', `scale(${newScale})`);
+        }
+    });
+</script>
+
+</body>
+</html>

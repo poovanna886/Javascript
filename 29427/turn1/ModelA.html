@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Editor</title>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    body { font-family: 'Arial', sans-serif; background: #f4f4f4; }
+    .editor-container {
+        max-width: 900px; margin: 20px auto; padding: 20px;
+        background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .image-preview {
+        width: 100%; max-height: 600px; overflow: auto;
+        display: flex; justify-content: center; align-items: center;
+    }
+    #editedImage { max-width: 100%; height: auto; }
+    .controls { margin-top: 20px; }
+    .slider { width: 100%; margin: 10px 0; }
+    .btn-modern { background-color: #007BFF; border: none; color: white; }
+    .btn-modern:hover { background-color: #0056b3; }
+</style>
+</head>
+<body>
+
+<div class="editor-container">
+    <h2 class="text-center">Photo Editor</h2>
+    <div class="form-group">
+        <input type="file" id="fileInput" class="form-control-file">
+        <input type="url" id="urlInput" class="form-control mt-2" placeholder="Enter image URL">
+    </div>
+    <div class="image-preview">
+        <img id="editedImage" src="" alt="Edited Image" style="display:none;">
+    </div>
+    <div class="controls">
+        <!-- Sliders for image editing -->
+        <input type="range" min="0" max="200" value="100" class="slider" id="brightness">
+        <!-- Add other sliders similarly for contrast, opacity, etc. -->
+        <button id="downloadBtn" class="btn btn-modern btn-block">Download Image</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.3.0/fabric.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let canvas = new fabric.Canvas('editedImage', { 
+        preserveObjectStacking: true 
+    });
+    
+    // Image upload handling
+    document.getElementById('fileInput').addEventListener('change', handleImage, false);
+    document.getElementById('urlInput').addEventListener('change', function(e) {
+        fabric.Image.fromURL(e.target.value, function(img) {
+            canvas.setDimensions({width: img.width, height: img.height});
+            canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+        });
+    });
+
+    function handleImage(e) {
+        let reader = new FileReader();
+        reader.onload = function(event) {
+            let imgObj = new Image();
+            imgObj.src = event.target.result;
+            imgObj.onload = function() {
+                canvas.setDimensions({width: imgObj.width, height: imgObj.height});
+                canvas.setBackgroundImage(imgObj.src, canvas.renderAll.bind(canvas));
+            }
+        }
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    // Apply filters
+    const filters = ['brightness', 'contrast', 'grayscale', 'invert', 'opacity', 'saturate', 'sepia', 'blur', 'hue-rotate'];
+    filters.forEach(filter => {
+        document.getElementById(filter).addEventListener('input', function(e) {
+            let value = e.target.value;
+            if(filter === 'hue-rotate') value += 'deg';
+            canvas.backgroundImage.filters.push(new fabric.Image.filters[filter.charAt(0).toUpperCase() + filter.slice(1)]({ [filter]: value }));
+            canvas.backgroundImage.applyFilters();
+            canvas.renderAll();
+        });
+    });
+
+    // Zoom functionality
+    canvas.on('mouse:wheel', function(opt) {
+        let delta = opt.e.deltaY;
+        let zoom = canvas.getZoom();
+        zoom *= 0.999 ** delta;
+        if (zoom > 20) zoom = 20;
+        if (zoom < 0.01) zoom = 0.01;
+        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+    });
+
+    // Download image
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        let image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+        let link = document.createElement('a');
+        link.download = 'edited_image.png';
+        link.href = image;
+        link.click();
+    });
+});
+</script>
+
+</body>
+</html>
