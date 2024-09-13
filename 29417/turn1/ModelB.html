@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Photo Album</title>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  .card-deck {
+    perspective: 1000px;
+    width: 300px;
+    height: 400px;
+    margin: auto;
+  }
+  .card {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transition: transform 1s;
+    transform-style: preserve-3d;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  .card div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+  }
+  .card .back {
+    transform: rotateY(180deg);
+  }
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+  #addCardBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+  }
+  .modal-content {
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card-deck" id="cardDeck"></div>
+<button id="addCardBtn" class="btn btn-primary" data-toggle="modal" data-target="#addCardModal">Add Card</button>
+
+<div class="modal fade" id="addCardModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Photo</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="file" id="photoUpload" accept="image/*">
+        <input type="text" id="photoText" placeholder="Enter photo description" class="form-control mt-2">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="saveCard">Save</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', (event) => {
+    const deck = document.getElementById('cardDeck');
+    let cards = [];
+
+    // Function to create a card
+    function createCard(imageSrc, text, bgColor) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div class="front" style="background-color: ${bgColor};"><img src="${imageSrc}" style="max-width:100%; max-height:80%;" alt="${text}"/><p>${text}</p></div><div class="back"></div>`;
+      return card;
+    }
+
+    // Add initial cards or load from somewhere
+    // Here we're just adding one for demonstration
+    cards.push(createCard('default.jpg', 'Default Photo', '#'+(Math.random()*0xFFFFFF<<0).toString(16)));
+
+    // Function to rotate card to back
+    function rotateToBack() {
+      if (cards.length > 1) {
+        const firstCard = deck.firstChild;
+        firstCard.classList.add('flipped');
+        setTimeout(() => {
+          deck.appendChild(firstCard);
+          firstCard.classList.remove('flipped');
+        }, 500);
+      }
+    }
+
+    // Event listeners
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        rotateToBack();
+      }
+    });
+
+    document.getElementById('saveCard').addEventListener('click', function() {
+      const file = document.getElementById('photoUpload').files[0];
+      const text = document.getElementById('photoText').value;
+      if (file && text) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const bgColor = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+          cards.push(createCard(e.target.result, text, bgColor));
+          deck.appendChild(cards[cards.length - 1]);
+        };
+        reader.readAsDataURL(file);
+        $('#addCardModal').modal('hide');
+      }
+    });
+
+    // Initial render
+    cards.forEach(card => deck.appendChild(card));
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Style+Script&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: "Style Script", cursive, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      width: 100vw;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      background-color: #21252e;
+    }
+
+    .card {
+      display: flex;
+      position: fixed;
+      width: 600px;
+      height: 300px;
+      transition: transform .3s ease-out;
+      box-shadow: 0 0 2px 0 #000;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 700px) {
+      .card {
+        width: 80%;
+      }
+    }
+
+    @media (max-height: 400px) {
+      .card {
+        height: 40%;
+      }
+    }
+
+    .first {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      color: white;
+      background-color: #ffa719;
+    }
+
+    @media (max-width: 700px) {
+      .first {
+        font-size: 1rem;
+      }
+    }
+
+    .second {
+      background-color: #e56660;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .third {
+      background-color: #b94a53;
+    }
+
+    .fourth {
+      background-color: #4b345e;
+    }
+
+    .fifth {
+      background-color: #724e94;
+    }
+
+    .imageText{
+      overflow: scroll;
+    }
+    .imageText::-webkit-scrollbar {
+  display: none;
+}
+
+.imageText{
+  -ms-overflow-style: none; 
+  scrollbar-width: none;  
+}
+
+    #addCardBtn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #ffa719;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      right: 0;
+    }
+
+    #addCardModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 100;
+      width: 400px;
+      text-align: center;
+    }
+
+    #modalOverlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 50;
+    }
+
+    #submitCardBtn{
+      margin-top: 10px;
+      padding: 8px 15px;
+      background-color: #ffa719 ;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #closeModal {
+      margin-top: 10px;
+      padding: 8px 15px;
+      background-color: #e56660;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    input[type="file"] {
+      margin: 15px 0;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin: 10px 0;
+      padding: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1 style="color: white; font-size: 50px;">Sit back </h1>
+  <h1 style="color: white; font-size: 50px;"> and</h1>
+  <h1 style="color: white; font-size: 50px;">relive your memories!!</h1>
+
+  <div id="cardsContainer"
+    style="display: flex; justify-content:center; align-items: center; height:100vh; width: 100vw;">
+    <div class="card first">
+      <p>Press Up or Down arrow to view your album</p>
+    </div>
+    <div class="card second">
+      <img style="width: 50%; border-radius: 8px;"
+        src="https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/3c767931856945.586df35ebc5c9.jpg" />
+      <div class="imageText" style="color: white; font-size: large; padding: 5%;">
+        Traveling in Rio de Janeiro offers a mix of vibrant culture and breathtaking landscapes, from the iconic Christ the Redeemer statue to the lively beaches of Copacabana and Ipanema. The city's festive spirit is infectious, especially during Carnival.
+      </div>
+    </div>
+    <div class="card third">
+      <img style="width: 50%; border-radius: 8px;"
+        src="https://i.pinimg.com/originals/a3/7e/16/a37e16a3e01323f477ec99b8aa69a34f.jpg" />
+      <div class="imageText" style="color: white; font-size: large; padding: 5%;">
+        In Moscow, visitors can explore Russia's rich history through its grand architecture, from the Kremlin to the colorful domes of St. Basil’s Cathedral. The city's vast squares and intricate metro stations add a unique charm to every visit.
+      
+      </div>
+    </div>
+    <div class="card fourth">
+      <img style="width: 50%; border-radius: 8px;"
+        src="https://i.pinimg.com/originals/01/3d/eb/013debf3d461cfda88d832d2d34e0f9b.jpg" />
+      <div class="imageText" style="color: white; font-size: large; padding: 5%;">
+        New Delhi immerses travelers in India's rich cultural tapestry, from the historic Red Fort and Qutub Minar to bustling markets like Chandni Chowk. The city's blend of ancient monuments and modern energy creates a captivating experience.
+      </div>
+    </div>
+    <div class="card fifth">
+      <img style="width: 50%; border-radius: 8px;"
+        src="https://i.pinimg.com/564x/02/37/a3/0237a313d27b467f336da0faa0fdb785.jpg" />
+      <div class="imageText" style="color: white; font-size: large; padding: 5%;">
+        New York City dazzles with its skyscrapers, cultural diversity, and endless attractions like Times Square, Central Park, and the Statue of Liberty. The city’s dynamic energy makes it a hub for art, food, and fashion from around the world.
+       </div>
+    </div>
+  </div>
+
+  <!-- Button to open modal -->
+  <button id="addCardBtn">Add Card</button>
+
+  <!-- Modal for adding new card -->
+  <div id="modalOverlay"></div>
+  <div id="addCardModal">
+    <h2>Add New Card</h2>
+    <input type="file" id="imageUpload" accept="image/*" />
+    <textarea id="cardText" style="width: 80%; border-radius: 8px;" placeholder="Enter card text..."></textarea>
+    <button id="submitCardBtn">Add Card</button>
+    <button id="closeModal">Close</button>
+
+    <script>
+
+      // Modal logic
+      const addCardBtn = document.getElementById('addCardBtn');
+      const modalOverlay = document.getElementById('modalOverlay');
+      const addCardModal = document.getElementById('addCardModal');
+      const closeModal = document.getElementById('closeModal');
+      const submitCardBtn = document.getElementById('submitCardBtn');
+      const cardsContainer = document.getElementById('cardsContainer');
+
+      let CARD_ARRAY = [...document.querySelectorAll('div[class*="card"]')];
+      let COUNT_OF_CARDS = CARD_ARRAY.length;
+      let isMoving = false;
+      let last_element = CARD_ARRAY[CARD_ARRAY.length - 1];
+
+      const CARD_PEN_OFFSET = 10; // displacement of the cards
+      const CARD_SWITCH_RANGE = '130%';
+
+      let offsetArray = [], offset = 0;
+      for (let i = 1; i <= COUNT_OF_CARDS; i++) {
+        offsetArray.push(offset);
+        offset += CARD_PEN_OFFSET;
+      }
+
+      // Function to update card positions
+      function setCardOffset() {
+        CARD_ARRAY.forEach(function (item, index) {
+          item.style.zIndex = Math.abs(index - CARD_ARRAY.length);
+          item.style.transform = `translate(${offsetArray[index]}px, ${offsetArray[index]}px)`;
+        });
+      }
+
+      // Set initial card positions
+      setCardOffset();
+
+      window.addEventListener('keydown', function (e) { cardSwitching(e); });
+
+      function cardSwitching(e) {
+        let animationObject = {}, previousSibling, scrolling = '';
+
+        if (isMoving) return;
+
+        if ((e.keyCode !== 38 && e.keyCode !== 40) && (e.keyCode !== undefined)) return;
+
+        for (let index of CARD_ARRAY) {
+          if (parseInt(window.getComputedStyle(index).zIndex) === CARD_ARRAY.length) {
+
+            if (e.deltaY < 0 || e.keyCode === 38) { // scrolling up
+              previousSibling = index.previousElementSibling;
+              if (previousSibling === null) previousSibling = last_element;
+            }
+
+            animationObject = e.deltaY < 0 || e.keyCode === 38 ? previousSibling : e.deltaY > 0 || e.keyCode === 40 ? index : '';
+            animationObject.style.transform = `translate(0px, -${CARD_SWITCH_RANGE})`;
+            scrolling = e.deltaY < 0 || e.keyCode === 38 ? 'up' : e.deltaY > 0 || e.keyCode === 40 ? 'down' : '';
+            isMoving = true;
+          }
+        }
+
+        if (animationObject !== undefined) {
+          animationObject.addEventListener('transitionend', function () {
+            if (scrolling === 'down') {
+              animationObject.style.zIndex = 0;
+              animationObject.style.transform = `translate(${offsetArray[COUNT_OF_CARDS]}px, ${offsetArray[COUNT_OF_CARDS]}px)`;
+              offsetSwitch(scrolling);
+            } else if (scrolling === 'up') {
+              offsetSwitch(scrolling);
+              animationObject.style.zIndex = CARD_ARRAY.length;
+              animationObject.style.transform = `translate(0px, 0px)`;
+            }
+            scrolling = '';
+          }, { once: true });
+        }
+      }
+
+      function offsetSwitch(scrolling) {
+        CARD_ARRAY.forEach((item) => {
+          item.style.zIndex = scrolling === 'down' ? parseInt(item.style.zIndex) + 1 : parseInt(item.style.zIndex) - 1;
+          let offsetIndex = Math.abs(parseInt(item.style.zIndex) - CARD_ARRAY.length);
+          item.style.transform = `translate(${offsetArray[offsetIndex]}px, ${offsetArray[offsetIndex]}px)`;
+
+          item.addEventListener('transitionend', () => isMoving = false, { once: true });
+        });
+      }
+
+      // Open modal
+      addCardBtn.addEventListener('click', () => {
+        modalOverlay.style.display = 'block';
+        addCardModal.style.display = 'block';
+      });
+
+      // Close modal
+      closeModal.addEventListener('click', () => {
+        modalOverlay.style.display = 'none';
+        addCardModal.style.display = 'none';
+      });
+
+      // Submit card
+      submitCardBtn.addEventListener('click', () => {
+        const cardText = document.getElementById('cardText').value;
+        const imageFile = document.getElementById('imageUpload').files[0];
+
+        if (!cardText || !imageFile) {
+          alert('Please upload an image and enter text.');
+          return;
+        }
+
+        // Create FileReader to read image
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const newCard = document.createElement('div');
+          newCard.classList.add('card');
+
+          // Assign a random background color
+          const colors = ['#ffa719', '#e56660', '#b94a53', '#4b345e', '#724e94', '#2c6fbb', '#4ecdc4', '#ff6b6b'];
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          newCard.style.backgroundColor = randomColor;
+
+          // Create image and text divs
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.width = '50%';
+          img.style.borderRadius = '8px';
+
+          const textDiv = document.createElement('div');
+          textDiv.classList.add('imageText');
+          textDiv.style.color = 'white';
+          textDiv.style.padding = '5%';
+          textDiv.style.fontSize = "larger";
+          textDiv.innerText = cardText;
+
+          // Append image and text to new card
+          newCard.appendChild(img);
+          newCard.appendChild(textDiv);
+
+          // Add the new card to the card stack
+          cardsContainer.appendChild(newCard);
+
+          // Update the card array and z-index/offsets
+          CARD_ARRAY = [...document.querySelectorAll('div[class*="card"]')];
+          COUNT_OF_CARDS = CARD_ARRAY.length;
+          last_element = CARD_ARRAY[CARD_ARRAY.length - 1];
+
+          // Recalculate the offset array to include the new card
+          offsetArray.push(offset);
+          offset += CARD_PEN_OFFSET;
+
+          setCardOffset();
+
+          // Close modal
+          modalOverlay.style.display = 'none';
+          addCardModal.style.display = 'none';
+
+          // Clear the input fields
+          document.getElementById('cardText').value = '';
+          document.getElementById('imageUpload').value = '';
+        };
+
+        reader.onerror = function () {
+          console.error("There was an error reading the file.");
+        };
+
+        reader.readAsDataURL(imageFile);
+      });
+
+    </script>
+</body>
+
+</html>
