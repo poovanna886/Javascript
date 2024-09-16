@@ -424,23 +424,23 @@
                 }
             }
         });
-  // Restrict input to numbers between 1 and 6
-  document.querySelectorAll('input[type="number"]').forEach(function(input) {
-        input.addEventListener('input', function() {
-            if (this.value < 1) this.value = 1;
-            if (this.value > 6) this.value = 6;
+        // Restrict input to numbers between 1 and 6
+        document.querySelectorAll('input[type="number"]').forEach(function (input) {
+            input.addEventListener('input', function () {
+                if (this.value < 1) this.value = 1;
+                if (this.value > 6) this.value = 6;
+            });
         });
-    });
 
         document.getElementById('setUnluckyNumbersBtn').addEventListener('click', function () {
             // Get the values from the input fields
             unluckyNumber1 = parseInt(document.getElementById('unlucky-1').value, 10);
             unluckyNumber2 = parseInt(document.getElementById('unlucky-2').value, 10);
-   // Validate that inputs are within range (1-6)
-   if (unluckyNumber1 < 1 || unluckyNumber1 > 6 || unluckyNumber2 < 1 || unluckyNumber2 > 6) {
-            alert('Please enter numbers between 1 and 6.');
-            return;
-        }
+            // Validate that inputs are within range (1-6)
+            if (unluckyNumber1 < 1 || unluckyNumber1 > 6 || unluckyNumber2 < 1 || unluckyNumber2 > 6) {
+                alert('Please enter numbers between 1 and 6.');
+                return;
+            }
             // Close the modal
             document.getElementById('unluckyNumberModal').style.display = 'none';
         });
