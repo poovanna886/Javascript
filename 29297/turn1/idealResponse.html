@@ -12,7 +12,7 @@
             overflow: hidden;
         }
 
-        canvas {          
+        canvas {
             display: block;
             margin: 0 auto;
             background: #cdcdcd;
@@ -20,9 +20,9 @@
             background-size: cover;
             background-repeat: none;
         }
-        .instructions{
+
+        .instructions {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             font-family: "Permanent Marker", cursive;
@@ -33,12 +33,18 @@
 <body>
     <canvas width="800" height="500" id="Canvas"></canvas>
     <div class="instructions">
-        <p>
-        Player 1: Use w,a,s,d keys to move and j,k,l to attack
-    </p>
-    <p>
-        Player 2: Use Arrow keys to move and 1,2,3 to attack
-    </p>
+        <div>
+            Player 1: Use w,a,s,d keys to move and
+            <p>j to punch</p>
+            <p>k to use beam attack</p>
+            <p>l to push</p>
+        </div>
+        <div>
+            Player 2: Use Arrow keys to move and
+            <p>1 to punch</p>
+            <p>2 to use beam attack</p>
+            <p>3 to push</p>
+        </div>
     </div>
     <script>
         //Grabs a handle on the canvas element
@@ -106,8 +112,8 @@
             player: "Red",
             x: Canvas.width / 4, // Center Red player on the left side of the canvas
             y: Canvas.height / 2 - 60, // Adjust y position to vertically center the image
-            width: 50, 
-            height: 100, 
+            width: 50,
+            height: 100,
             attacks: [],
             color: "rgb(255,0,0)",
             dir: 1,
@@ -124,8 +130,8 @@
             player: "Blue",
             x: (Canvas.width / 4) * 3 - 50, // Center Blue player on the right side of the canvas
             y: Canvas.height / 2 - 60, // Adjust y position to vertically center the image
-            width: 50, 
-            height: 100, 
+            width: 50,
+            height: 100,
             attacks: [],
             color: "rgb(0,0,255)",
             dir: -1,
@@ -175,7 +181,7 @@
             ctx.fillStyle = "red";
             ctx.fillRect(20, 20, characters[0].hp * 2, 20); // scale hp by 2 for width
             ctx.strokeStyle = "black";
-            ctx.strokeRect(20, 20, 200, 20); 
+            ctx.strokeRect(20, 20, 200, 20);
 
             // Blue character's health bar on the right
             ctx.fillStyle = "blue";
@@ -445,10 +451,10 @@
             char.y -= char.jumpForce;
             char.jumpForce -= 1;
             if (char.y + char.height * 1.5 >= Canvas.height) {  // *1.5 to account for image scaling
-                char.y = Canvas.height - char.height * 1.5;  
+                char.y = Canvas.height - char.height * 1.5;
                 char.numJumps = 2;  // Reset jumps when the character lands
-                char.jumpForce = 0;  
-                char.jumping = false; 
+                char.jumpForce = 0;
+                char.jumping = false;
             }
         }
 
@@ -483,7 +489,7 @@
                 drawAttacks(char);
                 checkHits(char);
                 gravity(char);
-                if (char.hp < 0) {
+                if (char.hp <= 0) {
                     gameRunning = false;
                     remBox({
                         x: 0,
@@ -509,7 +515,7 @@
                 if (char.hp > 0) {
                     ctx.font = "70px Arial";
                     ctx.fillStyle = char.color;
-                    ctx.fillText(char.player + " Wins!", 200, 400 );
+                    ctx.fillText(char.player + " Wins!", 200, 400);
                 }
             }
         }

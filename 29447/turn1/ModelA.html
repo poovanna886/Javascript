@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solar System Explorer</title>
+<style>
+body { margin: 0; overflow: hidden; font-family: 'Orbitron', sans-serif; }
+#info { position: absolute; top: 10px; width: 300px; text-align: center; z-index: 100; display:none; background: rgba(0, 0, 0, 0.7); color: white; padding: 10px; border-radius: 5px; transition: opacity 0.5s; }
+canvas { width: 100vw; height: 100vh; display: block; }
+</style>
+<link href="https://fonts.googleapis.com/css?family=Orbitron&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="info">Click on a planet to learn more!</div>
+<canvas id="bg"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Three.js code here
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#bg'), antialias: true });
+
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Lights
+const ambientLight = new THREE.AmbientLight(0x404040);
+scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+pointLight.position.set(0, 0, 0);
+scene.add(pointLight);
+
+// Sun
+const sun = new THREE.Mesh(
+    new THREE.SphereGeometry(5, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffff00 })
+);
+scene.add(sun);
+
+// Planets
+const planets = [
+    { name: 'Mercury', color: 0x888888, size: 0.5, orbitRadius: 10, speed: 0.02 },
+    { name: 'Venus', color: 0xffa500, size: 1, orbitRadius: 15, speed: 0.015 },
+    { name: 'Earth', color: 0x0000ff, size: 1.2, orbitRadius: 20, speed: 0.01 },
+    { name: 'Mars', color: 0xff0000, size: 1.1, orbitRadius: 25, speed: 0.008 }
+];
+
+const planetObjects = planets.map(p => {
+    const geometry = new THREE.SphereGeometry(p.size, 32, 32);
+    const material = new THREE.MeshPhongMaterial({ color: p.color });
+    const planet = new THREE.Mesh(geometry, material);
+    planet.position.x = p.orbitRadius;
+    scene.add(planet);
+    return { mesh: planet, ...p };
+});
+
+// Starry background
+const starGeo = new THREE.BufferGeometry();
+const starsCount = 5000;
+const positions = new Float32Array(starsCount * 3);
+for(let i = 0; i < starsCount * 3; i += 3) {
+    positions[i] = (Math.random() - 0.5) * 2000;
+    positions[i+1] = (Math.random() - 0.5) * 2000;
+    positions[i+2] = (Math.random() - 0.5) * 2000;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.7 });
+const starField = new THREE.Points(starGeo, starsMaterial);
+scene.add(starField);
+
+camera.position.z = 50;
+
+// Interaction
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function onDocumentMouseDown(event) {
+    event.preventDefault();
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(planetObjects.map(p => p.mesh));
+
+    if (intersects.length > 0) {
+        const info = document.getElementById('info');
+        info.textContent = `${intersects[0].object.name}: ${intersects[0].object.name} is known for.`; // Placeholder text
+        info.style.display = 'block';
+        info.style.left = `${event.clientX}px`;
+        info.style.top = `${event.clientY}px`;
+        setTimeout(() => info.style.opacity = '1', 10);
+    }
+}
+
+document.addEventListener('click', onDocumentMouseDown, false);
+
+// Animation Loop
+function animate() {
+    requestAnimationFrame(animate);
+
+    planetObjects.forEach(p => {
+        p.mesh.position.x = Math.cos(Date.now() * p.speed) * p.orbitRadius;
+        p.mesh.position.z = Math.sin(Date.now() * p.speed) * p.orbitRadius;
+    });
+
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// Handle resize
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

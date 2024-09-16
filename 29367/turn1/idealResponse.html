@@ -5,55 +5,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <style type="text/css">
+  
+
         .container {
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 20px;
+            gap: 50px;
+            /* Increased gap for better spacing */
+            padding: 20px;
         }
 
         .board {
-            width: 400px;
-            margin: auto
+            width: 600px;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            /* Added shadow for better visibility */
         }
 
         .right {
-            margin-right: 20%;
+            margin-right: 5%;
         }
 
         .time {
             font-size: 24px;
-            color: #ffffff;
-            background-color: rgb(53, 246, 53);
-            padding: 10%;
+            color: #333;
+            background-color: rgb(70, 233, 70);
+            /* Softer background */
+            padding: 15px;
+            /* Increased padding */
             text-align: center;
-            margin: 10px 0;
-            border: solid 1px white;
-            border-radius: 8px;
+            margin: 20px 0;
+            border: solid 2px #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Shadow for depth */
         }
 
         .clock {
-            padding: 10px;
-            border-radius: 8px;
-            border: solid 1px white;
-            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            border: solid 2px #ddd;
+            background-color: #f7f7f7;
+            /* Added background */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Shadow for consistency */
         }
 
         .black-time {
             margin-top: 20px;
         }
 
+        .info{
+            font-size: x-large;
+            font-weight: 400;
+        }
+
         .move-history {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #333;
+            background-color: #444;
             font-size: 18px;
             color: #fff;
-            height: 100px;
-            max-height: 100px;
+            height: 150px;
+            font-size: larger;
+            font-weight: 400;
+            max-height: 150px;
+            /* Increased height */
             width: 400px;
             overflow-y: scroll;
+            border-radius: 10px;
+            /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            /* Shadow for consistency */
+        }
+
+
+
+        /* notation */
+        .notation-322f9 {
+            cursor: default;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            position: absolute;
+            color: #333;
+            /* Changed color for better visibility */
         }
 
         /* clearfix */
@@ -82,33 +120,23 @@
             user-select: none;
         }
 
-        /* white square */
+
+        /* Slightly adjust board square colors for a more modern look */
         .white-1e1d7 {
-            background-color: #f0d9b5;
-            color: #b58863;
+            background-color: #f4e7d1;
         }
 
-        /* black square */
         .black-3c85d {
             background-color: #b58863;
-            color: #f0d9b5;
         }
 
-        /* highlighted square */
         .highlight1-32417,
         .highlight2-9c5d2 {
-            -webkit-box-shadow: inset 0 0 3px 3px yellow;
-            -moz-box-shadow: inset 0 0 3px 3px yellow;
-            box-shadow: inset 0 0 3px 3px yellow;
+            box-shadow: inset 0 0 4px 4px #ffff00;
+            /* Slightly larger highlight effect */
         }
 
-        /* notation */
-        .notation-322f9 {
-            cursor: default;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            position: absolute;
-        }
+
 
         .alpha-d2270 {
             bottom: 1px;

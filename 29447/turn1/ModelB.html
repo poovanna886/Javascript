@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Solar System Explorer</title>
+    <link href="https://fonts.googleapis.com/css?family=Orbitron&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
+        #info { position: absolute; top: 10px; width: 100%; text-align: center; color: #fff; transition: opacity 0.5s; opacity: 0; pointer-events: none; }
+        #info.show { opacity: 1; pointer-events: auto; }
+        #star-background { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://unblast.com/wp-content/uploads/2021/01/Space-Background-Image-2.jpg'); /* Base64 star image */ }
+    </style>
+</head>
+<body>
+<div id="star-background"></div>
+<div id="info">
+    <h2 id="planetName"></h2>
+    <p id="planetInfo"></p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    const pointLight = new THREE.PointLight(0xffee88, 1, 100);
+    pointLight.position.set(0, 0, 0);
+    scene.add(ambientLight, pointLight);
+
+    // Planets and Sun
+    const createPlanet = (size, texture, position, rotationSpeed, orbitSpeed) => {
+        const geometry = new THREE.SphereGeometry(size, 32, 32);
+        const material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load(texture) });
+        const planet = new THREE.Mesh(geometry, material);
+        planet.position.set(position, 0, 0);
+        scene.add(planet);
+        return {mesh: planet, rotationSpeed, orbitSpeed};
+    };
+
+    const sun = createPlanet(1, 'textures/sun.jpg', 0, 0.004, 0);
+    const mercury = createPlanet(0.2, 'textures/mercury.jpg', 2, 0.003, 0.01);
+    const venus = createPlanet(0.3, 'textures/venus.jpg', 3, 0.002, 0.007);
+    const earth = createPlanet(0.32, 'textures/earth.jpg', 4, 0.003, 0.005);
+    const mars = createPlanet(0.28, 'textures/mars.jpg', 5, 0.002, 0.004);
+
+    const planets = [mercury, venus, earth, mars];
+
+    camera.position.z = 10;
+
+    // Raycaster for interaction
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function onMouseClick(event) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(scene.children);
+        for (let i of intersects) {
+            if (i.object !== sun.mesh) {
+                showInfo(i.object);
+                break;
+            }
+        }
+    }
+
+    window.addEventListener('click', onMouseClick, false);
+
+    const planetInfo = {
+        'Mercury': 'The smallest and fastest planet, it zips around the Sun in only 88 Earth days.',
+        'Venus': 'Similar in size to Earth, Venus has a thick, toxic atmosphere that traps heat, making it the hottest planet.',
+        'Earth': 'Our home, known for its abundance of liquid water and life.',
+        'Mars': 'The Red Planet, known for iron oxide (rust) on its surface, giving it a reddish appearance.'
+    };
+
+    function showInfo(planetMesh) {
+        const name = planetMesh.material.map.sourceFile.split('/').pop().split('.')[0];
+        document.getElementById('planetName').textContent = name;
+        document.getElementById('planetInfo').textContent = planetInfo[name];
+        document.getElementById('info').classList.add('show');
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        planets.forEach(p => {
+            p.mesh.rotation.y += p.rotationSpeed;
+            p.mesh.position.x = Math.cos(Date.now() * p.orbitSpeed) * p.mesh.position.x;
+            p.mesh.position.z = Math.sin(Date.now() * p.orbitSpeed) * p.mesh.position.x;
+        });
+        renderer.render(scene, camera);
+    }
+
+    animate();
+</script>
+</body>
+</html>
