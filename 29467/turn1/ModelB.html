@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dice Game</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<style>
+    body { font-family: 'Arial', sans-serif; }
+    .game-board { max-width: 600px; margin: 20px auto; }
+    .player-panel { padding: 20px; border: 2px solid #e0e0e0; margin: 10px 0; }
+    .active { background-color: #f8f9fa; border-color: #007bff; }
+    .dice { font-size: 50px; text-align: center; }
+    .btn { margin: 5px; }
+</style>
+</head>
+<body>
+
+<div class="container game-board">
+    <h1 class="text-center">Dice Game</h1>
+    <!-- Modal for entering unlucky numbers -->
+    <div class="modal fade" id="unluckyModal" tabindex="-1" aria-labelledby="unluckyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set Unlucky Numbers</h5>
+                </div>
+                <div class="modal-body">
+                    <input type="number" id="player1Unlucky" class="form-control" placeholder="Player 1 Unlucky Number">
+                    <input type="number" id="player2Unlucky" class="form-control" placeholder="Player 2 Unlucky Number">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="setUnluckyNumbers()">Start Game</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="player1" class="player-panel">
+        <h3>Player 1</h3>
+        <div>Score: <span id="score1">0</span></div>
+    </div>
+    <div class="dice" id="diceDisplay">🎲</div>
+    <div id="player2" class="player-panel">
+        <h3>Player 2</h3>
+        <div>Score: <span id="score2">0</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="rollDice()" id="rollBtn">Roll Dice</button>
+    <button class="btn btn-secondary" onclick="hold()" id="holdBtn">Hold</button>
+    <button class="btn btn-danger" onclick="newGame()" id="newGameBtn">New Game</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let scores = [0, 0], currentTurn = 0, currentScore = 0;
+    let unluckyNumbers = [0, 0];
+
+    function setUnluckyNumbers() {
+        unluckyNumbers[0] = document.getElementById('player1Unlucky').value;
+        unluckyNumbers[1] = document.getElementById('player2Unlucky').value;
+        document.getElementById('unluckyModal').style.display = 'none';
+    }
+
+    function rollDice() {
+        const dice = Math.floor(Math.random() * 6) + 1;
+        if (dice == unluckyNumbers[currentTurn]) {
+            currentScore = 0;
+            endTurn();
+        } else {
+            currentScore += dice;
+            document.getElementById('diceDisplay').textContent = dice;
+        }
+    }
+
+    function hold() {
+        scores[currentTurn] += currentScore;
+        document.getElementById('score' + (currentTurn + 1)).textContent = scores[currentTurn];
+        if (scores[currentTurn] >= 50) {
+            alert('Player ' + (currentTurn + 1) + ' wins!');
+            newGame();
+        } else {
+            endTurn();
+        }
+    }
+
+    function endTurn() {
+        currentTurn = 1 - currentTurn; // Switch player
+        currentScore = 0;
+        document.querySelector('.player-panel.active').classList.remove('active');
+        document.getElementById('player' + (currentTurn + 1)).classList.add('active');
+        document.getElementById('diceDisplay').textContent = '🎲';
+    }
+
+    function newGame() {
+        scores = [0, 0];
+        currentTurn = 0;
+        currentScore = 0;
+        document.getElementById('score1').textContent = '0';
+        document.getElementById('score2').textContent = '0';
+        document.getElementById('player1').classList.add('active');
+        document.getElementById('player2').classList.remove('active');
+        document.getElementById('unluckyModal').style.display = 'block';
+    }
+
+    // Bootstrap modal show on load
+    document.addEventListener('DOMContentLoaded', (event) => {
+        new bootstrap.Modal(document.getElementById('unluckyModal')).show();
+    });
+</script>
+</body>
+</html>

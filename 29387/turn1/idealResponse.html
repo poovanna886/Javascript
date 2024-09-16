@@ -97,7 +97,7 @@
         }
 
         path.country.stage {
-            fill: #ff4e4b;
+            fill: #ff0400;
         }
 
         path.country#selection {
@@ -368,11 +368,12 @@
     // Function to update the selection based on direction (next or previous)
     function updateSelection(direction) {
         // Find the index of the current selection based on the raceNumber
-        let index = stages.findIndex(stage => stage.raceNumber === selection);
-
+        let index = stages.findIndex(stage => stage.raceNumber === selection) === -1 ? 0 : stages.findIndex(stage => stage.raceNumber === selection) ;
+        
         // Update the selection based on the direction
         if (direction === 'prev') {
-            index = (index === 0) ? stages.length - 1 : index - 1;
+            index = (index <= 0 ) ? stages.length - 1 : index - 1;
+            
         } else {
             index = (index === stages.length - 1) ? 0 : index + 1;
         }
@@ -447,7 +448,7 @@
     Promise.all([d3.json(urlJSON), d3.tsv(urlTSV)])
         .then(([json, tsv]) => {
             const countries = topojson.feature(json, json.objects.countries);
-            console.log(countries)
+            
 
             countries.features.forEach((feature) => {
                 const { name } = tsv.find(({ iso_n3: id }) => id === feature.id);
