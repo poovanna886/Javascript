@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Honeycomb Word Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for honeycomb */
+        .honeycomb {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: #f0f0f0;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            text-align: center;
+            line-height: 50px;
+            margin: 5px;
+        }
+        .highlight {
+            background: #ffe082;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-4">Honeycomb Word Game</h1>
+        <div id="honeycomb" class="mb-4"></div>
+        <input id="wordInput" class="p-2 border rounded w-full max-w-md mb-2" placeholder="Enter your word">
+        <button id="submitBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Submit</button>
+        <button id="clearBtn" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">Clear</button>
+        <div class="mt-4">
+            <p>Score: <span id="score">0</span></p>
+            <div id="guessedWords" class="mt-2"></div>
+        </div>
+    </div>
+
+    <script>
+    // Game logic here
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    let gameState = {
+        currentLetters: [],
+        mustUseLetter: '',
+        guessedWords: [],
+        score: 0
+    };
+
+    function initGame() {
+        gameState.currentLetters = Array.from({length: 7}, () => letters[Math.floor(Math.random() * letters.length)]);
+        gameState.mustUseLetter = gameState.currentLetters[Math.floor(Math.random() * 7)];
+        renderHoneycomb();
+    }
+
+    function renderHoneycomb() {
+        const honeycombDiv = document.getElementById('honeycomb');
+        honeycombDiv.innerHTML = gameState.currentLetters.map((letter, idx) => 
+            `<div class="honeycomb ${letter === gameState.mustUseLetter ? 'highlight' : ''}">${letter}</div>`
+        ).join('');
+    }
+
+    function checkWord(word) {
+        if (!word.includes(gameState.mustUseLetter) || word.length < 4 || gameState.guessedWords.includes(word)) return false;
+        // Here you should validate if the word exists in a dictionary
+        // For simplicity, this example skips dictionary validation
+        return true;
+    }
+
+    function updateScore(word) {
+        let points = word.length === 4 ? 1 : word.length;
+        if (gameState.currentLetters.every(letter => word.includes(letter))) points += 7; // Pangram check
+        gameState.score += points;
+        document.getElementById('score').textContent = gameState.score;
+    }
+
+    function submitWord() {
+        const word = document.getElementById('wordInput').value.toUpperCase();
+        if (checkWord(word)) {
+            gameState.guessedWords.push(word);
+            updateScore(word);
+            document.getElementById('guessedWords').innerHTML += `<p>${word}</p>`;
+            document.getElementById('wordInput').value = '';
+        } else {
+            alert('Invalid word or already guessed!');
+        }
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', submitWord);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        document.getElementById('wordInput').value = '';
+    });
+
+    initGame();
+    </script>
+</body>
+</html>

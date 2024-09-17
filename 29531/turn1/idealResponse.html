@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spelling Bee Clone</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Flex layout for hexagonal structure */
+    .honeycomb {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .honeycomb-row {
+      display: flex;
+      justify-content: center;
+    }
+
+    .honeycomb-row:nth-child(odd) {
+      margin-left: 30px; /* Stagger odd rows to create hexagonal layout */
+    }
+
+    /* Hexagonal buttons */
+    .letter-btn {
+      width: 80px;
+      height: 80px;
+      background-color: lightgray;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+      transition: background-color 0.3s;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .letter-btn:hover {
+      background-color: #f59e0b;
+    }
+
+    /* Custom input for current word display */
+    .custom-input {
+      width: 100%;
+      padding: 10px;
+      font-size: 24px;
+      font-weight: bold;
+      height:50px;
+      background-color: transparent;
+      outline: none;
+      border: none;
+      text-align: center;
+      letter-spacing: 2px;
+      position: relative;
+    }
+
+    /* Blinking cursor */
+    .custom-input::after {
+      content: '|';
+      animation: blink 1s steps(1) infinite;
+      color:yellow;
+      position: absolute;
+      right: 50%;
+      transform: translateX(100%);
+      font-weight: bold;
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans p-6" onkeydown="handleKeyPress(event)">
+
+  <div class="max-w-xl mx-auto bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold text-center mb-4">Spelling Bee Clone</h1>
+    
+    <!-- Honeycomb Letter Grid -->
+    <div class="honeycomb mb-6">
+      <div class="honeycomb-row">
+        <div class="letter-btn" onclick="addLetter('R')">R</div>
+        <div class="letter-btn" onclick="addLetter('C')">C</div>
+      </div>
+      <div class="honeycomb-row">
+        <div class="letter-btn" onclick="addLetter('K')">K</div>
+        <div class="letter-btn bg-yellow-300" onclick="addLetter('O')">O</div> <!-- Center letter -->
+        <div class="letter-btn" onclick="addLetter('B')">B</div>
+      </div>
+      <div class="honeycomb-row">
+        <div class="letter-btn" onclick="addLetter('A')">A</div>
+        <div class="letter-btn" onclick="addLetter('D')">D</div>
+      </div>
+    </div>
+
+    <!-- Input Section styled like Spelling Bee -->
+    <div class="custom-input" id="current-word-input"></div>
+
+    <!-- Buttons -->
+    <div class="flex justify-between">
+      <button class="bg-blue-500 text-white py-2 px-4 rounded mt-6" onclick="submitWord()">Submit Word</button>
+      <button class="bg-red-500 text-white py-2 px-4 rounded mt-6" onclick="clearWord()">Clear</button>
+    </div>
+
+    <!-- Score -->
+    <div class="mt-6">
+      <h2 class="text-xl font-bold">Score: <span id="score">0</span></h2>
+    </div>
+
+    <!-- Word List -->
+    <div class="mt-4">
+      <h3 class="text-lg font-semibold">Found Words:</h3>
+      <ul id="word-list" class="list-disc pl-6"></ul>
+    </div>
+  </div>
+
+  <script>
+    let currentWord = '';
+    let score = 0;
+    const validWords = ['BACKORD', 'BROCKA', 'CORKAD', 'BOARD', 'ROCK', 'CORD']; // Sample word list
+    const centerLetter = 'O'; // The center letter
+    const guessedWords = new Set();
+
+    // Function to add letter to current word (click)
+    function addLetter(letter) {
+      currentWord += letter;
+      updateCurrentWordInput();
+    }
+
+    // Function to update input field
+    function updateCurrentWordInput() {
+      document.getElementById('current-word-input').textContent = currentWord;
+    }
+
+    // Function to clear the current word
+    function clearWord() {
+      currentWord = '';
+      updateCurrentWordInput();
+    }
+
+     // Function to handle word submission
+     function submitWord() {
+      // Convert both currentWord and validWords to uppercase for comparison
+      const normalizedWord = currentWord.toUpperCase();
+      if (currentWord.length >= 4 && currentWord.includes(centerLetter) && validWords.includes(normalizedWord) && !guessedWords.has(normalizedWord)) {
+        // Word is valid
+        let wordPoints = currentWord.length;
+        if (isPangram(normalizedWord)) wordPoints += 7; // Pangram bonus
+        score += wordPoints;
+
+        // Update score and word list
+        document.getElementById('score').innerText = score;
+        const wordList = document.getElementById('word-list');
+        const li = document.createElement('li');
+        li.innerText = currentWord;
+        li.style.textDecoration = 'underline';
+        wordList.appendChild(li);
+
+        guessedWords.add(normalizedWord);
+      } else {
+        alert("Invalid word! Must be at least 4 letters and include the center letter.");
+      }
+      clearWord();
+    }
+
+
+    // Check for pangram
+    function isPangram(word) {
+      const letters = new Set(word);
+      return letters.size === 7; // All letters used
+    }
+
+    // Handle keyboard input
+    function handleKeyPress(event) {
+      const letter = event.key.toUpperCase();
+      if (/^[A-Z]$/.test(letter)) {
+        addLetter(letter);
+      } else if (event.key === "Backspace") {
+        currentWord = currentWord.slice(0, -1); // Remove last letter
+        updateCurrentWordInput();
+      }
+    }
+  </script>
+
+</body>
+</html>

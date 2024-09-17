@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honeycomb Word Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .honeycomb {
+            display: inline-grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            transform: rotate(30deg);
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-30deg);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+    </style>
+</head>
+<body class="p-8 bg-gray-100">
+    <div class="container mx-auto">
+        <h1 class="text-2xl mb-4 text-center">Honeycomb Word Game</h1>
+        <div id="game" class="mb-4">
+            <div id="honeycomb" class="honeycomb mx-auto mb-4"></div>
+            <input type="text" id="wordInput" class="p-2 border border-gray-300 rounded w-full md:w-1/2 mx-auto block" placeholder="Enter your word or click letters">
+            <div class="mt-4 flex justify-center">
+                <button id="submitBtn" class="bg-blue-500 text-white p-2 rounded mr-2">Submit</button>
+                <button id="clearBtn" class="bg-red-500 text-white p-2 rounded">Clear</button>
+            </div>
+        </div>
+        <div class="text-center">
+            <p>Score: <span id="score">0</span></p>
+            <p>Guessed Words: <span id="guessedWords"></span></p>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const vowels = 'AEIOU';
+        const mandatoryLetter = vowels[Math.floor(Math.random() * vowels.length)];
+        let gameLetters = [mandatoryLetter];
+
+        // Generate 6 more letters, ensuring at least one vowel
+        while(gameLetters.length < 7) {
+            let letter = letters[Math.floor(Math.random() * letters.length)];
+            if (!gameLetters.includes(letter) && (vowels.includes(letter) || gameLetters.length < 6 || Math.random() > 0.7)) {
+                gameLetters.push(letter);
+            }
+        }
+
+        // Shuffle letters
+        gameLetters.sort(() => Math.random() - 0.5);
+
+        const honeycomb = document.getElementById('honeycomb');
+        gameLetters.forEach((letter, index) => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.textContent = letter;
+            if (letter === mandatoryLetter) cell.classList.add('bg-yellow-200');
+            cell.onclick = () => document.getElementById('wordInput').value += letter;
+            honeycomb.appendChild(cell);
+        });
+
+        let score = 0;
+        let guessedWords = new Set();
+        const wordInput = document.getElementById('wordInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const scoreDisplay = document.getElementById('score');
+        const wordsDisplay = document.getElementById('guessedWords');
+
+        // This would ideally check against a dictionary API or a large word list
+        const isValidWord = (word) => word.length >= 4 && gameLetters.every(letter => word.toUpperCase().includes(letter)) && word.includes(mandatoryLetter);
+
+        submitBtn.onclick = () => {
+            const word = wordInput.value.toUpperCase();
+            if (isValidWord(word) && !guessedWords.has(word)) {
+                let points = word.length >= 4 ? word.length : 0;
+                if (gameLetters.every(l => word.includes(l))) points += 7; // Pangram bonus
+                score += points;
+                guessedWords.add(word);
+                scoreDisplay.textContent = score;
+                wordsDisplay.textContent = Array.from(guessedWords).join(', ');
+            } else {
+                alert('Invalid word or already guessed!');
+            }
+            wordInput.value = '';
+        };
+
+        clearBtn.onclick = () => wordInput.value = '';
+    });
+    </script>
+</body>
+</html>
