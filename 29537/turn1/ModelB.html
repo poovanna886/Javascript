@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Word Scramble Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        #hint {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        #letterGrid {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .letter {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .letter:hover, .selected {
+            background: #b0e0e6;
+        }
+        .correct {
+            background: #90ee90;
+        }
+        .incorrect {
+            background: #ffcccb;
+        }
+        #message {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #lineCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="hint"></div>
+    <div id="letterGrid"></div>
+    <div id="message"></div>
+    <canvas id="lineCanvas"></canvas>
+
+    <script>
+        const hint = document.getElementById('hint');
+        const letterGrid = document.getElementById('letterGrid');
+        const message = document.getElementById('message');
+        const canvas = document.getElementById('lineCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const words = ['APPLE', 'BANANA', 'GRAPE', 'ORANGE', 'PEAR'];
+        let currentWord = words[Math.floor(Math.random() * words.length)];
+        let scrambled = currentWord.split('').sort(() => 0.5 - Math.random()).join('');
+        let selectedLetters = [];
+        let startPos = null;
+
+        // Initialize game
+        function initGame() {
+            hint.textContent = "Hint: A type of fruit";
+            for(let char of scrambled) {
+                let div = document.createElement('div');
+                div.className = 'letter';
+                div.textContent = char;
+                div.addEventListener('mousedown', startSelection);
+                letterGrid.appendChild(div);
+            }
+            canvas.width = letterGrid.offsetWidth;
+            canvas.height = letterGrid.offsetHeight;
+        }
+
+        // Start letter selection
+        function startSelection(e) {
+            startPos = {x: e.clientX, y: e.clientY};
+            selectedLetters.push(e.target.textContent);
+            e.target.classList.add('selected');
+            document.addEventListener('mousemove', drawLine);
+            document.addEventListener('mouseup', endSelection);
+        }
+
+        // Draw line while selecting
+        function drawLine(e) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(startPos.x - letterGrid.offsetLeft, startPos.y - letterGrid.offsetTop);
+            ctx.lineTo(e.clientX - letterGrid.offsetLeft, e.clientY - letterGrid.offsetTop);
+            ctx.stroke();
+        }
+
+        // End letter selection
+        function endSelection(e) {
+            document.removeEventListener('mousemove', drawLine);
+            document.removeEventListener('mouseup', endSelection);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let word = selectedLetters.join('').toUpperCase();
+            if(word === currentWord) {
+                message.textContent = 'Correct!';
+                Array.from(letterGrid.children).forEach(child => {
+                    if(selectedLetters.includes(child.textContent)) {
+                        child.classList.add('correct');
+                    }
+                });
+            } else {
+                message.textContent = 'Incorrect, try again!';
+                selectedLetters.forEach(() => {
+                    letterGrid.querySelector('.selected').classList.remove('selected');
+                });
+            }
+            selectedLetters = [];
+        }
+
+        initGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Scramble Game</title>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #f0f0f0;
+    }
+    .game-container {
+        text-align: center;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .hint {
+        margin-bottom: 20px;
+        font-size: 1.5em;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(5, 40px);
+        gap: 5px;
+        justify-content: center;
+    }
+    .letter {
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        background: #fff;
+        transition: background-color 0.3s;
+    }
+    .letter:hover, .letter.selected {
+        background-color: #e0e0e0;
+    }
+    .letter.correct {
+        background-color: #90ee90;
+    }
+    .message {
+        margin-top: 20px;
+        font-weight: bold;
+    }
+    .link {
+        stroke: #000;
+        stroke-width: 2;
+    }
+</style>
+</head>
+<body>
+<div class="game-container">
+    <div class="hint" id="hint">Hint: Animals</div>
+    <svg width="250" height="250" id="linkContainer"></svg>
+    <div class="grid" id="letterGrid"></div>
+    <div class="message" id="message"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const hintElement = document.getElementById('hint');
+    const gridElement = document.getElementById('letterGrid');
+    const messageElement = document.getElementById('message');
+    const linkContainer = document.getElementById('linkContainer');
+    const words = ['tiger', 'elephant', 'monkey', 'snake', 'parrot'];
+    let currentWord = '';
+    let selectedLetters = [];
+    let links = [];
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function createGrid() {
+        let letters = words.join('').split('').sort(() => Math.random() - 0.5);
+        gridElement.innerHTML = '';
+        letters.forEach(letter => {
+            const div = document.createElement('div');
+            div.className = 'letter';
+            div.textContent = letter;
+            div.addEventListener('mousedown', startSelection);
+            gridElement.appendChild(div);
+        });
+    }
+
+    function startSelection(e) {
+        e.preventDefault();
+        currentWord = '';
+        selectedLetters = [{element: e.target, position: getElementPosition(e.target)}];
+        document.addEventListener('mousemove', selectLetter);
+        document.addEventListener('mouseup', endSelection);
+    }
+
+    function selectLetter(e) {
+        if (e.target.classList.contains('letter') && !e.target.classList.contains('selected')) {
+            currentWord += e.target.textContent;
+            selectedLetters.push({element: e.target, position: getElementPosition(e.target)});
+            e.target.classList.add('selected');
+            drawLink();
+        }
+    }
+
+    function endSelection() {
+        document.removeEventListener('mousemove', selectLetter);
+        checkWord();
+    }
+
+    function checkWord() {
+        if (words.includes(currentWord)) {
+            messageElement.textContent = 'Correct!';
+            selectedLetters.forEach(letter => letter.element.classList.add('correct'));
+        } else {
+            messageElement.textContent = 'Try again!';
+            selectedLetters.forEach(letter => letter.element.classList.remove('selected'));
+        }
+        clearSelection();
+    }
+
+    function clearSelection() {
+        currentWord = '';
+        selectedLetters = [];
+        clearLinks();
+    }
+
+    function drawLink() {
+        clearLinks();
+        for (let i = 1; i < selectedLetters.length; i++) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', selectedLetters[i-1].position.x);
+            line.setAttribute('y1', selectedLetters[i-1].position.y);
+            line.setAttribute('x2', selectedLetters[i].position.x);
+            line.setAttribute('y2', selectedLetters[i].position.y);
+            line.classList.add('link');
+            linkContainer.appendChild(line);
+            links.push(line);
+        }
+    }
+
+    function clearLinks() {
+        links.forEach(link => linkContainer.removeChild(link));
+        links = [];
+    }
+
+    function getElementPosition(el) {
+        const rect = el.getBoundingClientRect();
+        return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2
+        };
+    }
+
+    createGrid();
+});
+</script>
+</body>
+</html>

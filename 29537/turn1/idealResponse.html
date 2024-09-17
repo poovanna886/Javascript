@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Strands Game Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .hint {
+            background-color: orange;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative; /* For positioning canvas over the grid */
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 60px); /* Changed to 6 columns */
+            grid-template-rows: repeat(8, 60px);    /* Changed to 8 rows */
+            gap: 10px; /* Added spacing between cells */
+            position: relative; /* Position relative for canvas overlay */
+            z-index: 1;
+            user-select: none;
+        }
+
+        .grid div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        .grid div.selected {
+            background-color: lightgray;
+        }
+
+        .grid div.correct {
+            background-color: lightblue;
+            pointer-events: none; /* Prevent further interaction with correct cells */
+        }
+
+        .word-container {
+            margin-top: 20px;
+        }
+
+        #message {
+            margin-top: 20px;
+            color: green;
+            font-weight: bold;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none; /* Let mouse events pass through */
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <h3 class="hint">Hint: Painters</h3>
+    <div class="game-container">
+        <canvas id="connection-canvas"></canvas> <!-- Canvas for drawing lines -->
+        <div class="grid">
+            <!-- Letter grid will be dynamically generated here -->
+        </div>
+        <div class="word-container">
+            <p>Selected Word: <span id="selected-word"></span></p>
+        </div>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // List of letters for the 8x6 grid, hiding artist names
+        const letters = [
+            ['I', 'T', 'D', 'N', 'A', 'R'],
+            ['N', 'O', 'B', 'R', 'E', 'A'],
+            ['S', 'S', 'L', 'M', 'P', 'R'],
+            ['O', 'A', 'K', 'E', 'A', 'H'],
+            ['G', 'G', 'C', 'I', 'P', 'I'],
+            ['H', 'O', 'N', 'A', 'D', 'I'],
+            ['M', 'A', 'N', 'V', 'A', 'C'],
+            ['V', 'D', 'E', 'T', 'I', 'N'],
+        ];
+
+        // List of hidden artist names for validation
+        const artistList = ['VANGOGH', 'DAVINCI', 'REMBRANDT', 'MONET', 'RAPHAEL'];
+
+        let guessedArtists = [];  // Track the artists that have been guessed
+        let gameCompleted = false;  // Track whether the game is completed
+
+        // Variables to track state
+        let selectedLetters = [];
+        let currentWord = '';
+        let isSelecting = false;  // Track whether the mouse is held down for selecting
+
+        // Get DOM elements
+        const grid = document.querySelector('.grid');
+        const selectedWordDisplay = document.getElementById('selected-word');
+        const messageDisplay = document.getElementById('message');
+        const canvas = document.getElementById('connection-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size dynamically based on the grid size
+        function adjustCanvasSize() {
+            const gridRect = grid.getBoundingClientRect();
+            canvas.width = gridRect.width;
+            canvas.height = gridRect.height;
+        }
+
+        // Generate the grid based on letters array
+        function createGrid() {
+            letters.forEach((row, rowIndex) => {
+                row.forEach((letter, colIndex) => {
+                    const cell = document.createElement('div');
+                    cell.textContent = letter;
+                    cell.dataset.row = rowIndex;
+                    cell.dataset.col = colIndex;
+                    grid.appendChild(cell);
+
+                    // Mouse events to handle highlighting on click and drag
+                    cell.addEventListener('mousedown', () => startSelection(cell));
+                    cell.addEventListener('mouseover', () => continueSelection(cell));
+                });
+            });
+
+            // Detect when mouse button is released (ends the selection)
+            document.addEventListener('mouseup', endSelection);
+
+            // Adjust canvas size to match the grid
+            adjustCanvasSize();
+            window.addEventListener('resize', adjustCanvasSize); // Adjust on window resize
+        }
+
+        // Start selecting letters when mouse is pressed down
+        function startSelection(cell) {
+            if (gameCompleted) return;  // Prevent further selection if game is over
+
+            clearSelection();
+            isSelecting = true;  // Mark that we are now selecting
+            addLetterToWord(cell);
+            cell.classList.add('selected');
+        }
+
+        // Continue selecting letters as the mouse moves over cells (while mouse is down)
+        function continueSelection(cell) {
+            if (isSelecting && !gameCompleted) {
+                addLetterToWord(cell);
+                cell.classList.add('selected');
+                drawConnections(); // Draw connections between selected letters
+            }
+        }
+
+        // End selection when mouse button is released
+        function endSelection() {
+            if (isSelecting) {
+                isSelecting = false;  // Stop selecting
+                selectedWordDisplay.textContent = currentWord;
+                validateWord();  // Automatically validate the word once mouse is released
+            }
+        }
+
+        // Add letter to current word if not already selected
+        function addLetterToWord(cell) {
+            const row = cell.dataset.row;
+            const col = cell.dataset.col;
+            const letter = letters[row][col];
+
+            // Ensure the letter hasn't been selected yet
+            if (!selectedLetters.includes(cell)) {
+                selectedLetters.push(cell);
+                currentWord += letter;
+            }
+        }
+
+        // Clear selection when starting new selection
+        function clearSelection() {
+            selectedLetters.forEach(cell => cell.classList.remove('selected'));
+            selectedLetters = [];
+            currentWord = '';
+            selectedWordDisplay.textContent = '';
+            messageDisplay.textContent = '';
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the lines on canvas
+        }
+
+        // Validate the word and highlight letters in blue if it's a valid artist name
+        function validateWord() {
+            if (artistList.includes(currentWord.toUpperCase()) && !guessedArtists.includes(currentWord.toUpperCase())) {
+                messageDisplay.textContent = `You found an artist: ${currentWord}`;
+                guessedArtists.push(currentWord.toUpperCase());  // Add to guessed artists list
+                markCorrectSelection();  // Mark the correct word as permanent
+                checkForCompletion();  // Check if all artists have been found
+            } else if (currentWord.length > 0) {
+                messageDisplay.textContent = `"${currentWord}" is not a valid artist in this puzzle.`;
+                clearSelection();  // Clear the incorrect selection
+            }
+        }
+
+        // Mark the selected letters as correct and prevent further interaction
+        function markCorrectSelection() {
+            selectedLetters.forEach(cell => {
+                cell.classList.remove('selected');
+                cell.classList.add('correct');  // Mark as correct and keep blue
+            });
+            selectedLetters = [];  // Clear selection for the next word
+            currentWord = '';  // Reset current word
+        }
+
+        // Check if all artists have been found
+        function checkForCompletion() {
+            if (guessedArtists.length === artistList.length) {
+                messageDisplay.textContent = 'Congratulations! You found all the artists!';
+                gameCompleted = true;  // Set flag to prevent further interaction
+            }
+        }
+
+        // Draw connections between selected letters
+        function drawConnections() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous lines
+
+            if (selectedLetters.length < 2) return; // No lines if fewer than two letters are selected
+
+            ctx.strokeStyle = 'lightblue';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+
+            selectedLetters.forEach((cell, index) => {
+                const cellRect = cell.getBoundingClientRect();
+                const gridRect = grid.getBoundingClientRect();
+
+                const x = cellRect.left - gridRect.left + cellRect.width / 2;
+                const y = cellRect.top - gridRect.top + cellRect.height / 2;
+
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.stroke();
+        }
+
+        // Initialize the game grid
+        createGrid();
+    </script>
+</body>
+</html>

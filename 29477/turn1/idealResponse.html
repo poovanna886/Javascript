@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        
+        :root {
+  --blue: #007afe;
+  --lightgray: #bdc0c8;
+  --darkgray: #9b9b9b;
+  --yellow: #f2c71a;
+  --green: #00d957;
+  --red: #da363c;
+  --dark: #595959;
+  --shadow: 0 4px 20px 3px rgba(31, 38, 135, 0.1);
+  --rounded: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+main {
+  height: 100%;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 26px;
+}
+
+/* -- Top Menu -- */
+
+#menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 20px;
+}
+
+#menu > .key {
+  flex: 1;
+  height: 30px;
+  max-width: 70px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: var(--shadow);
+  background: var(--dark);
+  border-radius: var(--rounded);
+  border: none;
+}
+
+#new-word-icon {
+  height: 20px;
+  fill: white;
+}
+
+#give-up-icon {
+  height: 20px;
+  fill: white;
+}
+
+/* -- Guesses & Letters -- */
+
+#entries {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.entry {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.letter {
+  width: 52px;
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 38px;
+  font-weight: bold;
+  box-shadow: var(--shadow);
+  border-radius: var(--rounded);
+  z-index: 10;
+}
+
+/* -- Keyboard Styles -- */
+
+#keyboard {
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.key {
+  flex: 1;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  background: white;
+  box-shadow: var(--shadow);
+  border-radius: var(--rounded);
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  color: black;
+  z-index: 10;
+}
+
+.key:active {
+  filter: brightness(80%);
+}
+
+.letter-key {
+  max-width: 36px;
+}
+
+.special-key {
+  max-width: 62px;
+  flex: 1.5;
+}
+
+#backspace {
+  background: var(--lightgray);
+}
+
+#backspace-icon {
+  fill: white;
+  width: 26px;
+}
+
+#enter {
+  background: var(--blue);
+}
+
+#enter-icon {
+  fill: white;
+  width: 20px;
+}
+
+/* -- Different types of letters + keys -- */
+
+.empty {
+  background: white;
+}
+
+.absent,
+.wrong-position,
+.correct {
+  color: white;
+}
+
+.absent {
+  background: var(--darkgray);
+}
+
+.wrong-position {
+  background: var(--yellow);
+}
+
+.correct {
+  background: var(--green);
+}
+
+/* -- Modal messages -- */
+
+.modal {
+  position: absolute;
+  scale: 0;
+  top: 33%;
+  z-index: 20;
+  width: 240px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-weight: bold;
+  font-size: 20px;
+  color: white;
+}
+
+/* -- Overlay on Victory -- */
+
+#overlay {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: 19;
+  background-color: black;
+  opacity: 0;
+  display: none;
+}
+
+    </style>
+    </head>
+    <body>
+        <main>
+            <section id="menu">
+              <div id="new-word" title="New Word" class="key" data-key="newword">
+                <svg id="new-word-icon" viewBox="0 0 512 512" width="100" title="redo-alt">
+                  <path d="M256.455 8c66.269.119 126.437 26.233 170.859 68.685l35.715-35.715C478.149 25.851 504 36.559 504 57.941V192c0 13.255-10.745 24-24 24H345.941c-21.382 0-32.09-25.851-16.971-40.971l41.75-41.75c-30.864-28.899-70.801-44.907-113.23-45.273-92.398-.798-170.283 73.977-169.484 169.442C88.764 348.009 162.184 424 256 424c41.127 0 79.997-14.678 110.629-41.556 4.743-4.161 11.906-3.908 16.368.553l39.662 39.662c4.872 4.872 4.631 12.815-.482 17.433C378.202 479.813 319.926 504 256 504 119.034 504 8.001 392.967 8 256.002 7.999 119.193 119.646 7.755 256.455 8z" />
+                </svg>
+              </div>
+              <div id="give-up" title="Give Up" class="key" data-key="giveup">
+                <svg id="give-up-icon" viewBox="0 0 512 512" width="100" title="window-close">
+                  <path d="M464 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h416c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zm-83.6 290.5c4.8 4.8 4.8 12.6 0 17.4l-40.5 40.5c-4.8 4.8-12.6 4.8-17.4 0L256 313.3l-66.5 67.1c-4.8 4.8-12.6 4.8-17.4 0l-40.5-40.5c-4.8-4.8-4.8-12.6 0-17.4l67.1-66.5-67.1-66.5c-4.8-4.8-4.8-12.6 0-17.4l40.5-40.5c4.8-4.8 12.6-4.8 17.4 0l66.5 67.1 66.5-67.1c4.8-4.8 12.6-4.8 17.4 0l40.5 40.5c4.8 4.8 4.8 12.6 0 17.4L313.3 256l67.1 66.5z" />
+                </svg>
+              </div>
+            </section>
+            <section id="entries">
+              <!--   first entry   -->
+              <div class="entry">
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+              </div>
+              <!--   second entry   -->
+              <div class="entry">
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+              </div>
+              <!--   third entry   -->
+              <div class="entry">
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+              </div>
+              <!--   fourth entry   -->
+              <div class="entry">
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+              </div>
+              <!--   fifth entry   -->
+              <div class="entry">
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+              </div>
+              <!--   sixth entry   -->
+              <div class="entry">
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+                <div class="letter empty"></div>
+              </div>
+          
+            </section>
+            <section id="keyboard">
+              <!--   row 1   -->
+              <div class="row">
+                <div class="key letter-key" data-key="q">Q</div>
+                <div class="key letter-key" data-key="w">W</div>
+                <div class="key letter-key" data-key="e">E</div>
+                <div class="key letter-key" data-key="r">R</div>
+                <div class="key letter-key" data-key="t">T</div>
+                <div class="key letter-key" data-key="y">Y</div>
+                <div class="key letter-key" data-key="u">U</div>
+                <div class="key letter-key" data-key="i">I</div>
+                <div class="key letter-key" data-key="o">O</div>
+                <div class="key letter-key" data-key="p">P</div>
+              </div>
+              <!--   row 2   -->
+              <div class="row">
+                <div class="key letter-key" data-key="a">A</div>
+                <div class="key letter-key" data-key="s">S</div>
+                <div class="key letter-key" data-key="d">D</div>
+                <div class="key letter-key" data-key="f">F</div>
+                <div class="key letter-key" data-key="g">G</div>
+                <div class="key letter-key" data-key="h">H</div>
+                <div class="key letter-key" data-key="j">J</div>
+                <div class="key letter-key" data-key="k">K</div>
+                <div class="key letter-key" data-key="l">L</div>
+              </div>
+              <!--   row 3   -->
+              <div class="row">
+                <div id="enter" class="key special-key" title="Enter" data-key="enter">
+                  <svg id="enter-icon" viewBox="0 0 448 512" width="100" title="arrow-up">
+                    <path d="M34.9 289.5l-22.2-22.2c-9.4-9.4-9.4-24.6 0-33.9L207 39c9.4-9.4 24.6-9.4 33.9 0l194.3 194.3c9.4 9.4 9.4 24.6 0 33.9L413 289.4c-9.5 9.5-25 9.3-34.3-.4L264 168.6V456c0 13.3-10.7 24-24 24h-32c-13.3 0-24-10.7-24-24V168.6L69.2 289.1c-9.3 9.8-24.8 10-34.3.4z" />
+                  </svg>
+                </div>
+          
+                <div class="key letter-key" data-key="z">Z</div>
+                <div class="key letter-key" data-key="x">X</div>
+                <div class="key letter-key" data-key="c">C</div>
+                <div class="key letter-key" data-key="v">V</div>
+                <div class="key letter-key" data-key="b">B</div>
+                <div class="key letter-key" data-key="n">N</div>
+                <div class="key letter-key" data-key="m">M</div>
+          
+                <div id="backspace" class="key special-key" title="Backspace" data-key="backspace">
+                  <svg id="backspace-icon" viewBox="0 0 640 512" width="100" title="backspace">
+                    <path d="M576 64H205.26A63.97 63.97 0 0 0 160 82.75L9.37 233.37c-12.5 12.5-12.5 32.76 0 45.25L160 429.25c12 12 28.28 18.75 45.25 18.75H576c35.35 0 64-28.65 64-64V128c0-35.35-28.65-64-64-64zm-84.69 254.06c6.25 6.25 6.25 16.38 0 22.63l-22.62 22.62c-6.25 6.25-16.38 6.25-22.63 0L384 301.25l-62.06 62.06c-6.25 6.25-16.38 6.25-22.63 0l-22.62-22.62c-6.25-6.25-6.25-16.38 0-22.63L338.75 256l-62.06-62.06c-6.25-6.25-6.25-16.38 0-22.63l22.62-22.62c6.25-6.25 16.38-6.25 22.63 0L384 210.75l62.06-62.06c6.25-6.25 16.38-6.25 22.63 0l22.62 22.62c6.25 6.25 6.25 16.38 0 22.63L429.25 256l62.06 62.06z" />
+                  </svg>
+                </div>
+              </div>
+          
+            </section>
+          
+            <div class="modal"></div>
+            <div id="overlay"></div>
+          </main>
+          <script src="https://unpkg.co/gsap@3/dist/gsap.min.js"></script>
+
+        <script>
+console.clear();
+const words = [
+  "apple", "grape", "lemon", "mango", "pearl", 
+  "chair", "table", "frame", "shine", "globe", 
+  "steel", "sword", "badge", "space", "flame"
+];
+
+const entries = document.querySelectorAll(".entry"),
+  letterKeys = document.querySelectorAll(".letter-key"),
+  modal = document.querySelector(".modal");
+let row = 0,
+  col = 0,
+  word = [], // correct word
+  guess = [], // entered word
+  correctLettersGuessed = new Set(),
+  hasWon = false,
+  gameOver = false;
+
+const Colors = {
+  green: getComputedStyle(document.documentElement).getPropertyValue("--green"),
+  yellow: getComputedStyle(document.documentElement).getPropertyValue(
+    "--yellow"
+  ),
+  darkGray: getComputedStyle(document.documentElement).getPropertyValue(
+    "--darkgray"
+  )
+};
+
+newWord(); // initial call
+
+// Keyboard button listeners
+const keys = document.querySelectorAll(".key");
+keys.forEach((key) => {
+  key.addEventListener("click", () => {
+    keyPress(key.dataset.key);
+  });
+});
+document.addEventListener("keydown", function (event) {
+  keyPress(event.key);
+});
+
+// Runs when a key is pressed and calls the appropriate command
+function keyPress(key) {
+  key = key.toLowerCase();
+  if (!validateKey(key)) return;
+  runPressedAnimationFor(key);
+  if (!hasWon && !gameOver) {
+    if (key === "enter") {
+      submitWord();
+    } else if (key === "backspace") {
+      backspace();
+    } else {
+      addLetter(key);
+    }
+  }
+  if (key === "newword") {
+    newWord();
+  }
+  if (key === "giveup") {
+    giveUp();
+  }
+}
+
+// Adds a letter to the DOM and the guess array
+function addLetter(letter) {
+  if (isLetter(letter) && guess.length < 5) {
+    const square = entries[row].children[col];
+    runLetterInputAnimationFor(square);
+    square.innerHTML = letter.toUpperCase();
+    guess.push(letter);
+    col++;
+  }
+}
+
+// Reverse of addLetter bc of position of col
+function backspace() {
+  if (guess.length > 0) {
+    col--;
+    guess.pop();
+    entries[row].children[col].innerHTML = "";
+  }
+}
+
+// Called when the submit button or enter is pressed
+// Verifies that the guess is a valid length and word
+// Checks it against the answer word and updates the DOM accordingly
+function submitWord() {
+  if (guess.length < 5) {
+    runRowShakeAnimation();
+    sendMessage("Not enough letters");
+  } else if (!words.includes(guess.join("").toLowerCase())) {
+    runRowShakeAnimation();
+    sendMessage("Not in word list");
+  } else {
+    const result = checkGuess();
+    showResult(result);
+    if (row === 5 && !hasWon) {
+      gameOver = true;
+      setTimeout(() => {
+        sendMessage("The word was: " + word.join(""), 0.6);
+      }, 2000);
+    }
+    if (hasWon) {
+      let message = "";
+      if (row === 0) {
+        message = "INCREDIBLE!!!";
+      } else if (row === 1) {
+        message = "Amazing!!";
+      } else if (row === 2) {
+        message = "Yippee!";
+      } else if (row === 3) {
+        message = "Well done";
+      } else if (row === 4) {
+        message = "Nice";
+      } else {
+        message = "Phew";
+      }
+      setTimeout(() => {
+        sendMessage(message);
+      }, 3300);
+    }
+    // reset guess
+    row++;
+    col = 0;
+    guess = [];
+  }
+}
+
+// is the letter correct?
+// is letter in the word?
+// is letter in right spot?
+function checkGuess() {
+  const diff = [];
+  const letterCount = countLetters();
+
+  // mark correct letters
+  for (let i = 0; i < 5; i++) {
+    guessLetter = guess[i];
+    ansLetter = word[i];
+    if (guessLetter === ansLetter) {
+      diff.push("correct");
+      correctLettersGuessed.add(guessLetter);
+      letterCount[guessLetter] -= 1;
+    } else {
+      diff.push("absent");
+    }
+  }
+
+  // mark wrong position letters w/o overriding correct letters
+  for (let i = 0; i < 5; i++) {
+    guessLetter = guess[i];
+    if (
+      word.includes(guessLetter) &&
+      diff[i] !== "correct" &&
+      letterCount[guessLetter] > 0
+    ) {
+      diff[i] = "wrong-position";
+      letterCount[guessLetter] -= 1;
+    }
+  }
+
+  return diff;
+}
+
+// Shows the results on the DOM both on the word and keyboard
+function showResult(result) {
+  for (let i = 0; i < 5; i++) {
+    const letter = entries[row].children[i];
+    // const key = document.querySelector(`[data-key='${guess[i]}']`);
+    // letter.classList.add(result[i]);
+    // key.classList.add(result[i]);
+    runRevealGuessAnimationFor(result);
+  }
+  if (word.join("") === guess.join("")) {
+    hasWon = true;
+    runVictoryAnimation();
+  }
+}
+function newWord() {
+  entries.forEach((entry) => {
+    Array.from(entry.children).forEach((letter) => {
+      letter.innerHTML = "";
+      letter.className = "letter empty";
+    });
+  });
+  letterKeys.forEach((key) => {
+    key.className = "key letter-key";
+    key.style.backgroundColor = "white";
+    key.style.color = "black";
+  });
+  row = 0;
+  col = 0;
+  guess = [];
+  correctLettersGuessed = new Set();
+  
+  // Select a random word from the words array
+  const randomIndex = Math.floor(Math.random() * words.length);
+  word = words[randomIndex].split(""); // Set the new word as the correct word
+  
+  hasWon = false;
+  gameOver = false;
+  console.log(word.join("")); // For debugging, prints the correct word in the console
+}
+
+
+// gives up :(
+function giveUp() {
+  sendMessage("The word was: " + word.join(""));
+  setTimeout(() => {
+    newWord();
+  }, 2000);
+}
+
+// Sends a message to the screen
+function sendMessage(msg, duration = 0.1) {
+  modal.innerHTML = msg;
+  runModalAnimation(duration);
+}
+
+// Utility function to check if the string is actually a valid usable key
+// Used so the user cannot input weird characters & mess with things
+function validateKey(key) {
+  if (
+    isLetter(key) ||
+    key === "enter" ||
+    key === "backspace" ||
+    key === "newword" ||
+    key === "giveup"
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// Helper for above function to check if key is a letter
+function isLetter(str) {
+  return str.length === 1 && str.match(/[a-zA-Z]/i);
+}
+
+function countLetters() {
+  const counts = {};
+  for (const letter of word) {
+    if (counts[letter]) {
+      counts[letter] += 1;
+    } else {
+      counts[letter] = 1;
+    }
+  }
+  return counts;
+}
+
+// GSAP ANIMATIONS :D
+
+function runPressedAnimationFor(key) {
+  const keyDOM = document.querySelector(`[data-key='${key}']`);
+  const duration = 0.08;
+  gsap.to(keyDOM, {
+    scale: 0.9,
+    duration,
+    onComplete: function () {
+      gsap.to(keyDOM, {
+        scale: 1,
+        duration
+      });
+    }
+  });
+}
+
+function runLetterInputAnimationFor(square) {
+  const duration = 0.08;
+  gsap.to(square, {
+    scale: 1.15,
+    duration,
+    onComplete: function () {
+      gsap.to(square, {
+        scale: 1,
+        duration
+      });
+    }
+  });
+}
+
+function runRevealGuessAnimationFor(result) {
+  const timeline = gsap.timeline();
+  const duration = 0.15;
+  for (let i = 0; i < 5; i++) {
+    const letter = entries[row].children[i];
+    timeline
+      .to(letter, {
+        scaleX: 0,
+        duration,
+        onComplete: function () {
+          letter.classList.add(result[i]);
+        }
+      })
+      .to(letter, {
+        scaleX: 1,
+        duration
+      });
+  }
+  timeline.add("keys1");
+  for (let i = 0; i < 5; i++) {
+    const key = document.querySelector(`[data-key='${guess[i]}']`);
+    let backgroundColor = key.style.backgroundColor;
+    if (result[i] === "correct") {
+      backgroundColor = Colors.green;
+    }
+    if (!correctLettersGuessed.has(guess[i])) {
+      if (result[i] === "wrong-position") {
+        backgroundColor = Colors.yellow;
+      }
+      if (result[i] === "absent") {
+        backgroundColor = Colors.darkGray;
+      }
+    }
+
+    timeline
+      .to(
+        key,
+        {
+          scale: 0,
+          duration: duration
+        },
+        "keys1"
+      )
+      .set(key, {
+        backgroundColor,
+        color: "white"
+      });
+  }
+  timeline.add("keys2");
+  for (let i = 0; i < 5; i++) {
+    const key = document.querySelector(`[data-key='${guess[i]}']`);
+    timeline.to(
+      key,
+      {
+        scale: 1,
+        duration: duration
+      },
+      "keys2"
+    );
+  }
+  timeline.play();
+}
+
+function runModalAnimation(duration) {
+  gsap.to(modal, {
+    scale: 1,
+    ease: "elastic.out(1, 0.7)",
+    onComplete: function () {
+      gsap.to(modal, {
+        scale: 0,
+        delay: duration,
+        ease: "elastic.in(1, 0.7)"
+      });
+    }
+  });
+}
+
+function runRowShakeAnimation() {
+  const rowDOM = entries[row];
+  gsap.to(rowDOM, {
+    x: -5,
+    duration: 0.05,
+    ease: "linear",
+    onComplete: function () {
+      gsap.to(rowDOM, {
+        x: 0,
+        duration: 0.5,
+        ease: "elastic(4, 0.2)"
+      });
+    }
+  });
+}
+
+function runVictoryAnimation() {
+  const lettersDOM = entries[row].children;
+  const overlayDOM = document.querySelector("#overlay");
+  const timeline = gsap.timeline();
+
+  // Makes the letters appear on top of the rest
+  for (let i = 0; i < 5; i++) {
+    // lettersDOM[i].style.zIndex = 20;
+    timeline.set(lettersDOM[i], { zIndex: 20 });
+  }
+
+  // Mimics an explosion of letters by setting positions
+  timeline.add("explode");
+  const startDelay = 1.6;
+  const explodePos = [
+    { x: -50, y: -40, rotation: -245 },
+    { x: -3, y: 60, rotation: -260 },
+    { x: 10, y: -50, rotation: -220 },
+    { x: 30, y: 80, rotation: 260 },
+    { x: 50, y: -10, rotation: 240 }
+  ];
+
+  // Creates dark overlay
+  overlayDOM.style.display = "flex";
+  timeline.to(
+    overlayDOM,
+    {
+      opacity: 0.5,
+      duration: 0.5,
+      delay: startDelay
+    },
+    "explode"
+  );
+
+  // Tweens the letters to explosion positions
+  for (let i = 0; i < 5; i++) {
+    timeline.to(
+      lettersDOM[i],
+      {
+        x: explodePos[i].x,
+        y: explodePos[i].y,
+        rotation: explodePos[i].rotation,
+        ease: "power2.out",
+        duration: 0.6,
+        delay: startDelay
+      },
+      "explode"
+    );
+  }
+
+  // Brings letters back together
+  timeline.add("together");
+  for (let i = 0; i < 5; i++) {
+    timeline.to(
+      lettersDOM[i],
+      {
+        x: 0,
+        y: 0,
+        rotation: 0,
+        duration: 0.3,
+        ease: "elastic.out(0.7, 0.7)"
+      },
+      "together"
+    );
+  }
+
+  // Scales the letters up and widens the gaps
+  timeline.add("scale");
+  for (let i = 0; i < 5; i++) {
+    const factor = 20;
+    let x = 0;
+    if (i === 0) {
+      x = -factor * 2;
+    } else if (i === 1) {
+      x = -factor;
+    } else if (i === 3) {
+      x = factor;
+    } else if (i === 4) {
+      x = factor * 2;
+    }
+    timeline.to(
+      lettersDOM[i],
+      {
+        scale: 1.2,
+        x,
+        duration: 0.7,
+        delay: 0.1
+      },
+      "together"
+    );
+  }
+
+  // Brings everything back to normal
+  timeline.add("return");
+  for (let i = 0; i < 5; i++) {
+    timeline.to(
+      lettersDOM[i],
+      {
+        scale: 1,
+        x: 0,
+        duration: 0.1
+      },
+      "return"
+    );
+  }
+
+  // Removes the dark overlay
+  timeline.to(overlayDOM, {
+    opacity: 0,
+    duration: 0.5
+  });
+
+  setTimeout(() => {
+    overlayDOM.style.display = "none";
+  }, 4000);
+
+  // Resets the z-indexes
+  for (let i = 0; i < 5; i++) {
+    // setTimeout(() => {
+    //   lettersDOM[i].style.zIndex = 10;
+    // }, 4000);
+    timeline.set(lettersDOM[i], { zIndex: 10, delay: 0.3 });
+  }
+
+  // Play the animation
+  timeline.play();
+}
+
+        </script>
+    </body>
+    </html>

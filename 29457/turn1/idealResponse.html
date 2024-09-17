@@ -4,209 +4,694 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+        integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <style type="text/css">
-        *, *:after, *:before {
+        @import url("https://fonts.googleapis.com/css?family=Audiowide&display=swap");
+
+        :root {
+            --dk-gray-100: #F3F4F6;
+            --dk-gray-200: #E5E7EB;
+            --dk-gray-300: #D1D5DB;
+            --dk-gray-400: #9CA3AF;
+            --dk-gray-500: #6B7280;
+            --dk-gray-600: #4B5563;
+            --dk-gray-700: #374151;
+            --dk-gray-800: #1F2937;
+            --dk-gray-900: #111827;
+            --dk-dark-bg: #313348;
+            --dk-darker-bg: #2a2b3d;
+            --navbar-bg-color: #6f6486;
+            --sidebar-bg-color: #252636;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --canvas-color: #F2E0E6;
-            --card-color: #FFEDF3;
-            --accent-color: #3A141F;
-            --primary-text-color: #724252;
-            --primary-text-color-light: #AA8792;
-            --secondary-text-color: #EECFD9;
-        }
-
         body {
-            font-family: "DM Sans", "Inter", sans-serif;
-            background-color: var(--canvas-color);
-            padding: 2rem;
+            font-family: 'Audiowide', cursive, sans-serif;
+            background-color: var(--dk-darker-bg);
+            font-size: .925rem;
         }
 
-        /* Container to hold the grid */
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 20px;
+        #wrapper {
+
+            transition: all .3s ease-in-out;
         }
 
-        .player {
-            width: 100%;
-            height: 230px;
-            border-radius: 30px;
-            box-shadow: 0 15px 30px rgba(58, 20, 31, .1);
+        #wrapper.fullwidth {
+            margin-left: 0;
+        }
+
+        .welcome {
+            color: var(--dk-gray-300);
+        }
+
+        .welcome .content {
+            background-color: var(--dk-dark-bg);
+        }
+
+        .welcome p {
+            color: var(--dk-gray-400);
+        }
+
+        .statistics {
+            color: var(--dk-gray-200);
+        }
+
+        .statistics .box {
+            background-color: var(--dk-dark-bg);
+        }
+
+        .statistics .box i {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+        }
+
+        .statistics .box p {
+            color: var(--dk-gray-400);
+        }
+
+        .charts .chart-container {
+            background-color: var(--dk-dark-bg);
+        }
+
+        .charts .chart-container h3 {
+            color: var(--dk-gray-400)
+        }
+
+
+        .admins .box .admin {
+            background-color: var(--dk-dark-bg);
+        }
+
+        .admins .box h3 {
+            color: var(--dk-gray-300);
+        }
+
+        .admins .box p {
+            color: var(--dk-gray-400)
+        }
+
+
+
+        .statis {
+            color: var(--dk-gray-100);
+        }
+
+        .statis .box {
             position: relative;
-            background-color: var(--card-color);
-            display: flex;
-            flex-direction: row;
+            overflow: hidden;
+            border-radius: 3px;
         }
 
-        .player-info {
-            padding: 2rem 0 0 1.75rem;
-            display: flex;
-            flex-grow: 1;
-            flex-shrink: 1;
-            position: relative;
-        }
-
-        .player-name {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary-text-color);
-        }
-
-        .player-team {
-            font-size: 1rem;
-            font-weight: 400;
-            color: var(--primary-text-color-light);
+        .statis .box h3:after {
+            content: "";
+            height: 2px;
+            width: 70%;
+            margin: auto;
+            background-color: rgba(255, 255, 255, 0.12);
             display: block;
-            margin-bottom: .5rem;
-            text-transform: uppercase;
+            margin-top: 10px;
         }
 
-        .player-stats {
-            border-radius: 20px;
-            background-color: var(--accent-color);
-            box-shadow: 15px 15px 30px rgba(58, 20, 31, .1);
-            width: 300px;
+        .statis .box i {
             position: absolute;
-            left: -40px;
-            bottom: -30px;
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem 1.5rem;
-        }
-
-        .player-stat {
-            font-size: .75rem;
-            color: var(--secondary-text-color);
-            text-transform: uppercase;
-        }
-
-        .player-stat-number {
-            margin-top: .375rem;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--secondary-text-color);
-        }
-
-        .player-image {
-            display: flex;
-            position: relative;
-            width: 180px;
-        }
-
-        .player-image img {
-            display: block;
-            position: absolute;
-            width: 200px;
-            left: -40px;
-            bottom: 0;
-        }
-
-        .captain-badge {
-            width: 3rem;
-            height: 3rem;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #FFF;
+            height: 70px;
+            width: 70px;
+            font-size: 22px;
+            padding: 15px;
+            top: -25px;
+            left: -25px;
+            background-color: rgba(255, 255, 255, 0.15);
+            line-height: 60px;
+            text-align: right;
             border-radius: 50%;
-            font-weight: 700;
-            color: var(--primary-text-color);
-            box-shadow: 3px 5px 10px 0 rgba(58, 20, 31, .15);
-            right: 1.25rem;
-            bottom: 1.25rem;
-            position: absolute;
+        }
+
+        .main-color {
+            color: #ffc107
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg-color) !important;
+            border: none !important;
+        }
+
+        .navbar .dropdown-menu {
+            right: auto !important;
+            left: 0 !important;
+        }
+
+        .navbar .navbar-nav>li>a {
+            color: #EEE !important;
+            line-height: 55px !important;
+            padding: 0 10px !important;
+        }
+
+        .navbar .navbar-brand {
+            color: #FFF !important
+        }
+
+        .navbar .navbar-nav>li>a:focus,
+        .navbar .navbar-nav>li>a:hover {
+            color: #EEE !important
+        }
+
+        .navbar .navbar-nav>.open>a,
+        .navbar .navbar-nav>.open>a:focus,
+        .navbar .navbar-nav>.open>a:hover {
+            background-color: transparent !important;
+            color: #FFF !important
+        }
+
+        .navbar .navbar-brand {
+            line-height: 55px !important;
+            padding: 0 !important
+        }
+
+        .navbar .navbar-brand:focus,
+        .navbar .navbar-brand:hover {
+            color: #FFF !important
+        }
+
+        .navbar>.container .navbar-brand,
+        .navbar>.container-fluid .navbar-brand {
+            margin: 0 !important
+        }
+
+        @media (max-width: 767px) {
+            .navbar>.container-fluid .navbar-brand {
+                margin-left: 15px !important;
+            }
+
+            .navbar .navbar-nav>li>a {
+                padding-left: 0 !important;
+            }
+
+            .navbar-nav {
+                margin: 0 !important;
+            }
+
+            .navbar .navbar-collapse,
+            .navbar .navbar-form {
+                border: none !important;
+            }
+        }
+
+        .navbar .navbar-nav>li>a {
+            float: left !important;
+        }
+
+        .navbar .navbar-nav>li>a>span:not(.caret) {
+            background-color: #e74c3c !important;
+            border-radius: 50% !important;
+            height: 25px !important;
+            width: 25px !important;
+            padding: 2px !important;
+            font-size: 11px !important;
+            position: relative !important;
+            top: -10px !important;
+            right: 5px !important
+        }
+
+        .dropdown-menu>li>a {
+            padding-top: 5px !important;
+            padding-right: 5px !important;
+        }
+
+        .navbar .navbar-nav>li>a>i {
+            font-size: 18px !important;
+        }
+
+
+        /* Start media query */
+
+        @media (max-width: 767px) {
+            #wrapper {
+                margin: 0 !important
+            }
+
+            .statistics .box {
+                margin-bottom: 25px !important;
+            }
+
+            .navbar .navbar-nav .open .dropdown-menu>li>a {
+                color: #CCC !important
+            }
+
+            .navbar .navbar-nav .open .dropdown-menu>li>a:hover {
+                color: #FFF !important
+            }
+
+            .navbar .navbar-toggle {
+                border: none !important;
+                color: #EEE !important;
+                font-size: 18px !important;
+            }
+
+            .navbar .navbar-toggle:focus,
+            .navbar .navbar-toggle:hover {
+                background-color: transparent !important
+            }
+        }
+
+
+        ::-webkit-scrollbar {
+            background: transparent;
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #3c3f58;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        #dnfDrivers {
+            display: flex;
+            flex-direction: column;
+            color: white;
+
         }
     </style>
 
 </head>
 
 <body>
-    <div class="container" id="players-container">
-        <!-- Player cards will be added dynamically here -->
-    </div>
 
-    <script>
-        // Array to store players' data
-        const players = [
-            {
-                team: "West Ham United",
-                name: "Mark Noble",
-                matches: 550,
-                goals: 62,
-                assists: 58,
-                image: "https://assets.codepen.io/285131/noble.png",
-                captain: true
-            },
-            {
-                team: "West Ham United",
-                name: "Declan Rice",
-                matches: 200,
-                goals: 10,
-                assists: 15,
-                image: "https://assets.codepen.io/285131/noble.png",
-                captain: false
-            },
-            {
-                team: "West Ham United",
-                name: "Michail Antonio",
-                matches: 300,
-                goals: 75,
-                assists: 50,
-                image: "https://assets.codepen.io/285131/noble.png",
-                captain: false
-            },
-            {
-                team: "West Ham United",
-                name: "Lukasz Fabianski",
-                matches: 400,
-                goals: 0,
-                assists: 2,
-                image: "https://assets.codepen.io/285131/noble.png",
-                captain: false
-            }
-        ];
 
-        // Function to generate the HTML for a player card
-        function createPlayerCard(player) {
-            return `
-                <div class="player">
-                    <div class="player-info">
-                        <h2 class="player-name">
-                            <span class="player-team">${player.team}</span>${player.name}
-                        </h2>
-                        <dl class="player-stats">		
-                            <div>
-                                <dt class="player-stat">Matches</dt>
-                                <dd class="player-stat-number">${player.matches}</dd>
+    <section id="wrapper">
+
+
+        <div class="p-4">
+            <div class="welcome">
+                <div class="content rounded-3 p-3">
+                    <h1 class="fs-3">F1 2023 Bahrain GP Dashboard</h1>
+
+                </div>
+            </div>
+
+            <section class="statistics mt-4">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="box d-flex rounded-2 align-items-center mb-4 mb-lg-0 p-3">
+                            <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">1</i>
+                            <div class="ms-3">
+                                <div class="d-flex align-items-center">
+                                    <h3 class="mb-0">1 Max</h3> <span class="d-block ms-2">Verstappen</span>
+                                </div>
+                                <p class="fs-normal mb-0">Red Bull Racing</p>
                             </div>
-                            <div>
-                                <dt class="player-stat">Goals</dt>
-                                <dd class="player-stat-number">${player.goals}</dd>
-                            </div>
-                            <div>
-                                <dt class="player-stat">Assists</dt>
-                                <dd class="player-stat-number">${player.assists}</dd>
-                            </div>
-                        </dl>
+                        </div>
                     </div>
-                    <div class="player-image">
-                        <img src="${player.image}" alt="${player.name}" />
-                        ${player.captain ? '<span class="captain-badge">C</span>' : ''}
+                    <div class="col-lg-4">
+                        <div class="box d-flex rounded-2 align-items-center mb-4 mb-lg-0 p-3">
+                            <i class="uil-file fs-2 text-center bg-danger rounded-circle">11</i>
+                            <div class="ms-3">
+                                <div class="d-flex align-items-center">
+                                    <h3 class="mb-0">2 Sergio</h3> <span class="d-block ms-2">Perez</span>
+                                </div>
+                                <p class="fs-normal mb-0">Red Bull Racing</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="box d-flex rounded-2 align-items-center p-3">
+                            <i class="uil-users-alt fs-2 text-center bg-success rounded-circle">14</i>
+                            <div class="ms-3">
+                                <div class="d-flex align-items-center">
+                                    <h3 class="mb-0">3 Fernando</h3> <span class="d-block ms-2">Alonso</span>
+                                </div>
+                                <p class="fs-normal mb-0">Aston Martin</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            `;
+            </section>
+
+
+            <section class="admins mt-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="box">
+                            <!-- <h4>Admins:</h4> -->
+                            <div class="admin d-flex align-items-center rounded-2 p-3 mb-4">
+                                <div class="img">
+                                    <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">55</i>
+                                </div>
+                                <div class="ms-3">
+                                    <h3 class="fs-5 mb-1">4 Carlos Sainz</h3>
+                                    <p class="mb-0">Ferrari</p>
+                                </div>
+
+                            </div>
+                            <div class="admin d-flex align-items-center rounded-2 p-3 mb-4">
+                                <div class="img">
+                                    <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">18</i>
+                                </div>
+                                <div class="ms-3">
+                                    <h3 class="fs-5 mb-1">6 Lance Stroll</h3>
+                                    <p class="mb-0">Aston Martin</p>
+                                </div>
+                            </div>
+                            <div class="admin d-flex align-items-center rounded-2 p-3 mb-4">
+                                <div class="img">
+                                    <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">77</i>
+                                </div>
+                                <div class="ms-3">
+                                    <h3 class="fs-5 mb-1">8 Valtteri Bottas</h3>
+                                    <p class="mb-0">Alfa Romeo</p>
+                                </div>
+                            </div>
+
+                            <div class="admin d-flex align-items-center rounded-2 p-3">
+                                <div class="img">
+                                    <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">23</i>
+                                </div>
+
+                                <div class="ms-3">
+                                    <h3 class="fs-5 mb-1">10 Alexander Albon</h3>
+                                    <p class="mb-0">Williams</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="box">
+                            <!-- <h4>Moderators:</h4> -->
+                            <div class="admin d-flex align-items-center rounded-2 p-3 mb-4">
+                                <div class="img">
+                                    <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">44</i>
+                                </div>
+                                <div class="ms-3">
+                                    <h3 class="fs-5 mb-1">5 Lewis Hamilton</h3>
+                                    <p class="mb-0">Mercedes</p>
+                                </div>
+
+                            </div>
+                            <div class="admin d-flex align-items-center rounded-2 p-3 mb-4">
+                                <div class="img">
+                                    <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">63</i>
+                                </div>
+                                <div class="ms-3">
+                                    <h3 class="fs-5 mb-1">7 George Russell</h3>
+                                    <p class="mb-0">Mercedes</p>
+                                </div>
+                            </div>
+                            <div class="admin d-flex align-items-center rounded-2 p-3">
+                                <div class="img">
+                                    <i class="uil-envelope-shield fs-2 text-center bg-primary rounded-circle">10</i>
+                                </div>
+                                <div class="ms-3">
+                                    <h3 class="fs-5 mb-1">9 Pierre Gasly</h3>
+                                    <p class="mb-0">Alpine</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="statis mt-4 text-center">
+                <h3>Constructors Standings</h3>
+                <div class="row">
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-primary p-3">
+                            <i class="uil-eye"></i>
+                            <h3>43</h3>
+                            <p class="lead">Red Bull</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-success p-3">
+                            <i class="uil-feedback"></i>
+                            <h3>23</h3>
+                            <p class="lead">Aston Martin</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-danger p-3">
+                            <i class="uil-user"></i>
+                            <h3>12</h3>
+                            <p class="lead">Ferrari</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-success p-3">
+                            <i class="uil-feedback"></i>
+                            <h3>16</h3>
+                            <p class="lead">Mercedes</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-danger p-3">
+                            <i class="uil-user"></i>
+                            <h3>4</h3>
+                            <p class="lead">Alfa Romeo</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-primary p-3">
+                            <i class="uil-eye"></i>
+                            <h3>2</h3>
+                            <p class="lead">Alpine</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-success p-3">
+                            <i class="uil-feedback"></i>
+                            <h3>1</h3>
+                            <p class="lead">Williams</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-warning p-3">
+                            <i class="uil-shopping-cart"></i>
+                            <h3>0</h3>
+                            <p class="lead">McLaren</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-primary p-3">
+                            <i class="uil-eye"></i>
+                            <h3>0</h3>
+                            <p class="lead">Alpha Tauri</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                        <div class="box bg-danger p-3">
+                            <i class="uil-user"></i>
+                            <h3>0</h3>
+                            <p class="lead">Haas F1</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <section class="charts mt-4">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="chart-container rounded-2 p-3">
+                            <h3 class="fs-6 mb-3">Chart title number one</h3>
+                            <canvas id="myChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="chart-container rounded-2 p-3">
+                            <h3 class="fs-6 mb-3">Chart title number two</h3>
+                            <canvas id="myChart2"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+
+
+            <section class="charts mt-4">
+                <div class="chart-container p-3">
+                    <h3 class="fs-6 mb-3">Chart title number three</h3>
+                    <div style="height: 300px">
+                        <canvas id="chart3" width="100%"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+    <div id="dnfDrivers">
+        <h3>Drivers that DNF-ed or had problems:</h3>
+        <ul>
+            <li>Charles Leclerc - Engine problem</li>
+            <li>Esteban Ocon - Mechanical problem</li>
+            <li>Nyck de Vries - DNF</li>
+            <li>Oscar Piastri - Electrical problem</li>
+            <li>Mick Schumacher - DNF</li>
+            <li>Lando Norris - DNF</li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+        integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        function $(selector) {
+            return document.querySelector(selector)
         }
 
-        // Adding player cards to the DOM
-        const playersContainer = document.getElementById("players-container");
-        players.forEach(player => {
-            playersContainer.innerHTML += createPlayerCard(player);
+        function find(el, selector) {
+            let finded
+            return (finded = el.querySelector(selector)) ? finded : null
+        }
+
+        function siblings(el) {
+            const siblings = []
+            for (let sibling of el.parentNode.children) {
+                if (sibling !== el) {
+                    siblings.push(sibling)
+                }
+            }
+            return siblings
+        }
+
+        const wrapper = $('#wrapper')
+
+        // Update to correctly configure global defaults in Chart.js v3+
+        Chart.defaults.animation.duration = 2000; // Animation duration
+        Chart.defaults.plugins.legend.display = false; // Hide legend
+        Chart.defaults.color = '#71748c'; // Set default font color
+        Chart.defaults.font.size = 13; // Set default font size
+      
+        // The bar chart
+        const ctx1 = document.getElementById('myChart').getContext('2d');
+        const fastestLapChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ["Max Verstappen", "Sergio Pérez", "Fernando Alonso", "Carlos Sainz", "Lewis Hamilton", "Lance Stroll", "George Russell", "Valtteri Bottas", "Pierre Gasly", "Alexander Albon"], // Driver names
+                datasets: [{
+                    label: 'Fastest Lap Time (seconds)',
+                    data: [96.236, 96.344, 96.156, 97.130, 96.546, 96.546, 97.221, 97.379, 95.068, 97.144], // Fastest lap times in seconds
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Lap Time (seconds)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Drivers'
+                        }
+                    }
+                }
+            }
         });
+
+
+        const ctx = document.getElementById('myChart2').getContext('2d');
+
+        const chart2 = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["Max Verstappen", "Sergio Pérez", "Fernando Alonso", "Carlos Sainz", "Lewis Hamilton", "Lance Stroll", "George Russell", "Valtteri Bottas", "Pierre Gasly", "Alexander Albon"],
+                datasets: [{
+                    label: 'Time Gap from Race Winner (seconds)',
+                    data: [0, 11.987, 38.637, 48.052, 50.977, 54.502, 55.873, 72.647, 73.753, 89.774],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Time Gap (seconds)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Drivers'
+                        }
+                    }
+                }
+            }
+        });
+
+
+        // Third line chart
+        const ctx3 = document.getElementById('chart3').getContext('2d');
+        const myScatterPlot = new Chart(ctx3, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Position vs. Grid Start',
+                    data: [
+                        { x: 1, y: 1 },
+                        { x: 2, y: 2 },
+                        { x: 5, y: 3 },
+                        { x: 4, y: 4 },
+                        { x: 7, y: 5 },
+                        { x: 8, y: 6 },
+                        { x: 6, y: 7 },
+                        { x: 12, y: 8 },
+                        { x: 20, y: 9 },
+                        { x: 15, y: 10 }
+                    ],
+                    backgroundColor: 'rgba(255, 99, 132, 1)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Grid Start Position'
+                        },
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Final Race Position'
+                        },
+                        reverse: true,  // Reverse the y-axis to show first place at the top
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
     </script>
 </body>
 
