@@ -143,30 +143,40 @@
       updateCurrentWordInput();
     }
 
-     // Function to handle word submission
-     function submitWord() {
-      // Convert both currentWord and validWords to uppercase for comparison
-      const normalizedWord = currentWord.toUpperCase();
-      if (currentWord.length >= 4 && currentWord.includes(centerLetter) && validWords.includes(normalizedWord) && !guessedWords.has(normalizedWord)) {
-        // Word is valid
-        let wordPoints = currentWord.length;
-        if (isPangram(normalizedWord)) wordPoints += 7; // Pangram bonus
-        score += wordPoints;
+    function submitWord() {
+  // Convert both currentWord and validWords to uppercase for comparison
+  const normalizedWord = currentWord.toUpperCase();
+  if (currentWord.length >= 4 && currentWord.includes(centerLetter) && validWords.includes(normalizedWord) && !guessedWords.has(normalizedWord)) {
+    // Word is valid
+    let wordPoints = currentWord.length;
+    console.log(wordPoints)
+    if (isPangram(normalizedWord)) wordPoints += 7; // Pangram bonus
+    score += wordPoints;
 
-        // Update score and word list
-        document.getElementById('score').innerText = score;
-        const wordList = document.getElementById('word-list');
-        const li = document.createElement('li');
-        li.innerText = currentWord;
-        li.style.textDecoration = 'underline';
-        wordList.appendChild(li);
+    // Update score and word list
+    document.getElementById('score').innerText = score;
+    const wordList = document.getElementById('word-list');
+    const li = document.createElement('li');
+    li.innerText = currentWord;
+    li.style.textDecoration = 'underline';
+    wordList.appendChild(li);
 
-        guessedWords.add(normalizedWord);
-      } else {
-        alert("Invalid word! Must be at least 4 letters and include the center letter.");
-      }
-      clearWord();
-    }
+    guessedWords.add(normalizedWord);
+
+  } else {
+   
+    alert("Invalid word! Must be at least 4 letters and include the center letter.");
+  }
+  
+      // Check if all valid words have been guessed
+      if (guessedWords.size === validWords.length) {
+   
+   alert(`Game Over! You guessed all the words with a total score of ${score} points.`);
+   location.reload(); // Refresh the page
+ }
+
+  clearWord();
+}
 
 
     // Check for pangram
