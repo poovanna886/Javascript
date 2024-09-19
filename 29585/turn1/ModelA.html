@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ball Obstacle Game</title>
+<style>
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+}
+#gameArea {
+    width: 600px;
+    height: 400px;
+    border: 2px solid black;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+}
+#ball {
+    width: 20px;
+    height: 20px;
+    background-color: red;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.obstacle {
+    position: absolute;
+    background-color: #8B4513;
+    border-radius: 5px;
+}
+.finish {
+    position: absolute;
+    background: repeating-linear-gradient(
+        45deg,
+        #000,
+        #000 10px,
+        #fff 10px,
+        #fff 20px
+    );
+}
+#score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-size: 18px;
+}
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+    <div id="ball"></div>
+    <div id="score">Score: 0</div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+const gameArea = document.getElementById('gameArea');
+const ball = document.getElementById('ball');
+const scoreDisplay = document.getElementById('score');
+
+let ballSize = 20;
+let xSpeed = 0;
+let ySpeed = 2;
+let score = 0;
+let currentLevel = 0;
+let hitCount = 0;
+
+const levels = [
+    {
+        layout: [
+            '   O   ',
+            '   O   ',
+            '  O O  ',
+            '  OOO  ',
+            ' O   O ',
+            'O     O',
+            '   F   '
+        ],
+        ballStart: {x: 300, y: 0}
+    },
+    {
+        layout: [
+            '  O    ',
+            ' O O   ',
+            'O   O  ',
+            ' O O O ',
+            '  O O  ',
+            '   O   ',
+            '    F  '
+        ],
+        ballStart: {x: 300, y: 0}
+    }
+];
+
+function setupLevel(level) {
+    const layout = levels[level].layout;
+    gameArea.innerHTML = ''; // Clear previous obstacles
+    gameArea.appendChild(ball);
+    gameArea.appendChild(scoreDisplay);
+
+    layout.forEach((row, y) => {
+        [...row].forEach((cell, x) => {
+            if (cell === 'O') {
+                const obstacle = document.createElement('div');
+                obstacle.className = 'obstacle';
+                obstacle.style.width = '50px';
+                obstacle.style.height = '20px';
+                obstacle.style.left = `${x * 50}px`;
+                obstacle.style.top = `${y * 30}px`;
+                gameArea.appendChild(obstacle);
+            } else if (cell === 'F') {
+                const finish = document.createElement('div');
+                finish.className = 'finish';
+                finish.style.width = '50px';
+                finish.style.height = '20px';
+                finish.style.left = `${x * 50}px`;
+                finish.style.top = `${y * 30}px`;
+                gameArea.appendChild(finish);
+            }
+        });
+    });
+    
+    resetBall();
+}
+
+function resetBall() {
+    ball.style.width = `${ballSize}px`;
+    ball.style.height = `${ballSize}px`;
+    ball.style.left = `${levels[currentLevel].ballStart.x}px`;
+    ball.style.top = `${levels[currentLevel].ballStart.y}px`;
+    hitCount = 0;
+}
+
+function moveBall() {
+    let x = parseFloat(ball.style.left);
+    let y = parseFloat(ball.style.top);
+    
+    y += ySpeed;
+    x += xSpeed;
+
+    // Check for collisions with walls
+    if (x < 0 || x > gameArea.offsetWidth - ballSize) xSpeed = -xSpeed;
+    
+    // Check for collision with bottom or obstacles
+    if (y > gameArea.offsetHeight - ballSize) {
+        y = gameArea.offsetHeight - ballSize;
+        checkLevelComplete();
+    } else {
+        const obstacles = document.querySelectorAll('.obstacle, .finish');
+        obstacles.forEach(ob => {
+            if (collisionCheck(ball, ob)) {
+                if (ob.className === 'finish') {
+                    checkLevelComplete();
+                } else {
+                    ySpeed = -ySpeed; // Bounce back
+                    hitCount++;
+                    if (hitCount >= 2) {
+                        resetBall();
+                    } else {
+                        ballSize /= 2;
+                        ball.style.width = `${ballSize}px`;
+                        ball.style.height = `${ballSize}px`;
+                    }
+                }
+            }
+        });
+    }
+
+    // Increase size if not hitting obstacles
+    if (hitCount === 0 && ballSize < 40) {
+        ballSize += 0.1;
+        ball.style.width = `${ballSize}px`;
+        ball.style.height = `${ballSize}px`;
+    }
+
+    ball.style.left = `${x}px`;
+    ball.style.top = `${y}px`;
+}
+
+function collisionCheck(a, b) {
+    return !(
+        ((a.style.top) > (parseFloat(b.style.top) + parseFloat(b.style.height))) ||
+        ((parseFloat(a.style.top) + parseFloat(a.style.height)) < (parseFloat(b.style.top))) ||
+        ((a.style.left) > (parseFloat(b.style.left) + parseFloat(b.style.width))) ||
+        ((parseFloat(a.style.left) + parseFloat(a.style.width)) < (parseFloat(b.style.left)))
+    );
+}
+
+function checkLevelComplete() {
+    const finish = document.querySelector('.finish');
+    if (collisionCheck(ball, finish)) {
+        score += 1; // Assuming each level cleared awards 1 point
+        scoreDisplay.textContent = `Score: ${score}`;
+        currentLevel++;
+        if (currentLevel < levels.length) {
+            setupLevel(currentLevel);
+        } else {
+            alert(`Game Over! Your final score is ${score}`);
+            currentLevel = 0;
+            score = 0;
+            setupLevel(currentLevel);
+        }
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') xSpeed = -2;
+    if (e.key === 'ArrowRight') xSpeed = 2;
+    if (e.key === 'ArrowUp' && parseFloat(ball.style.top) >= gameArea.offsetHeight - ballSize - 1) ySpeed = -6; // Jump
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') xSpeed = 0;
+});
+
+setupLevel(currentLevel);
+setInterval(moveBall, 30);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ball Obstacle Game</title>
+    <style>
+        #gameCanvas {
+            border: 2px solid black;
+            background-color: #f0f0f0;
+        }
+        .rock {
+            background-image: url('data:image/svg+xml;base64,...'); /* Base64 encoded rock texture or path to image */
+            background-size: cover;
+        }
+        .finish {
+            background-image: repeating-linear-gradient(45deg, black, black 10px, white 10px, white 20px);
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div id="gameInfo"></div>
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gameInfo = document.getElementById('gameInfo');
+    
+    // Game variables
+    let ball = {x: canvas.width / 2, y: 0, radius: 20, dx: 0, dy: 0.5, jump: -10, sizeFactor: 1};
+    let obstacles = [];
+    let level = 0;
+    let score = 0;
+    const levels = [
+        ['@', ' ', ' ', 'F', ' ', ' '],
+        [' ', '@', ' ', ' ', ' ', 'F']
+    ];
+
+    // Initialize level
+    function initLevel() {
+        obstacles = [];
+        for(let y = 0; y < levels[level].length; y++) {
+            for(let x = 0; x < levels[level][y].length; x++) {
+                if(levels[level][y][x] === '@') obstacles.push({x: x * 50, y: y * 50, width: 50, height: 50});
+                if(levels[level][y][x] === 'F') {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(x * 50, y * 50, 50, 50);
+                }
+            }
+        }
+        ball.x = canvas.width / 2; // Reset ball position
+        ball.y = 0;
+        ball.sizeFactor = 1;
+    }
+
+    // Draw game elements
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius * ball.sizeFactor, 0, Math.PI * 2);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        
+        obstacles.forEach(ob => {
+            ctx.fillStyle = 'brown';
+            ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+        });
+    }
+
+    // Update game state
+    function update() {
+        ball.dy += 0.1; // Gravity
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+
+        // Collision detection
+        obstacles.forEach(ob => {
+            if(ball.y + ball.radius * ball.sizeFactor > ob.y && 
+               ball.y - ball.radius * ball.sizeFactor < ob.y + ob.height &&
+               ball.x + ball.radius * ball.sizeFactor > ob.x && 
+               ball.x - ball.radius * ball.sizeFactor < ob.x + ob.width) {
+                if(ball.sizeFactor > 0.5) {
+                    ball.sizeFactor /= 2;
+                } else {
+                    initLevel(); // Reset level if hit twice
+                }
+            } else if (ball.sizeFactor < 1) {
+                ball.sizeFactor *= 1.01; // Slowly increase size if not hit
+            }
+        });
+
+        // Screen boundaries
+        if(ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) ball.dx *= -1;
+        if(ball.y > canvas.height) initLevel(); // Fall off screen
+
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    // Key events
+    document.addEventListener('keydown', function(e) {
+        if(e.key === 'ArrowLeft') ball.dx = -3;
+        if(e.key === 'ArrowRight') ball.dx = 3;
+        if(e.key === 'ArrowUp' && ball.dy >= 0) ball.dy = ball.jump; // Jump only when on ground or falling
+    });
+    document.addEventListener('keyup', function(e) {
+        if(['ArrowLeft', 'ArrowRight'].includes(e.key)) ball.dx = 0;
+    });
+
+    // Start game
+    initLevel();
+    update();
+
+    // Score update
+    function updateScore() {
+        score = level * 10; // Assuming each level is worth 10 points for simplicity
+        gameInfo.textContent = `Level: ${level + 1} | Score: ${score}`;
+        if(level > 1) gameInfo.textContent += ' | Game Completed!';
+    }
+
+    // Check for level completion and proceed
+    function checkLevelComplete() {
+        if(levels[level].some(row => row.includes('F') && row.indexOf('F') * 50 < ball.x && ball.x < (row.indexOf('F') + 1) * 50 && ball.y > levels[level].length * 50 - 50)) {
+            level++;
+            if(level < levels.length) {
+                initLevel();
+            }
+            updateScore();
+        }
+    }
+
+    // Call checkLevelComplete in your game loop
+    setInterval(checkLevelComplete, 100);
+</script>
+
+</body>
+</html>
