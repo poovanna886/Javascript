@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2D Platformer Game</title>
+<style>
+    body { margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; }
+    canvas { border: 1px solid #fff; }
+    #message { position: absolute; color: white; font-size: 2em; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+<div id="message"></div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const messageDiv = document.getElementById('message');
+
+// Game objects and variables
+let player, platforms, coins, lava, currentLevel, levelCount;
+
+// Player properties
+const playerSize = 20;
+const gravity = 0.5;
+const jumpStrength = -10;
+
+// Game states
+let gameOver = false;
+let youWin = false;
+
+function setupGame() {
+    currentLevel = 1;
+    setupLevel(currentLevel);
+}
+
+function setupLevel(level) {
+    player = { x: 50, y: canvas.height - playerSize - 10, width: playerSize, height: playerSize, dy: 0, dx: 0, jumping: false };
+    platforms = [
+        {x: 0, y: canvas.height - 10, width: canvas.width, height: 20},
+        // Add more platforms based on level
+    ];
+    coins = [];
+    lava = [{x: 200, y: canvas.height - 30, width: 50, height: 30, dy: 1}]; // Example lava
+
+    if(level === 1) {
+        // Setup easy level
+        platforms.push({x: 150, y: 300, width: 100, height: 10});
+        coins.push({x: 180, y: 280, width: 10, height: 10});
+    } else if(level === 2) {
+        // Setup complex level
+        platforms.push({x: 150, y: 300, width: 100, height: 10}, {x: 300, y: 250, width: 100, height: 10});
+        coins.push({x: 330, y: 230, width: 10, height: 10});
+        lava.push({x: 400, y: canvas.height - 30, width: 50, height: 30, dy: -1});
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw player
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // Draw platforms, coins, and lava
+    ctx.fillStyle = 'green';
+    platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
+
+    ctx.fillStyle = 'yellow';
+    coins.forEach(coin => ctx.fillRect(coin.x, coin.y, coin.width, coin.height));
+
+    ctx.fillStyle = 'red';
+    lava.forEach(l => ctx.fillRect(l.x, l.y, l.width, l.height));
+
+    // Update player position
+    if(!gameOver && !youWin) {
+        updatePlayer();
+        checkCollisions();
+        updateLava();
+    }
+}
+
+function updatePlayer() {
+    player.y += player.dy;
+    player.dy += gravity;
+    
+    if(player.dx !== 0) {
+        player.x += player.dx;
+        player.dx *= 0.9; // Friction
+    }
+
+    // Keep player within canvas bounds
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+}
+
+function checkCollisions() {
+    // Platform collision
+    platforms.forEach(p => {
+        if(player.y + player.height <= p.y && player.y + player.height + player.dy > p.y && 
+           player.x < p.x + p.width && player.x + player.width > p.x) {
+            player.dy = 0;
+            player.y = p.y - player.height;
+            player.jumping = false;
+        }
+    });
+
+    // Coin collection
+    coins = coins.filter(coin => {
+        if(player.x < coin.x + coin.width && player.x + player.width > coin.x && 
+           player.y < coin.y + coin.height && player.y + player.height > coin.y) {
+            return false;
+        }
+        return true;
+    });
+
+    if(coins.length === 0) {
+        if(currentLevel < 2) {
+            currentLevel++;
+            setupLevel(currentLevel);
+        } else {
+            youWin = true;
+            messageDiv.textContent = "You Win!";
+        }
+    }
+
+    // Lava collision
+    lava.forEach(l => {
+        if(player.x < l.x + l.width && player.x + player.width > l.x && 
+           player.y < l.y + l.height && player.y + player.height > l.y) {
+            gameOver = true;
+            messageDiv.textContent = "Game Over!";
+            setTimeout(() => setupGame(), 2000);
+        }
+    });
+}
+
+function updateLava() {
+    lava.forEach(l => {
+        l.y += l.dy;
+        if(l.y <= 0 || l.y >= canvas.height - l.height) l.dy *= -1;
+    });
+}
+
+document.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowRight') player.dx = 5;
+    if(e.key === 'ArrowLeft') player.dx = -5;
+    if(e.key === 'ArrowUp' && !player.jumping) {
+        player.dy = jumpStrength;
+        player.jumping = true;
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    if(e.key === 'ArrowRight' || e.key === 'ArrowLeft') player.dx = 0;
+});
+
+setupGame();
+setInterval(draw, 1000/60);
+</script>
+</body>
+</html>

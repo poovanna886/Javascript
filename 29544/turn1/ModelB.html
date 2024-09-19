@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dual Wordle</title>
+<style>
+    body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f0f0; }
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 20px; }
+    .row { display: contents; }
+    .tile { width: 60px; height: 60px; border: 2px solid #d3d6da; display: flex; justify-content: center; align-items: center; font-size: 2rem; text-transform: uppercase; }
+    .correct { background-color: #6aaa64; color: white; }
+    .present { background-color: #c9b458; color: white; }
+    .half-present-left { background: linear-gradient(to right, #c9b458 50%, #787c7e 50%); color: white; }
+    .half-present-right { background: linear-gradient(to left, #c9b458 50%, #787c7e 50%); color: white; }
+    .absent { background-color: #787c7e; color: white; }
+    #keyboard { margin-top: 20px; }
+    .key { margin: 2px; padding: 10px; width: 40px; text-align: center; background: #d3d6da; border: none; cursor: pointer; }
+    .key-wide { width: 80px; }
+    #message { margin-top: 20px; font-size: 1.5em; }
+</style>
+</head>
+<body>
+
+<div style="display: flex;">
+    <div id="grid1" class="grid"></div>
+    <div id="grid2" class="grid"></div>
+</div>
+<div id="keyboard"></div>
+<div id="message"></div>
+
+<script>
+// Game logic
+const words = ['apple', 'beach', 'chair', 'dance', 'eagle', 'flame', 'grape']; // Example words
+let word1 = words[Math.floor(Math.random() * words.length)];
+let word2 = words[Math.floor(Math.random() * words.length)];
+let currentRow = 0;
+let currentTile = 0;
+let gameOver = false;
+
+function createTiles(gridId, word) {
+    for(let r = 0; r < 6; r++) {
+        for(let c = 0; c < 5; c++) {
+            let tile = document.createElement('div');
+            tile.id = `${gridId}-tile-${r}-${c}`;
+            tile.classList.add('tile');
+            document.getElementById(gridId).appendChild(tile);
+        }
+    }
+}
+
+function initKeyboard() {
+    const keyboardLayout = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+    keyboardLayout.forEach(row => {
+        let rowDiv = document.createElement('div');
+        row.split('').forEach(key => {
+            let keyElem = document.createElement('button');
+            keyElem.textContent = key;
+            keyElem.classList.add('key');
+            keyElem.onclick = () => handleClick(key);
+            rowDiv.appendChild(keyElem);
+        });
+        document.getElementById('keyboard').appendChild(rowDiv);
+    });
+    let backspace = document.createElement('button');
+    backspace.textContent = 'Back';
+    backspace.classList.add('key', 'key-wide');
+    backspace.onclick = () => handleClick('Backspace');
+    let enter = document.createElement('button');
+    enter.textContent = 'Enter';
+    enter.classList.add('key', 'key-wide');
+    enter.onclick = () => handleClick('Enter');
+    document.getElementById('keyboard').appendChild(backspace);
+    document.getElementById('keyboard').appendChild(enter);
+}
+
+function handleClick(letter) {
+    if (gameOver) return;
+    if (letter === 'Backspace') {
+        if (currentTile > 0) currentTile--;
+        document.getElementById(`grid${currentTile < 5 ? '1' : '2'}-tile-${currentRow}-${currentTile % 5}`).textContent = '';
+    } else if (letter === 'Enter') {
+        checkGuess();
+    } else if (currentTile < 10) {
+        document.getElementById(`grid${currentTile < 5 ? '1' : '2'}-tile-${currentRow}-${currentTile % 5}`).textContent = letter;
+        currentTile++;
+    }
+}
+
+function checkGuess() {
+    if (currentTile % 5 !== 0) return;
+
+    let guess1 = '', guess2 = '';
+    for (let i = 0; i < 5; i++) {
+        guess1 += document.getElementById(`grid1-tile-${currentRow}-${i}`).textContent;
+        guess2 += document.getElementById(`grid2-tile-${currentRow}-${i}`).textContent;
+    }
+
+    colorTiles(guess1, word1, '1');
+    colorTiles(guess2, word2, '2');
+
+    if (guess1 === word1 && guess2 === word2) {
+        document.getElementById('message').textContent = 'You win!';
+        gameOver = true;
+    } else if (currentRow === 5) {
+        document.getElementById('message').textContent = `You lose! Words were ${word1} and ${word2}`;
+        gameOver = true;
+    } else {
+        currentRow++;
+        currentTile = currentRow * 5;
+    }
+}
+
+function colorTiles(guess, target, gridId) {
+    let rightLetter = Array(5).fill(false);
+    let letterCount = {};
+    for (let i = 0; i < 5; i++) {
+        let letter = target[i];
+        letterCount[letter] = (letterCount[letter] || 0) + 1;
+    }
+
+    // First pass: mark correct letters
+    for (let i = 0; i < 5; i++) {
+        if (guess[i] === target[i]) {
+            document.getElementById(`grid${gridId}-tile-${currentRow}-${i}`).classList.add('correct');
+            rightLetter[i] = true;
+            letterCount[guess[i]]--;
+        }
+    }
+
+    // Second pass: mark present letters
+    for (let i = 0; i < 5; i++) {
+        if (!rightLetter[i]) {
+            let letter = guess[i];
+            if (letterCount[letter] > 0) {
+                document.getElementById(`grid${gridId}-tile-${currentRow}-${i}`).classList.add('present');
+                letterCount[letter]--;
+            } else {
+                document.getElementById(`grid${gridId}-tile-${currentRow}-${i}`).classList.add('absent');
+            }
+        }
+    }
+
+    // Check for half-present in the other grid
+    for (let i = 0; i < 5; i++) {
+        let otherGrid = gridId === '1' ? '2' : '1';
+        let tile = document.getElementById(`grid${gridId}-tile-${currentRow}-${i}`);
+        if (!tile.classList.contains('correct') && !tile.classList.contains('present')) {
+            if (document.querySelector(`#grid${otherGrid} .tile:nth-child(${i+1})`).textContent === guess[i]) {
+                tile.classList.add(gridId === '1' ? 'half-present-left' : 'half-present-right');
+            }
+        }
+    }
+}
+
+createTiles('grid1', word1);
+createTiles('grid2', word2);
+initKeyboard();
+</script>
+
+</body>
+</html>

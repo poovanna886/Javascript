@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Population Globe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        #globe-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+        #chart-container {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border: 1px solid #ccc;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            #chart-container {
+                width: 90%;
+                height: 300px;
+                right: 5%;
+                top: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="globe-container"></div>
+<div id="chart-container">
+    <canvas id="population-chart"></canvas>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('globe-container').appendChild(renderer.domElement);
+
+    const globe = new THREE.Group();
+    scene.add(globe);
+
+    // Load an SVG or a pre-made globe model
+    // Here's a simplified approach with a sphere
+    const geometry = new THREE.SphereGeometry(5, 64, 64);
+    const material = new THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true });
+    const sphere = new THREE.Mesh(geometry, material);
+    globe.add(sphere);
+
+    camera.position.z = 15;
+
+    // GSAP for animation
+    gsap.to(globe.rotation, { duration: 10, y: Math.PI * 2, repeat: -1, ease: 'none' });
+
+    // Chart setup
+    const ctx = document.getElementById('population-chart').getContext('2d');
+    let chart = new Chart(ctx, {
+        type: 'line',
+        data: {},
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Function to update chart
+    function updateChart(countryData) {
+        chart.data = {
+            labels: Object.keys(countryData),
+            datasets: [{
+                label: 'Population',
+                data: Object.values(countryData),
+                borderColor: 'blue',
+                fill: false
+            }]
+        };
+        chart.update();
+    }
+
+    // Interaction - this is a placeholder for actual SVG interaction
+    function onCountryInteract(countryName) {
+        // Fetch or simulate fetching data
+        const mockData = Array.from({length: 51}, (_, i) => 1970 + i).reduce((acc, year) => {
+            acc[year] = Math.floor(Math.random() * 100000000);
+            return acc;
+        }, {});
+
+        updateChart(mockData);
+        document.getElementById('chart-container').style.display = 'block';
+    }
+
+    // Event listeners for mouse and touch
+    renderer.domElement.addEventListener('click', onCountryInteract);
+    renderer.domElement.addEventListener('touchstart', function(event) {
+        // Handle touch for mobile
+        event.preventDefault();
+        onCountryInteract('Touched Country'); // Placeholder for actual touch detection
+    });
+
+    // Render loop
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // Responsive resizing
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+</body>
+</html>

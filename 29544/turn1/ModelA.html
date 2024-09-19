@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dual Wordle</title>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .grid { display: inline-block; margin: 20px; }
+    .row { display: flex; }
+    .cell { 
+        width: 50px; 
+        height: 50px; 
+        border: 2px solid #d3d6da; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 2em; 
+        margin: 2px; 
+    }
+    .key { 
+        width: 40px; 
+        height: 58px; 
+        margin: 2px; 
+        background: #d3d6da; 
+        border: none; 
+        border-radius: 4px; 
+        cursor: pointer; 
+    }
+    .correct { background: #6aaa64; color: white; }
+    .present { background: #c9b458; color: white; }
+    .elsewhere { background: linear-gradient(to right, #c9b458 50%, #d3d6da 50%); }
+    .wrong { background: #787c7e; color: white; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div id="game" class="text-center">
+        <div class="grid" id="grid1"></div>
+        <div class="grid" id="grid2"></div>
+        <div id="keyboard"></div>
+        <button id="backspace" class="key">⌫</button>
+        <button id="submit" class="key">Submit</button>
+        <div id="message"></div>
+    </div>
+</body>
+
+<script>
+// Game logic would go here
+const words = ['apple', 'table']; // Example words, typically would be chosen randomly
+let currentRow = 0;
+let currentTile = 0;
+let gameOver = false;
+
+function initializeGame() {
+    const grids = [document.getElementById('grid1'), document.getElementById('grid2')];
+    const keyboard = document.getElementById('keyboard');
+
+    // Initialize grids
+    grids.forEach(grid => {
+        for (let i = 0; i < 6; i++) {
+            let row = document.createElement('div');
+            row.className = 'row';
+            for (let j = 0; j < 5; j++) {
+                let cell = document.createElement('div');
+                cell.className = 'cell';
+                row.appendChild(cell);
+            }
+            grid.appendChild(row);
+        }
+    });
+
+    // Keyboard setup
+    'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').forEach(key => {
+        let button = document.createElement('button');
+        button.textContent = key;
+        button.className = 'key';
+        button.addEventListener('click', () => handleKeyPress(key));
+        keyboard.appendChild(button);
+    });
+
+    // Event listeners for backspace and submit
+    document.getElementById('backspace').addEventListener('click', () => handleKeyPress('Backspace'));
+    document.getElementById('submit').addEventListener('click', checkWords);
+
+    // Physical keyboard input
+    document.addEventListener('keydown', (e) => {
+        if (gameOver) return;
+        if (e.key.length === 1 && e.key.match(/[a-z]/i)) handleKeyPress(e.key.toUpperCase());
+        else if (e.key === 'Backspace') handleKeyPress('Backspace');
+        else if (e.key === 'Enter') checkWords();
+    });
+}
+
+function handleKeyPress(key) {
+    if (gameOver) return;
+    if (currentTile < 10 && key !== 'Backspace') {
+        grids[currentTile < 5 ? 0 : 1].children[currentRow].children[currentTile % 5].textContent = key;
+        currentTile++;
+    } else if (key === 'Backspace' && currentTile > 0) {
+        currentTile--;
+        grids[currentTile < 5 ? 0 : 1].children[currentRow].children[currentTile % 5].textContent = '';
+    }
+}
+
+function checkWords() {
+    if (currentTile < 10) return;
+
+    let guessedWord1 = Array.from(grids[0].children[currentRow].children).map(cell => cell.textContent).join('');
+    let guessedWord2 = Array.from(grids[1].children[currentRow].children).map(cell => cell.textContent).join('');
+    let result1 = checkWord(guessedWord1, words[0]);
+    let result2 = checkWord(guessedWord2, words[1]);
+
+    // Display results
+    for (let i = 0; i < 5; i++) {
+        grids[0].children[currentRow].children[i].className += ` ${result1[i]}`;
+        grids[1].children[currentRow].children[i].className += ` ${result2[i]}`;
+    }
+
+    if (guessedWord1 === words[0] && guessedWord2 === words[1]) {
+        endGame(true);
+    } else if (currentRow >= 5) {
+        endGame(false);
+    } else {
+        currentRow++;
+        currentTile = 0;
+    }
+}
+
+function checkWord(guess, word) {
+    let result = Array(5).fill('wrong');
+    let wordArr = word.split('');
+    let guessArr = guess.split('');
+
+    // First pass: find correct positions
+    for (let i = 0; i < 5; i++) {
+        if (guessArr[i] === wordArr[i]) {
+            result[i] = 'correct';
+            wordArr[i] = null;
+        }
+    }
+
+    // Second pass: find present letters
+    for (let i = 0; i < 5; i++) {
+        if (result[i] === 'wrong' && wordArr.includes(guessArr[i])) {
+            result[i] = wordArr.indexOf(guessArr[i]) !== -1 ? 'present' : 'elsewhere';
+        }
+    }
+
+    return result;
+}
+
+function endGame(won) {
+    gameOver = true;
+    document.getElementById('message').textContent = won ? 'You Win!' : `You Lose! The words were ${words[0]} and ${words[1]}.`;
+}
+
+initializeGame();
+</script>
+
+</html>
