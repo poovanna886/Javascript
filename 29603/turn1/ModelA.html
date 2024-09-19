@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hexagon Number Game</title>
+<style>
+    .hexagon {
+        position: relative;
+        width: 300px; 
+        height: 259.81px; /* width * 0.866 */
+        margin: 100px auto;
+    }
+    .triangle {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 75px solid transparent;
+        border-right: 75px solid transparent;
+        text-align: center;
+        line-height: 150px;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .triangle:nth-child(1) { transform: rotate(0deg); }
+    .triangle:nth-child(2) { transform: rotate(60deg); }
+    .triangle:nth-child(3) { transform: rotate(120deg); }
+    .triangle:nth-child(4) { transform: rotate(180deg); }
+    .triangle:nth-child(5) { transform: rotate(240deg); }
+    .triangle:nth-child(6) { transform: rotate(300deg); }
+
+    .triangle::before {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        left: -75px;
+        border-left: 75px solid transparent;
+        border-right: 75px solid transparent;
+        border-bottom: 150px solid; /* Triangle height */
+    }
+    .grey { background-color: #808080; }
+    .red { background-color: #ff0000; }
+    .green { background-color: #00ff00; }
+</style>
+</head>
+<body>
+
+<div class="hexagon">
+    <div class="triangle"><span></span></div>
+    <div class="triangle"><span></span></div>
+    <div class="triangle"><span></span></div>
+    <div class="triangle"><span></span></div>
+    <div class="triangle"><span></span></div>
+    <div class="triangle"><span></span></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const triangles = document.querySelectorAll('.triangle');
+    let values = [];
+
+    // Function to initialize game
+    function initializeGame() {
+        values = [-9, -8, 5, 4, 3, 5]; // Example values summing to zero
+        updateTriangles();
+    }
+
+    // Function to update triangle colors and values
+    function updateTriangles() {
+        triangles.forEach((triangle, index) => {
+            triangle.querySelector('span').textContent = values[index];
+            triangle.className = 'triangle ' + getColorClass(values[index]);
+        });
+    }
+
+    // Determine color class based on value
+    function getColorClass(value) {
+        if (value > 0) return 'green';
+        else if (value < 0) return 'red';
+        return 'grey';
+    }
+
+    // Handle triangle click
+    triangles.forEach((triangle, index) => {
+        triangle.addEventListener('click', function(e) {
+            const change = e.button === 0 ? 2 : -2; // Left click or Right click
+            const adjacents = [5, 0, 1, 2, 3, 4][index]; // Adjacent triangles for each index
+            values[index] += change;
+            [adjacents, (adjacents + 1) % 6, (adjacents + 5) % 6].forEach(i => {
+                if (i !== index) values[i] -= change > 0 ? 1 : -1;
+            });
+            updateTriangles();
+            checkWin();
+        });
+    });
+
+    // Check for win condition
+    function checkWin() {
+        if (values.every(val => val === 0 || Math.abs(val) === 1)) {
+            alert('You win!');
+        }
+    }
+
+    initializeGame();
+});
+</script>
+
+</body>
+</html>

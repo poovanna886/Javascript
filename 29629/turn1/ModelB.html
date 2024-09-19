@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crate Pusher Game</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+            display: block;
+            margin: auto;
+            background-color: #f0f0f0;
+        }
+        #message {
+            text-align: center;
+            font-size: 2em;
+            color: green;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="message">You Win!</div>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const messageDiv = document.getElementById('message');
+    
+    // Game variables
+    const tileSize = 40;
+    let player = {x: 1, y: 1};
+    let crates = [
+        {x: 3, y: 3, inPlace: false},
+        {x: 4, y: 3, inPlace: false}
+    ];
+    let targets = [{x: 10, y: 10}, {x: 11, y: 10}];
+    const walls = [
+        {x: 0, y: 0, w: 15, h: 1}, // Top wall
+        {x: 0, y: 14, w: 15, h: 1}, // Bottom wall
+        {x: 0, y: 0, w: 1, h: 15},  // Left wall
+        {x: 14, y: 0, w: 1, h: 15}  // Right wall
+    ];
+
+    // Drawing functions
+    function drawPlayer() {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(player.x * tileSize, player.y * tileSize, tileSize, tileSize);
+    }
+
+    function drawCrates() {
+        ctx.fillStyle = 'brown';
+        crates.forEach(crate => {
+            ctx.fillRect(crate.x * tileSize, crate.y * tileSize, tileSize, tileSize);
+            if(crate.inPlace) {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(crate.x * tileSize + 5, crate.y * tileSize + 5, tileSize - 10, tileSize - 10);
+            }
+        });
+    }
+
+    function drawTargets() {
+        ctx.fillStyle = 'lightgreen';
+        targets.forEach(target => {
+            ctx.beginPath();
+            ctx.arc((target.x + 0.5) * tileSize, (target.y + 0.5) * tileSize, tileSize/2 - 5, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+    }
+
+    function drawWalls() {
+        ctx.fillStyle = 'black';
+        walls.forEach(wall => ctx.fillRect(wall.x * tileSize, wall.y * tileSize, wall.w * tileSize, wall.h * tileSize));
+    }
+
+    // Game logic
+    function canMoveTo(x, y) {
+        if (x < 0 || y < 0 || x >= canvas.width/tileSize || y >= canvas.height/tileSize) return false;
+        if (walls.some(wall => x >= wall.x && x < wall.x + wall.w && y >= wall.y && y < wall.y + wall.h)) return false;
+        return !crates.some(crate => crate.x === x && crate.y === y && !crate.inPlace);
+    }
+
+    function move(direction) {
+        const newX = player.x + direction.x;
+        const newY = player.y + direction.y;
+        if (canMoveTo(newX, newY)) {
+            player.x = newX;
+            player.y = newY;
+        } else if (canMoveTo(newX, newY)) { // Check if there's a crate to push
+            let crate = crates.find(c => c.x === newX && c.y === newY);
+            if (crate && canMoveTo(newX + direction.x, newY + direction.y)) {
+                crate.x += direction.x;
+                crate.y += direction.y;
+                player.x = newX;
+                player.y = newY;
+                checkCratesInPlace();
+            }
+        }
+    }
+
+    function checkCratesInPlace() {
+        crates.forEach(crate => {
+            crate.inPlace = targets.some(target => target.x === crate.x && target.y === crate.y);
+        });
+        if (crates.every(crate => crate.inPlace)) {
+            messageDiv.style.display = 'block';
+        }
+    }
+
+    // Event listener for key presses
+    document.addEventListener('keydown', function(event) {
+        switch(event.key) {
+            case 'ArrowUp': move({x: 0, y: -1}); break;
+            case 'ArrowDown': move({x: 0, y: 1}); break;
+            case 'ArrowLeft': move({x: -1, y: 0}); break;
+            case 'ArrowRight': move({x: 1, y: 0}); break;
+        }
+        drawGame();
+    });
+
+    // Draw game
+    function drawGame() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawWalls();
+        drawTargets();
+        drawCrates();
+        drawPlayer();
+    }
+
+    drawGame();
+</script>
+</body>
+</html>

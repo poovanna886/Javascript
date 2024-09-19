@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        /* Use modern, cleaner fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #232b2b;
+            margin: 0;
+            gap: 10px;
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1,
+        h3 {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffec5e;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1rem;
+            color: #b3b3b3;
+        }
+
+        .zeros {
+            color: rgb(180, 180, 180);
+            font-weight: 700;
+        }
+
+        #negone {
+            color: #ff7171;
+            font-weight: 700;
+        }
+
+        #one {
+            color: #71ff71;
+            font-weight: 700;
+        }
+
+        .triangle {
+            stroke: #000;
+            /* 	fill: #7f7ddb; */
+            stroke-width: 1px;
+            cursor: pointer;
+        }
+
+        .triangle-text:hover {
+            cursor: pointer;
+        }
+
+        .triangle-text {
+            fill: #fff;
+            font-size: 3em;
+            paint-order: stroke;
+            stroke: #000;
+            stroke-width: 2px;
+            stroke-linecap: butt;
+            stroke-linejoin: miter;
+        }
+
+        .btn {
+            font-size: 2em;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background-color: #ffec5e;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #fff6b5;
+        }
+
+        .btn:active {
+            background-color: #ffec5e;
+        }
+
+        #play-again {
+            opacity: 0;
+            transition: 200ms ease-in-out;
+        }
+
+        .lower-left {
+            fill: hsl(120deg 10% 50%);
+        }
+
+        .upper-left {
+            fill: hsl(0deg 80% 50%);
+        }
+
+        .upper-middle {
+            fill: hsl(120deg 50% 50%);
+        }
+
+        .upper-right {
+            fill: hsl(120deg 70% 50%);
+        }
+
+        .lower-right {
+            fill: hsl(0deg 20% 50%);
+        }
+
+        .lower-middle {
+            fill: hsl(0deg 30% 50%);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container center">
+        <h1>To win, either get <i>all</i> <span class="zeros">zeros</span>, or all <span class="zeros">zeros</span>,
+            <span id="negone">-1</span> and <span id="one">1</span>.</h1>
+        <h3>Left click (pull) - add 2, subtract 1 from each neighbor</h3>
+        <h3>Right click (push) - subtract 2, add 1 to each neighbor</h3>
+        <div class="center">
+            <svg width="400" height="400">
+                <g>
+                    <polygon class="triangle lower-left" points="200, 200 136, 310 72, 200" />
+                    <polygon class="triangle upper-left" points="200, 200 72, 200 136, 90" />
+                    <polygon class="triangle upper-middle" points="200, 200 136, 90 264, 90" />
+                    <polygon class="triangle upper-right" points="200, 200 264, 90 328, 200" />
+                    <polygon class="triangle lower-right" points="200, 200 328, 200 264, 311" />
+                    <polygon class="triangle lower-middle" points="200, 200 136, 310 264, 311" />
+                    <text class="triangle-text" x="110" y="254">1</text>
+                    <text class="triangle-text" x="112" y="176">-8</text>
+                    <text class="triangle-text" x="176" y="148">5</text>
+                    <text class="triangle-text" x="240" y="176">7</text>
+                    <text class="triangle-text" x="240" y="254">-2</text>
+                    <text class="triangle-text" x="176" y="286">-3</text>
+
+                </g>
+            </svg>
+        </div>
+        <div class="center">
+            <button class="btn" id="play-again">Play again</button>
+        </div>
+    </div>
+    <script>
+        let triangles = document.getElementsByClassName("triangle");
+        let triangleText = document.getElementsByClassName("triangle-text");
+
+        let playAgainButton = document.getElementById("play-again");
+
+        let triangleValues = Array(triangles.length);
+        const maxValue = 9;
+
+        let triangleLighten = Array(triangles.length);
+
+        playAgainButton.onclick = () => {
+            resetTriangleValues();
+            renderTriangles();
+            playAgainButton.style.opacity = "0";
+        };
+
+        document.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+        });
+
+        for (let i = 0; i < triangles.length; i++) {
+            triangleLighten[i] = 0;
+            triangles[i].addEventListener("mouseover", (e) => {
+                triangleLighten[i] = 20;
+                renderTriangles();
+            });
+            triangles[i].addEventListener("mouseout", (e) => {
+                triangleLighten[i] = 0;
+                renderTriangles();
+            });
+
+            triangles[i].addEventListener("mousedown", (e) => {
+                triangleLighten[i] = 10;
+                renderTriangles();
+                addTriangle(i, e.button);
+            });
+
+            triangles[i].addEventListener("mouseup", (e) => {
+                triangleLighten[i] = 20;
+                renderTriangles();
+            });
+
+            triangleText[i].addEventListener("mouseover", (e) => {
+                triangleLighten[i] = 20;
+                renderTriangles();
+            });
+            triangleText[i].addEventListener("mouseout", (e) => {
+                triangleLighten[i] = 0;
+                renderTriangles();
+            });
+
+            triangleText[i].addEventListener("mousedown", (e) => {
+                triangleLighten[i] = 10;
+                renderTriangles();
+                addTriangle(i, e.button);
+                let allInRange = triangleValues.every((num) => num >= -1 && num <= 1);
+                if (allInRange) {
+                    playAgainButton.style.opacity = "1";
+                }
+            });
+
+            triangleText[i].addEventListener("mouseup", (e) => {
+                triangleLighten[i] = 20;
+                renderTriangles();
+            });
+        }
+
+        resetTriangleValues();
+        renderTriangles();
+
+        function addTriangle(index, button) {
+            let neighborLeft = (index + 5) % 6;
+            let neighborRight = (index + 1) % 6;
+            if (button == 0) {
+                triangleValues[neighborLeft] -= 1;
+                triangleValues[neighborRight] -= 1;
+                triangleValues[index] += 2;
+            }
+            if (button == 2) {
+                triangleValues[neighborLeft] += 1;
+                triangleValues[neighborRight] += 1;
+                triangleValues[index] -= 2;
+            }
+        }
+
+        function resetTriangleValues() {
+            let sum = 0;
+            for (let i = 0; i < triangles.length - 1; i++) {
+                triangleValues[i] = randomInt(maxValue * 2 + 1) - maxValue;
+                sum += triangleValues[i];
+                triangleText[i].innerHTML = triangleValues[i];
+            }
+            triangleValues[5] = -sum;
+            if (triangleValues[5] > 9 || triangleValues[5] < -9) {
+                return resetTriangleValues();
+            }
+        }
+
+        function renderTriangles() {
+            for (let i = 0; i < triangles.length; i++) {
+                triangleText[i].innerHTML = triangleValues[i];
+                let textX = triangleText[i].getAttribute("x");
+
+                if (triangleValues[i] == 0) {
+                    triangles[i].style.fill = `hsl(60deg 0.2 ${50 + triangleLighten[i]}%)`;
+                    triangleText[i].setAttribute("transform", `translate(${10}, ${0})`);
+                }
+                if (triangleValues[i] > 0) {
+                    triangles[i].style.fill = `hsl(120deg ${(triangleValues[i] / maxValue) * 100
+                        }% ${50 + triangleLighten[i]}%)`;
+                    triangleText[i].setAttribute("transform", `translate(${10}, ${0})`);
+                }
+                if (triangleValues[i] < 0) {
+                    triangles[i].style.fill = `hsl(0deg ${(Math.abs(triangleValues[i]) / maxValue) * 100
+                        }% ${50 + triangleLighten[i]}%)`;
+                }
+            }
+        }
+
+        function randomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+
+    </script>
+</body>
+
+</html>

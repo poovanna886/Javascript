@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sokoban-like Game</title>
+<style>
+    body { 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        margin: 0; 
+        background-color: #f0f0f0;
+    }
+    #gameArea {
+        position: relative;
+        width: 400px;
+        height: 400px;
+        background-color: #ccc;
+        border: 2px solid #000;
+    }
+    .player, .crate, .target {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+    }
+    .player {
+        background-color: blue;
+    }
+    .crate {
+        background-color: brown;
+    }
+    .crate.onTarget {
+        background-color: green;
+    }
+    .target {
+        background-color: red;
+        border-radius: 50%;
+    }
+    #message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 24px;
+        display: none;
+    }
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+    <div id="player" class="player"></div>
+    <div id="crate1" class="crate"></div>
+    <div id="crate2" class="crate"></div>
+    <div id="target1" class="target"></div>
+    <div id="target2" class="target"></div>
+    <div id="message"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const gameArea = document.getElementById('gameArea');
+    const player = document.getElementById('player');
+    const message = document.getElementById('message');
+    let crates = [
+        {element: document.getElementById('crate1'), onTarget: false},
+        {element: document.getElementById('crate2'), onTarget: false}
+    ];
+    const targets = [
+        document.getElementById('target1'),
+        document.getElementById('target2')
+    ];
+
+    const size = 40;
+    let playerPos = {x: 0, y: 0};
+
+    function canMoveTo(x, y) {
+        return x >= 0 && x < 10 && y >= 0 && y < 10 && !isWall(x, y);
+    }
+
+    function isWall(x, y) {
+        // Simplified wall logic, expand as needed
+        return (x === 0 || y === 0 || x === 9 || y === 9);
+    }
+
+    function movePlayer(dx, dy) {
+        const newX = playerPos.x + dx;
+        const newY = playerPos.y + dy;
+        
+        if (!canMoveTo(newX, newY)) return;
+
+        const crate = crates.find(crate => crate.element.offsetLeft === newX * size && crate.element.offsetTop === newY * size);
+        if (crate) {
+            const crateNewX = newX + dx;
+            const crateNewY = newY + dy;
+            if (canMoveTo(crateNewX, crateNewY) && !crates.some(c => c.element.offsetLeft === crateNewX * size && c.element.offsetTop === crateNewY * size)) {
+                crate.element.style.left = `${crateNewX * size}px`;
+                crate.element.style.top = `${crateNewY * size}px`;
+                checkCratePositions();
+            } else {
+                return; // Can't push the crate
+            }
+        }
+
+        playerPos.x = newX;
+        playerPos.y = newY;
+        player.style.left = `${newX * size}px`;
+        player.style.top = `${newY * size}px`;
+    }
+
+    function checkCratePositions() {
+        crates.forEach((crate, index) => {
+            crate.onTarget = targets.some(target => 
+                target.offsetLeft === crate.element.offsetLeft && 
+                target.offsetTop === crate.element.offsetTop
+            );
+            crate.element.classList.toggle('onTarget', crate.onTarget);
+        });
+
+        if (crates.every(crate => crate.onTarget)) {
+            message.style.display = 'block';
+            message.textContent = 'You Win!';
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        switch(e.key) {
+            case 'ArrowUp': movePlayer(0, -1); break;
+            case 'ArrowDown': movePlayer(0, 1); break;
+            case 'ArrowLeft': movePlayer(-1, 0); break;
+            case 'ArrowRight': movePlayer(1, 0); break;
+        }
+    });
+
+    // Initial setup
+    movePlayer(0, 0); // To set initial position
+});
+</script>
+
+</body>
+</html>
