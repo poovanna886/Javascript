@@ -180,28 +180,6 @@
         var planetViewed = 0;
         init();
         animate();
-        $(window).on('load', function () {
-            TweenMax.to($('#welcome'), 1, {
-                css: {
-                    opacity: 1
-                },
-                ease: Quad.easeInOut,
-            });
-            TweenMax.to($('#social'), 0.5, {
-                css: {
-                    bottom: '20px'
-                }, delay: 0.5,
-                ease: Quad.easeInOut,
-            });
-            TweenMax.to($('#border'), 0.5, {
-                css: {
-                    height: '200px',
-                },
-                delay: 0.5,
-                ease: Quad.easeInOut,
-            });
-
-        });
 
         function hideWelcome() {
             TweenMax.to($('#welcome'), 0.5, {
