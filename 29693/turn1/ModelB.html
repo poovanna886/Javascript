@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Platform Escape Game</title>
+<style>
+    canvas { border: 1px solid #000; display: block; margin: auto; }
+    #timeDisplay { text-align: center; font-size: 20px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="timeDisplay">Time: <span id="gameTime">0</span>s</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const timeDisplay = document.getElementById('gameTime');
+
+const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false };
+
+document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+const player = { x: 400, y: 300, width: 30, height: 30, dy: 0, dx: 0, jumpStrength: 10, highJump: false };
+const platforms = [{x:0, y:550, width:800, height:50}, /* Add more platforms here */];
+const lava = [{x:0, y:580, width:800, height:20}];
+const keysToCollect = [{x:100, y:500, color:'red'}, /* Add more keys */];
+const doors = [{x:700, y:450, width:30, height:50, color:'red'}];
+const rocket = {x:400, y:50, width:50, height:70, active: false};
+const powerUp = {x:200, y:200, width:20, height:20, type:'highJump'};
+
+let gameTime = 0;
+let gameRunning = true;
+let startTime;
+
+function gameLoop() {
+    if (!gameRunning) return;
+    update();
+    render();
+    if (rocket.active) {
+        gameRunning = false;
+        timeDisplay.textContent = (Date.now() - startTime) / 1000;
+    } else {
+        requestAnimationFrame(gameLoop);
+    }
+}
+
+function update() {
+    // Player movement
+    if (keys.ArrowLeft) player.dx = -5;
+    else if (keys.ArrowRight) player.dx = 5;
+    else player.dx = 0;
+
+    if (keys.ArrowUp && player.dy === 0) {
+        player.dy = player.highJump ? -15 : -player.jumpStrength;
+    }
+
+    player.dy += 0.5; // Gravity
+    player.x += player.dx;
+    player.y += player.dy;
+
+    // Collision detection with platforms
+    platforms.forEach(platform => {
+        if (player.y + player.height <= platform.y && 
+            player.y + player.height + player.dy >= platform.y &&
+            player.x + player.width > platform.x && 
+            player.x < platform.x + platform.width) {
+            player.dy = 0;
+            player.y = platform.y - player.height;
+        }
+    });
+
+    // Lava, Key, Door, Power-up, and Rocket interactions
+    // Implement collision checks and game logic here
+
+    // Keep player within canvas
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    if (player.y > canvas.height) {
+        player.x = 400;
+        player.y = 300;
+        player.dy = 0;
+    }
+}
+
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'green';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // Render platforms, lava, keys, doors, power-ups, and rocket
+    // This would involve drawing rectangles or using images for each element
+
+    ctx.fillStyle = 'orange';
+    lava.forEach(l => ctx.fillRect(l.x, l.y, l.width, l.height));
+}
+
+startTime = Date.now();
+gameLoop();
+</script>
+</body>
+</html>

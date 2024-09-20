@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lava Escape Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #gameCanvas { background: #87CEEB; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+// Game setup
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 600;
+
+// Player properties
+let player = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    width: 30,
+    height: 30,
+    speed: 5,
+    vy: 0,
+    jumpStrength: -10,
+    highJump: false,
+    keys: { red: false, blue: false, green: false },
+    timeStart: Date.now()
+};
+
+// Game objects
+const platforms = [
+    {x: 0, y: 500, width: 800, height: 50},
+    // Add more platforms as needed
+];
+
+const lava = [{x: 0, y: 550, width: 800, height: 50}];
+
+const keys = [
+    {x: 100, y: 450, color: 'red'},
+    // Add other keys
+];
+
+const doors = [
+    {x: 700, y: 350, color: 'red', isOpen: false},
+    // Add other doors
+];
+
+const rocket = {x: 370, y: 50, width: 60, height: 100};
+
+// Game loop
+function gameLoop() {
+    update();
+    render();
+    requestAnimationFrame(gameLoop);
+}
+
+function update() {
+    // Gravity
+    player.vy += 0.5;
+    
+    // Movement
+    if (keys.left) player.x -= player.speed;
+    if (keys.right) player.x += player.speed;
+    if (keys.up && player.onGround) {
+        player.vy = player.highJump ? player.jumpStrength * 1.5 : player.jumpStrength;
+    }
+
+    // Apply velocity
+    player.y += player.vy;
+
+    // Collision detection with platforms
+    player.onGround = false;
+    for (let platform of platforms) {
+        if (player.x < platform.x + platform.width &&
+            player.x + player.width > platform.x &&
+            player.y + player.height > platform.y &&
+            player.y < platform.y + platform.height) {
+            if (player.vy > 0) {
+                player.y = platform.y - player.height;
+                player.vy = 0;
+                player.onGround = true;
+            }
+        }
+    }
+
+    // Lava reset
+    lava.forEach(l => {
+        if (collision(player, l)) {
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+        }
+    });
+
+    // Key collection, door interaction, rocket end game logic here...
+}
+
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw player, platforms, keys, doors, lava, and rocket
+}
+
+// Key handling
+let keys = { left: false, right: false, up: false };
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') keys.left = true;
+    if (e.key === 'ArrowRight') keys.right = true;
+    if (e.key === 'ArrowUp') keys.up = true;
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft') keys.left = false;
+    if (e.key === 'ArrowRight') keys.right = false;
+    if (e.key === 'ArrowUp') keys.up = false;
+});
+
+// Start the game loop
+gameLoop();
+</script>
+</body>
+</html>
