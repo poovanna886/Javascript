@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Road Crossing Game</title>
+<style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; background: #87CEEB; }
+    #info { position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; }
+</style>
+</head>
+<body>
+<div id="info">Level: 1 | Deaths: 0</div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+// Game setup
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const info = document.getElementById('info');
+
+let level = 1, deaths = 0, gameState = 'playing';
+
+const player = { x: 0, y: canvas.height / 2, width: 40, height: 40, dy: 5, dx: 5 };
+const carImage = new Image(); carImage.src = 'https://freesvg.org/storage/img/thumb/Car_Red_Front.png'; // Assume this image exists
+const playerImage = new Image(); playerImage.src = 'https://freesvg.org/storage/img/thumb/PixelCharacter2.png'; // Assume this image exists
+
+let cars = [];
+
+// Generate initial cars
+for(let i = 0; i < level * 2; i++) {
+    cars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() > 0.5 ? -100 : canvas.height + 100,
+        speed: Math.random() * (level * 0.5) + 1,
+        width: 50, 
+        height: 100,
+        direction: Math.random() > 0.5 ? 'up' : 'down'
+    });
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw player
+    ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+
+    // Draw cars
+    cars.forEach(car => {
+        ctx.drawImage(carImage, car.x, car.y, car.width, car.height);
+        if(car.direction === 'down') car.y += car.speed;
+        else car.y -= car.speed;
+
+        // Reset car position if out of bounds
+        if(car.y > canvas.height + 100 || car.y < -100) {
+            car.y = car.direction === 'down' ? -100 : canvas.height + 100;
+            car.x = Math.random() * canvas.width;
+        }
+    });
+
+    // Check for collision
+    if(gameState === 'playing' && cars.some(car => 
+        player.x < car.x + car.width &&
+        player.x + player.width > car.x &&
+        player.y < car.y + car.height &&
+        player.y + player.height > car.y)) {
+        gameState = 'paused';
+        deaths++;
+    }
+
+    // Check if player crossed the road
+    if(player.x > canvas.width - player.width) {
+        level++;
+        player.x = 0;
+        cars = cars.concat(Array.from({length: 2}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() > 0.5 ? -100 : canvas.height + 100,
+            speed: Math.random() * (level * 0.5) + 1,
+            width: 50, 
+            height: 100,
+            direction: Math.random() > 0.5 ? 'up' : 'down'
+        })));
+    }
+
+    // Update info
+    info.textContent = `Level: ${level} | Deaths: ${deaths}`;
+}
+
+function gameLoop() {
+    if(gameState === 'playing') {
+        draw();
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+document.addEventListener('keydown', function(e) {
+    if(gameState === 'paused' && e.code === 'Space') {
+        gameState = 'playing';
+    } else if(gameState === 'playing') {
+        switch(e.key) {
+            case 'w': player.y = Math.max(0, player.y - player.dy); break;
+            case 's': player.y = Math.min(canvas.height - player.height, player.y + player.dy); break;
+            case 'a': player.x = Math.max(0, player.x - player.dx); break;
+            case 'd': player.x = Math.min(canvas.width - player.width, player.x + player.dx); break;
+        }
+    }
+});
+
+gameLoop();
+</script>
+</body>
+</html>

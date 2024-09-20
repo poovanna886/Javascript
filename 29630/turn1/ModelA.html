@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Crossy Road</title>
+<style>
+    canvas { border: 1px solid black; display: block; margin: 0 auto; }
+    body { margin: 0; padding: 0; background: #f0f0f0; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Game assets - consider using actual images or CDN links for better performance
+const playerImage = new Image(); playerImage.src = 'https://freesvg.org/storage/img/thumb/PixelCharacter2.png';
+const carImage = new Image(); carImage.src = 'https://freesvg.org/storage/img/thumb/Car_Red_Front.png';
+
+let player = {
+    x: 0,
+    y: canvas.height - 50,
+    width: 40,
+    height: 40,
+    speed: 5
+};
+
+let cars = [];
+let level = 1;
+let deaths = 0;
+let gameRunning = true;
+
+function spawnCar() {
+    const y = Math.random() < 0.5 ? 0 : canvas.height - 50;
+    cars.push({
+        x: Math.random() * (canvas.width - 50),
+        y: y,
+        speed: Math.random() * 2 + level * 0.5,
+        width: 50,
+        height: 40
+    });
+}
+
+function updateGame() {
+    if (!gameRunning) return;
+
+    // Move cars
+    for (let car of cars) {
+        car.y += car.speed * (car.y > canvas.height / 2 ? -1 : 1);
+        if (car.y < -car.height || car.y > canvas.height) cars.shift();
+    }
+
+    // Collision detection
+    for (let car of cars) {
+        if (player.x < car.x + car.width &&
+            player.x + player.width > car.x &&
+            player.y < car.y + car.height &&
+            player.y + player.height > car.y) {
+            gameRunning = false;
+            deaths++;
+            return;
+        }
+    }
+
+    // Spawn new cars
+    if (Math.random() < 0.02) spawnCar();
+}
+
+function drawGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+    cars.forEach(car => ctx.drawImage(carImage, car.x, car.y, car.width, car.height));
+    
+    // UI
+    ctx.fillStyle = "black";
+    ctx.font = "20px Arial";
+    ctx.fillText(`Level: ${level} Deaths: ${deaths}`, 10, 30);
+}
+
+function gameLoop() {
+    updateGame();
+    drawGame();
+    if (player.y + player.height < 0) {
+        level++;
+        player.y = canvas.height - 50; // Reset player position for next level
+        cars = []; // Clear cars
+        spawnCar(); // Start with one car
+    }
+    if (gameRunning) requestAnimationFrame(gameLoop);
+}
+
+// Controls
+document.addEventListener('keydown', function(e) {
+    if (!gameRunning && e.code === 'Space') {
+        gameRunning = true;
+        return;
+    }
+    if (gameRunning) {
+        switch(e.key) {
+            case 'w': player.y -= player.speed; break;
+            case 's': player.y += player.speed; break;
+            case 'a': player.x -= player.speed; break;
+            case 'd': player.x += player.speed; break;
+        }
+        player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+        player.y = Math.max(0, Math.min(player.y, canvas.height - player.height));
+    }
+});
+
+// Start game
+gameLoop();
+</script>
+</body>
+</html>
