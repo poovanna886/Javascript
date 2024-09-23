@@ -81,6 +81,12 @@
             <canvas id="startFinishScatter"></canvas>
             <div id="dnfInfo"></div>
         </div>
+          <!-- New div to display retired drivers -->
+          <div id="retiredDrivers" class="mt-5">
+            <h3>Retired Drivers</h3>
+            <ul id="retiredDriversList" class="list-unstyled"></ul>
+        </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -119,8 +125,8 @@
             let constructors = Array.from(constructorsSection.children);
 
             constructors.sort((a, b) => {
-                let aValue = parseInt(a.querySelector('.card-text strong').textContent.split(':')[1]);
-                let bValue = parseInt(b.querySelector('.card-text strong').textContent.split(':')[1]);
+                  let aValue = parseInt(a.querySelector('.card-text').textContent.split(':')[1].trim());
+        let bValue = parseInt(b.querySelector('.card-text').textContent.split(':')[1].trim());
 
                 // Toggle between ascending and descending
                 return constructorSortDirection ? bValue - aValue : aValue - bValue;
@@ -165,18 +171,21 @@
                     if (parseInt(driver.points) > 0) {
                         const card = `
                     <div class="col-md-4">
-                        <div class="card d-flex">
-                            <div>
-                            <div class="card-body">
+                        <div class="card">
+                           
+                            <div class="card-body" style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
                                 <h5 class="card-title">${driver.position}</h5>
                                 <p class="card-text"><strong>Driver:</strong> ${driver.Driver.givenName} ${driver.Driver.familyName}</p>
                                 
                                 <p class="card-text"><strong>Team:</strong> ${driver.Constructor.name}</p>
                             </div>
+                           
+                           <div>
+                            
+                            <p class="card-text" style="font-size: 40px;"><strong> ${driver.number}</strong></p>
+                               </div> 
                             </div>
-                            <div>
-                            <p class="card-text" style="font-size: 20px;"><strong> ${driver.number}</strong></p>
-                                </div>
                             </div>
                     </div>`;
                         section.innerHTML += card;
@@ -225,7 +234,6 @@
                 // Data: Calculate the gap for each driver compared to the leader
                 const gapData = drivers.map(driver => {
                     if (driver.position == 1) {
-                        console.log(driver.position)
                         return 0;
                     }
                     else if (driver.Time) {
@@ -287,36 +295,86 @@
                     return parseFloat(timeStr); // Directly return the seconds and milliseconds
                 }
             }
-
             function createStartFinishScatter(drivers) {
-                const dnfInfo = [];
-                const ctx = document.getElementById('startFinishScatter').getContext('2d');
-                new Chart(ctx, {
-                    type: 'scatter',
-                    data: {
-                        datasets: [{
-                            label: 'Start vs Finish',
-                            data: drivers.map(d => {
-                                if (d.status.includes('DNF')) dnfInfo.push(`${d.Driver.givenName} ${d.Driver.familyName}`);
-                                return {
-                                    x: parseInt(d.grid),
-                                    y: d.status.includes('DNF') ? drivers.length + 1 : parseInt(d.position)
-                                };
-                            }),
-                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            pointRadius: 5,
-                        }]
+            const dnfInfo = [];
+            const retiredDrivers = []; // To store retired drivers
+            const ctx = document.getElementById('startFinishScatter').getContext('2d');
+
+            // Create the dataset for drivers including their start and finish positions
+            const driverData = drivers.map(d => {
+                const driverName = `${d.Driver.givenName} ${d.Driver.familyName}`;
+                if (d.status.includes('DNF')) dnfInfo.push(driverName);
+
+                // Check if the driver has positionText of 'R' (retired)
+                if (d.positionText === 'R') {
+                    retiredDrivers.push(driverName); // Store retired drivers separately
+                }
+
+                return {
+                    x: parseInt(d.grid), // Starting position
+                    y: d.status.includes('DNF') ? drivers.length + 1 : parseInt(d.position), // Finishing position
+                    driverName: driverName // Add driver name to data
+                };
+            });
+
+            // Create the scatter chart
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Start vs Finish',
+                        data: driverData, // Use the driverData array
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        pointRadius: 5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Starting Position' },
+                            ticks: {
+                                precision: 0 // Ensure whole numbers for grid positions
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'Finishing Position' },
+                            ticks: {
+                                precision: 0 // Ensure whole numbers for finishing positions
+                            }
+                        }
                     },
-                    options: {
-                        scales: {
-                            x: { title: { display: true, text: 'Starting Position' } },
-                            y: { title: { display: true, text: 'Finishing Position' } }
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const driver = context.raw.driverName;
+                                    const start = context.raw.x;
+                                    const finish = context.raw.y;
+                                    return `${driver}: Start - ${start}, Finish - ${finish}`;
+                                }
+                            }
                         }
                     }
-                });
-                document.getElementById('dnfInfo').innerText = dnfInfo.length ? 'DNF: ' + dnfInfo.join(', ') : '';
+                }
+            });
+
+            document.getElementById('dnfInfo').innerText = dnfInfo.length ? 'DNF: ' + dnfInfo.join(', ') : '';
+
+            // Display retired drivers in the separate div
+            const retiredDriversList = document.getElementById('retiredDriversList');
+            retiredDrivers.forEach(driverName => {
+                const li = document.createElement('li');
+                li.textContent = driverName;
+                retiredDriversList.appendChild(li);
+            });
+
+            if (retiredDrivers.length === 0) {
+                document.getElementById('retiredDrivers').style.display = 'none';
             }
+        }
+
         });
     </script>
 </body>
