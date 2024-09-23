@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect four</title>
+    <style>
+     body {
+  font-family: 'Arial', sans-serif;
+}
+
+.container {
+  position: relative;
+  margin: 20px auto;
+  max-width: 700px;
+}
+
+h2 {
+  margin-bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+}
+
+.yellowWins,
+.redWins {
+  display: none;
+}
+
+input {
+  display: none;
+}
+
+#redOptions {
+  display: none;
+}
+
+#board-overlay,
+#board {
+  display: flex;
+  flex-wrap: wrap;
+  width: 700px;
+  height: 600px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#board:before,
+#board:after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  bottom: 0;
+  box-shadow: 0px 9px 11px rgba(0, 0, 0, 0.8);
+  display: block;
+  z-index: 2;
+  width: 40px;
+  background: #1458CC;
+}
+
+#board:before {
+  left: -40px;
+}
+
+#board:after {
+  right: -40px;
+}
+
+.slot {
+  height: 90px;
+  width: 90px;
+  padding: 5px;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.4s;
+}
+
+.overlay-slot {
+  height: 90px;
+  width: 90px;
+  padding: 5px;
+  overflow: hidden;
+}
+
+.overlay-slot:before {
+  display: inline-block;
+  content: '';
+  height: 80px;
+  width: 80px;
+  border-radius: 50%;
+  vertical-align: -0.4em;
+  border: solid 4px rgba(9, 71, 178, 0.9);
+  box-shadow: 0 0 0 30px #1458CC, inset 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+#yellowOptions,
+#redOptions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 700px;
+  height: 600px;
+}
+
+label {
+  width: 100px;
+  position: absolute;
+  top: 0;
+  height: 600px;
+}
+
+label:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+#yellowOptions label:before {
+  background: #E0CB00;
+}
+
+#redOptions label:before {
+  background: #DE3B12;
+}
+
+.result {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 450px;
+  width: 700px;
+  color: #000;
+  text-align: center;
+  padding-top: 150px;
+  font-size: 35px;
+  z-index: 100;
+}
+
+button {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #f5f5f5;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+    </style>
+</head>
+
+<body>
+    <form>
+        <div class="container" id="board"></div>
+      
+        <div id="yellowOptions"></div>
+        <div id="redOptions"></div>
+      
+        <div id="board-overlay"></div>
+      
+        <div class="result yellowWins">
+          <h2>Yellow wins
+            <button type="reset" value="Reset">Play again</button>
+          </h2>
+        </div>
+      
+        <div class="result redWins">
+          <h2>Red wins
+            <button type="reset" value="Reset">Play again</button>
+          </h2>
+        </div>
+      </form>
+      
+    <script>
+        // Function to generate the grid dynamically
+function generateGrid() {
+  const board = document.getElementById('board');
+  const yellowOptions = document.getElementById('yellowOptions');
+  const redOptions = document.getElementById('redOptions');
+  const boardOverlay = document.getElementById('board-overlay');
+  
+  for (let x = 1; x <= 6; x++) {
+    // Create rows for the main board
+    for (let i = 1; i <= 7; i++) {
+      const slotDiv = document.createElement('div');
+      slotDiv.classList.add('slot');
+      slotDiv.id = `slot_row${x}place${i}`;
+      board.appendChild(slotDiv);
+    }
+
+    // Create rows for yellow options
+    for (let i = 1; i <= 7; i++) {
+      const yellowRadio = document.createElement('input');
+      yellowRadio.type = 'radio';
+      yellowRadio.name = `row${x}place${i}`;
+      yellowRadio.value = 'yellow';
+      yellowRadio.id = `row${x}place${i}yellow`;
+
+      const yellowLabel = document.createElement('label');
+      yellowLabel.setAttribute('for', `row${x}place${i}yellow`);
+
+      yellowOptions.appendChild(yellowRadio);
+      yellowOptions.appendChild(yellowLabel);
+      yellowOptions.appendChild(document.createElement('br'));
+    }
+
+    // Create rows for red options
+    for (let i = 1; i <= 7; i++) {
+      const redRadio = document.createElement('input');
+      redRadio.type = 'radio';
+      redRadio.name = `row${x}place${i}`;
+      redRadio.value = 'red';
+      redRadio.id = `row${x}place${i}red`;
+
+      const redLabel = document.createElement('label');
+      redLabel.setAttribute('for', `row${x}place${i}red`);
+
+      redOptions.appendChild(redRadio);
+      redOptions.appendChild(redLabel);
+      redOptions.appendChild(document.createElement('br'));
+    }
+
+    // Create overlay slots
+    for (let i = 1; i <= 7; i++) {
+      const overlayDiv = document.createElement('div');
+      overlayDiv.classList.add('overlay-slot');
+      overlayDiv.id = `slot_row${x}place${i}`;
+      boardOverlay.appendChild(overlayDiv);
+    }
+  }
+}
+
+// Call the function to generate the grid when the page loads
+window.onload = generateGrid;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const players = ['yellow', 'red'];
+  let currentPlayer = 'yellow';
+
+  // Function to handle dynamic display of red and yellow options
+  function updateOptions() {
+    const yellowOptions = document.getElementById('yellowOptions');
+    const redOptions = document.getElementById('redOptions');
+    
+    if (currentPlayer === 'yellow') {
+      yellowOptions.style.display = 'block';
+      redOptions.style.display = 'none';
+    } else {
+      yellowOptions.style.display = 'none';
+      redOptions.style.display = 'block';
+    }
+  }
+
+  // Check for a winning combination horizontally, vertically, or diagonally
+  function checkWin() {
+    const winConditions = [
+      checkHorizontalWin,
+      checkVerticalWin,
+      checkDiagonalWin,
+      checkReverseDiagonalWin
+    ];
+
+    for (const condition of winConditions) {
+      const winner = condition();
+      if (winner) {
+        displayWinner(winner);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Horizontal check logic
+  function checkHorizontalWin() {
+    for (let row = 1; row <= 6; row++) {
+      for (let col = 1; col <= 4; col++) {
+        const yellowCount = countChecked(row, col, 'horizontal', 'yellow');
+        const redCount = countChecked(row, col, 'horizontal', 'red');
+        if (yellowCount >= 4) return 'yellow';
+        if (redCount >= 4) return 'red';
+      }
+    }
+    return null;
+  }
+
+  // Vertical check logic
+  function checkVerticalWin() {
+    for (let col = 1; col <= 7; col++) {
+      for (let row = 1; row <= 3; row++) {
+        const yellowCount = countChecked(row, col, 'vertical', 'yellow');
+        const redCount = countChecked(row, col, 'vertical', 'red');
+        if (yellowCount >= 4) return 'yellow';
+        if (redCount >= 4) return 'red';
+      }
+    }
+    return null;
+  }
+
+  // Diagonal check logic
+  function checkDiagonalWin() {
+    for (let row = 1; row <= 3; row++) {
+      for (let col = 1; col <= 4; col++) {
+        const yellowCount = countChecked(row, col, 'diagonal', 'yellow');
+        const redCount = countChecked(row, col, 'diagonal', 'red');
+        if (yellowCount >= 4) return 'yellow';
+        if (redCount >= 4) return 'red';
+      }
+    }
+    return null;
+  }
+
+  // Reverse diagonal check logic
+  function checkReverseDiagonalWin() {
+    for (let row = 1; row <= 3; row++) {
+      for (let col = 4; col <= 7; col++) {
+        const yellowCount = countChecked(row, col, 'reverseDiagonal', 'yellow');
+        const redCount = countChecked(row, col, 'reverseDiagonal', 'red');
+        if (yellowCount >= 4) return 'yellow';
+        if (redCount >= 4) return 'red';
+      }
+    }
+    return null;
+  }
+
+  // Helper function to count checked radio buttons in a given direction
+  function countChecked(row, col, direction, color) {
+    let count = 0;
+    for (let i = 0; i < 4; i++) {
+      const input = document.querySelector(`[name="row${row + (direction === 'vertical' ? i : 0)}place${col + (direction === 'horizontal' ? i : direction === 'diagonal' ? i : direction === 'reverseDiagonal' ? -i : 0)}"][value="${color}"]:checked`);
+      if (input) count++;
+    }
+    return count;
+  }
+
+  // Function to display winner and reset the game
+  function displayWinner(winner) {
+    document.querySelector(`.${winner}Wins`).style.display = 'block';
+  }
+
+  // Event listener to switch players and check for a win
+  document.querySelectorAll('input[type="radio"]').forEach(input => {
+    input.addEventListener('change', () => {
+      if (checkWin()) return;
+      currentPlayer = currentPlayer === 'yellow' ? 'red' : 'yellow';
+      updateOptions();
+    });
+  });
+
+  // Initialize the first option set
+  updateOptions();
+});
+
+    </script>
+</body>
+
+</html>

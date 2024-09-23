@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Minesweeper</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+<style>
+    #game-container { text-align: center; }
+    #board { display: inline-block; }
+    .tile { width: 30px; height: 30px; background: #ccc; border: 1px solid #999; float: left; line-height: 30px; text-align: center; }
+    .revealed { background: #ddd; }
+    .flagged::before { content: '\f024'; font-family: 'Font Awesome 5 Free'; font-weight: 900; }
+    #settings { display: none; position: absolute; background: white; border: 1px solid black; padding: 10px; }
+    .message { font-size: 24px; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <i class="fas fa-cog" id="settings-icon"></i>
+    <div id="settings">
+        <label>Board Size: <input type="range" id="boardSize" min="1" max="20" value="10"></label><br>
+        <label>Tile Size: <input type="range" id="tileSize" min="20" max="50" value="30"></label><br>
+        <label>Difficulty: 
+            <input type="radio" name="difficulty" value="0.1" checked> Easy
+            <input type="radio" name="difficulty" value="0.25"> Normal
+            <input type="radio" name="difficulty" value="0.4"> Hard
+        </label>
+    </div>
+    <div id="board"></div>
+    <button id="newGame">New Game</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let boardSize = 10, tileSize = 30, bombFrequency = 0.1, board = [], gameOver = false;
+
+    function createBoard() {
+        const boardElement = document.getElementById('board');
+        boardElement.style.width = (tileSize * boardSize) + 'px';
+        boardElement.innerHTML = '';
+        gameOver = false;
+        board = [];
+
+        for(let i = 0; i < boardSize * boardSize; i++) {
+            let tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.dataset.row = Math.floor(i / boardSize);
+            tile.dataset.col = i % boardSize;
+            tile.style.width = tileSize + 'px';
+            tile.style.height = tileSize + 'px';
+            boardElement.appendChild(tile);
+            tile.addEventListener('click', revealTile);
+            tile.addEventListener('contextmenu', flagTile);
+        }
+        placeBombs();
+    }
+
+    function placeBombs() {
+        for(let i = 0; i < boardSize * boardSize; i++) {
+            if(Math.random() < bombFrequency) {
+                board[i] = {bomb: true};
+            } else {
+                board[i] = {bomb: false, count: 0};
+            }
+        }
+        countAdjacentBombs();
+    }
+
+    function countAdjacentBombs() {
+        for(let i = 0; i < board.length; i++) {
+            if(!board[i].bomb) {
+                let count = 0;
+                for(let dr = -1; dr <= 1; dr++) {
+                    for(let dc = -1; dc <= 1; dc++) {
+                        let r = +board[i].row + dr, c = +board[i].col + dc;
+                        if(r >= 0 && r < boardSize && c >= 0 && c < boardSize && board[r * boardSize + c] && board[r * boardSize + c].bomb) {
+                            count++;
+                        }
+                    }
+                }
+                board[i].count = count;
+            }
+        }
+    }
+
+    function revealTile(e) {
+        if(gameOver) return;
+        let tile = e.target, index = tile.dataset.row * boardSize + +tile.dataset.col;
+        if(board[index].flagged) return;
+
+        if(board[index].bomb) {
+            tile.textContent = '💣';
+            gameOver = true;
+            alert('Boom! Game Over');
+        } else {
+            tile.textContent = board[index].count || '';
+            tile.classList.add('revealed');
+            if(board[index].count === 0) revealAdjacent(tile.dataset.row, tile.dataset.col);
+        }
+    }
+
+    function flagTile(e) {
+        e.preventDefault();
+        if(gameOver) return;
+        let tile = e.target;
+        if(!tile.classList.contains('revealed')) {
+            tile.classList.toggle('flagged');
+        }
+    }
+
+    function revealAdjacent(row, col) {
+        for(let dr = -1; dr <= 1; dr++) {
+            for(let dc = -1; dc <= 1; dc++) {
+                let r = +row + dr, c = +col + dc;
+                if(r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+                    let index = r * boardSize + c;
+                    let tile = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if(!board[index].revealed && !tile.classList.contains('flagged')) {
+                        tile.textContent = board[index].count;
+                        tile.classList.add('revealed');
+                        board[index].revealed = true;
+                        if(board[index].count === 0) revealAdjacent(r, c);
+                    }
+                }
+            }
+        }
+    }
+
+    document.getElementById('settings-icon').onclick = function() {
+        document.getElementById('settings').style.display = 
+            document.getElementById('settings').style.display === 'block' ? 'none' : 'block';
+    };
+
+    document.getElementById('newGame').onclick = createBoard;
+
+    [document.getElementById('boardSize'), document.getElementById('tileSize'), document.querySelectorAll('input[name="difficulty"]')]
+    .forEach(elem => elem.addEventListener('change', function() {
+        boardSize = document.getElementById('boardSize').value;
+        tileSize = document.getElementById('tileSize').value;
+        bombFrequency = parseFloat(document.querySelector('input[name="difficulty"]:checked').value);
+        createBoard();
+    }));
+
+    createBoard();
+});
+</script>
+
+</body>
+</html>

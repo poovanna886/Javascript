@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minesweeper</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+<style>
+body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f0f0f0; }
+#game-container { margin-top: 20px; }
+#board { border: 2px solid #000; }
+#settings { margin: 10px 0; text-align: center; }
+.tile { width: 30px; height: 30px; background: #ccc; border: 1px solid #808080; display: inline-flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; }
+.tile.revealed { background: #e0e0e0; }
+.tile.bomb { background: red; }
+#message { margin-top: 20px; font-weight: bold; }
+button { margin-top: 10px; padding: 5px 10px; }
+</style>
+</head>
+<body>
+<div id="settings">
+    <i class="fas fa-cog" id="settings-icon"></i>
+    <div id="settings-menu" style="display:none;">
+        <label>Board Size: <input type="range" id="boardSize" min="1" max="20" value="10"></label>
+        <label>Tile Size: <input type="range" id="tileSize" min="20" max="50" value="30"></label>
+        <label>
+            Difficulty:
+            <input type="radio" name="difficulty" value="0.1" checked>Easy
+            <input type="radio" name="difficulty" value="0.25">Medium
+            <input type="radio" name="difficulty" value="0.4">Hard
+        </label>
+    </div>
+</div>
+<div id="game-container"></div>
+<div id="message"></div>
+<button onclick="newGame()">New Game</button>
+
+<script>
+document.getElementById('settings-icon').addEventListener('click', function() {
+    const menu = document.getElementById('settings-menu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+});
+
+let boardSize = 10, bombFrequency = 0.1, tileSize = 30;
+let board, gameOver = false;
+
+function setupGame() {
+    const container = document.getElementById('game-container');
+    container.innerHTML = '';
+    board = [];
+    for(let i = 0; i < boardSize; i++) {
+        board[i] = [];
+        for(let j = 0; j < boardSize; j++) {
+            board[i][j] = {
+                x: i, y: j, 
+                bomb: Math.random() < bombFrequency, 
+                revealed: false, 
+                flagged: false
+            };
+        }
+    }
+    renderBoard();
+}
+
+function countAdjacentBombs(x, y) {
+    let count = 0;
+    for(let dx = -1; dx <= 1; dx++) {
+        for(let dy = -1; dy <= 1; dy++) {
+            if(dx === 0 && dy === 0) continue;
+            const nx = x + dx, ny = y + dy;
+            if(nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize && board[nx][ny].bomb) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+function revealTile(x, y) {
+    if(gameOver || board[x][y].revealed || board[x][y].flagged) return;
+    board[x][y].revealed = true;
+    let count = countAdjacentBombs(x, y);
+    if(count === 0) {
+        for(let dx = -1; dx <= 1; dx++) {
+            for(let dy = -1; dy <= 1; dy++) {
+                const nx = x + dx, ny = y + dy;
+                if(nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
+                    revealTile(nx, ny);
+                }
+            }
+        }
+    } else {
+        board[x][y].count = count;
+    }
+    if(board[x][y].bomb) {
+        gameOver = true;
+        document.getElementById('message').textContent = 'Boom! Game Over';
+        revealAllBombs();
+    }
+    renderBoard();
+    checkWin();
+}
+
+function revealAllBombs() {
+    board.forEach(row => row.forEach(tile => {
+        if(tile.bomb) tile.revealed = true;
+    }));
+    renderBoard();
+}
+
+function checkWin() {
+    let unrevealedCount = 0;
+    board.forEach(row => row.forEach(tile => {
+        if(!tile.revealed && !tile.bomb) unrevealedCount++;
+    }));
+    if(unrevealedCount === 0) {
+        gameOver = true;
+        document.getElementById('message').textContent = 'You Win!';
+    }
+}
+
+function renderBoard() {
+    const container = document.getElementById('game-container');
+    container.style.width = `${boardSize * tileSize}px`;
+    let html = '<div id="board">';
+    board.forEach(row => {
+        row.forEach(tile => {
+            html += `<div class="tile ${tile.revealed ? 'revealed' : ''} ${tile.bomb ? 'bomb' : ''}" style="width:${tileSize}px;height:${tileSize}px;" onclick="revealTile(${tile.x}, ${tile.y})" oncontextmenu="flagTile(event, ${tile.x}, ${tile.y}); return false;">`;
+            if(tile.revealed) {
+                if(tile.bomb) html += '💣';
+                else if(tile.count) html += tile.count;
+            } else if(tile.flagged) {
+                html += '🚩';
+            }
+            html += '</div>';
+        });
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function flagTile(e, x, y) {
+    e.preventDefault();
+    if(!gameOver && !board[x][y].revealed) {
+        board[x][y].flagged = !board[x][y].flagged;
+        renderBoard();
+    }
+}
+
+function newGame() {
+    boardSize = document.getElementById('boardSize').value;
+    tileSize = document.getElementById('tileSize').value;
+    bombFrequency = parseFloat(document.querySelector('input[name="difficulty"]:checked').value);
+    gameOver = false;
+    document.getElementById('message').textContent = '';
+    setupGame();
+}
+
+newGame();
+</script>
+</body>
+</html>
