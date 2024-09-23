@@ -171,6 +171,7 @@
     referrerpolicy="no-referrer"></script>
 
 <script>
+    // JSON file providing a geometry for each country, differentiated by numerical ID
     const urlJSON = 'https://unpkg.com/world-atlas@1.1.4/world/50m.json';
     const urlTSV = 'https://unpkg.com/world-atlas@1.1.4/world/50m.tsv';
 
@@ -338,9 +339,10 @@
         }
     ];
 
-
+    // Variable describing the current selection
     let selection = stages[0].country;
 
+    // Add an SVG element in which to plot the world map
     const width = 500;
     const height = 250;
 
@@ -348,19 +350,13 @@
         .select('.world')
         .append('svg')
         .attr('viewBox', `0 0 ${width} ${height}`);
-
-    // Add arrow (initially hidden) for highlighting the selected country
-    let arrow = world
-        .append('polygon')
-        .attr('points', '-10,-10 10,-10 0,-20')
-        .attr('fill', '#FFD700')
-        .style('visibility', 'hidden');
-
-
+        
+    // Helper function to normalize country names (lowercase, trim spaces)
     function normalizeCountryName(name) {
         return name.trim().toLowerCase().replace(/\s+/g, ' ');
     }
 
+    // Function to update race information below the map
     function updateRaceInfo(selectedStage) {
         document.getElementById('raceNumber').textContent = selectedStage.raceNumber;
         document.getElementById('raceName').textContent = selectedStage.raceName;
@@ -369,54 +365,43 @@
         document.getElementById('raceDate').textContent = selectedStage.date;
     }
 
+    // Function to update the selection based on direction (next or previous)
     function updateSelection(direction) {
-        let index = stages.findIndex(stage => stage.raceNumber === selection) === -1 ? 0 : stages.findIndex(stage => stage.raceNumber === selection);
-
+        // Find the index of the current selection based on the raceNumber
+        let index = stages.findIndex(stage => stage.raceNumber === selection) === -1 ? 0 : stages.findIndex(stage => stage.raceNumber === selection) ;
+        
+        // Update the selection based on the direction
         if (direction === 'prev') {
-            index = (index <= 0) ? stages.length - 1 : index - 1;
+            index = (index <= 0 ) ? stages.length - 1 : index - 1;
+            
         } else {
             index = (index === stages.length - 1) ? 0 : index + 1;
         }
 
         const selectedStage = stages[index];
 
+        // Update the selection in the map and text element
         d3.selectAll('path.stage')
             .attr('id', ({ name }) => stages.some(stage => stage.raceNumber === selectedStage.raceNumber && normalizeCountryName(name) === normalizeCountryName(stage.country)) ? 'selection' : null);
 
         d3.select('text').text(selectedStage.country);
 
+        // Update the race information
         updateRaceInfo(selectedStage);
+
+        // Update the global selection variable with the raceNumber
         selection = selectedStage.raceNumber;
-
-        // Move and display the arrow above the selected country
-        moveArrow(selectedStage.country);
     }
 
-    let projection;
-    let geoPath;
 
-    function moveArrow(countryName) {
-        const countryPath = d3.selectAll('path.stage').filter(function (d) {
-            return normalizeCountryName(d.name) === normalizeCountryName(countryName);
-        });
-
-
-        if (countryPath.node()) {
-            const centroid = geoPath.centroid(countryPath.datum());
-            arrow
-                .attr('transform', `translate(${centroid[0]}, ${centroid[1] + 20})`) // Adjust Y position to place arrow above the country
-                .style('visibility', 'visible')
-                .raise(); // This brings the arrow to the front of the SVG stack
-        }
-    }
-
+    // Function to add countries through the d3.geo module
     function addCountries(countries) {
-        projection = d3.geoEquirectangular()
+        const projection = d3.geoEquirectangular()
             .fitSize([width, height], countries)
             .scale([80])
             .translate([width / 2, height / 2 + 40]);
 
-        geoPath = d3.geoPath().projection(projection);
+        const geoPath = d3.geoPath().projection(projection);
 
         world.append('text')
             .attr('x', width / 3)
@@ -434,6 +419,7 @@
 
         d3.selectAll('path.stage')
             .on('mouseenter', function ({ name }) {
+                // Ensure `name` exists before proceeding
                 if (name) {
                     d3.selectAll('path.stage').attr('id', '');
                     d3.select(this).attr('id', 'selection');
@@ -445,9 +431,6 @@
                         selection = name.toLowerCase();
 
                         updateRaceInfo(selectedStage);
-
-                        // Move the arrow to the highlighted country
-                        moveArrow(name);
                     }
                 }
             });
@@ -457,13 +440,15 @@
         d3.select('.controls .prev').on('click', () => updateSelection('prev'));
         d3.select('.controls .next').on('click', () => updateSelection('next'));
 
+        // Initially update the race info with the first selection
         updateRaceInfo(stages[0]);
-        moveArrow(stages[0].country);
     }
 
+    // Retrieve the data from the JSON and TSV references
     Promise.all([d3.json(urlJSON), d3.tsv(urlTSV)])
         .then(([json, tsv]) => {
             const countries = topojson.feature(json, json.objects.countries);
+            
 
             countries.features.forEach((feature) => {
                 const { name } = tsv.find(({ iso_n3: id }) => id === feature.id);
@@ -477,6 +462,7 @@
             addCountries(countries);
         })
         .catch(err => console.error(err));
+
 </script>
 
 </html>
