@@ -4,18 +4,36 @@
   <title>Ping Pong Game</title>
   <!-- Add the Bootstrap CSS file -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-
+  
   <style>
-    canvas {
-      border: 1px solid black;
-      background: #000;
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(120deg, #2980b9, #6dd5fa, #ffffff);
     }
-    .container {
+    
+    .game-container {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 20px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+
     }
+
+    canvas {
+      border-radius: 10px;
+      background: #02c62f;
+      margin: 0 auto;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
 
     .button {
       display: flex;
@@ -29,42 +47,76 @@
       color: white;
       padding: 10px 20px;
       text-align: center;
-      text-decoration: none;
-      display: inline-block;
       font-size: 16px;
       margin: 10px;
       cursor: pointer;
       border-radius: 5px;
+      transition: all 0.3s ease;
     }
 
     .btn:hover {
       background-color: #3e8e41;
+      transform: scale(1.1);
     }
 
     .control {
       text-align: center;
+      margin-top: 15px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .score {
+      font-size: 24px;
+      color: #000;
+      margin-bottom: 10px;
+    }
+
+    .modal-content {
+      border-radius: 10px;
+    }
+
+    .modal-content h5 {
+      color: #333;
+      font-size: 24px;
+    }
+
+    @media (max-width: 768px) {
+      canvas {
+        width: 90% !important;
+        height: 300px !important;
+      }
+
+      .btn {
+        padding: 8px 15px;
+      }
+
+      .control {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="game-container">
     <canvas id="canvas" width="600" height="400"></canvas>
+    <div class="button">
+      <button id="start-btn" class="btn">Start</button>
+      <button id="pause-btn" class="btn">Pause</button>
+      <button id="restart-btn" class="btn">Restart</button>
+    </div>
+    <p class="control">Control: Player Left (W and S) | Player Right (Up arrow, Down Arrow)</p>
   </div>
-  <div class="button">
-    <button id="start-btn" class="btn">Start</button>
-    <button id="pause-btn" class="btn">Pause</button>
-    <button id="restart-btn" class="btn">Restart</button>
-  </div>
-  <p class="control">Control: Player Left(W and S) | Player Right (Up arrow, Down Arrow)</p>
-  <!-- Add a modal element with an ID -->
-  <div class="modal" tabindex="-1" role="dialog" id="message-modal">
-    <div class="modal-dialog" role="document">
+
+  <!-- Modal for game result -->
+  <div class="modal fade" id="message-modal" tabindex="-1" role="dialog" aria-labelledby="message-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-body">
           <h5 id="message"></h5>
         </div>
         <div class="modal-footer">
-          <button type="button" id="message-modal-close" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" id="message-modal-close" data-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -73,7 +125,7 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script>
-    // Initialize canvas
+    // Initialize canvas and other variables
     var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
 
@@ -83,12 +135,11 @@
     var animationId;
     var gameRunning = false;
 
-    // Load paddle images
     var leftPaddleImage = new Image();
-    leftPaddleImage.src = 'https://freesvg.org/img/1412529636.png'; // Replace with your left paddle image URL
+    leftPaddleImage.src = 'https://freesvg.org/img/1412529636.png';
 
     var rightPaddleImage = new Image();
-    rightPaddleImage.src = 'https://freesvg.org/img/1412529636.png'; // Replace with your right paddle image URL
+    rightPaddleImage.src = 'https://freesvg.org/img/1412529636.png';
 
     startBtn.addEventListener("click", function () {
       if (!gameRunning) {
@@ -106,10 +157,6 @@
       document.location.reload();
     });
 
-    addEventListener("load", (event) => {
-      draw();
-    });
-
     // Define ball properties
     var ballRadius = 10;
     var ballX = canvas.width / 2;
@@ -117,66 +164,44 @@
     var ballSpeedX = 5;
     var ballSpeedY = 5;
 
-    // Define paddle properties
     var paddleHeight = 80;
     var paddleWidth = 40;
     var leftPaddleY = canvas.height / 2 - paddleHeight / 2;
     var rightPaddleY = canvas.height / 2 - paddleHeight / 2;
     var paddleSpeed = 10;
 
-    // Define score properties
     var leftPlayerScore = 0;
     var rightPlayerScore = 0;
     var maxScore = 10;
 
-    // Listen for keyboard events
     document.addEventListener("keydown", keyDownHandler);
     document.addEventListener("keyup", keyUpHandler);
 
-    // Handle key press
     var upPressed = false;
     var downPressed = false;
     let wPressed = false;
     let sPressed = false;
 
     function keyDownHandler(e) {
-      if (e.key === "ArrowUp") {
-        upPressed = true;
-      } else if (e.key === "ArrowDown") {
-        downPressed = true;
-      } else if (e.key === "w") {
-        wPressed = true;
-      } else if (e.key === "s") {
-        sPressed = true;
-      }
+      if (e.key === "ArrowUp") upPressed = true;
+      if (e.key === "ArrowDown") downPressed = true;
+      if (e.key === "w") wPressed = true;
+      if (e.key === "s") sPressed = true;
     }
 
     function keyUpHandler(e) {
-      if (e.key === "ArrowUp") {
-        upPressed = false;
-      } else if (e.key === "ArrowDown") {
-        downPressed = false;
-      } else if (e.key === "w") {
-        wPressed = false;
-      } else if (e.key === "s") {
-        sPressed = false;
-      }
+      if (e.key === "ArrowUp") upPressed = false;
+      if (e.key === "ArrowDown") downPressed = false;
+      if (e.key === "w") wPressed = false;
+      if (e.key === "s") sPressed = false;
     }
 
     function update() {
-      if (upPressed && rightPaddleY > 0) {
-        rightPaddleY -= paddleSpeed;
-      } else if (downPressed && rightPaddleY + paddleHeight < canvas.height) {
-        rightPaddleY += paddleSpeed;
-      }
+      if (upPressed && rightPaddleY > 0) rightPaddleY -= paddleSpeed;
+      if (downPressed && rightPaddleY + paddleHeight < canvas.height) rightPaddleY += paddleSpeed;
+      if (wPressed && leftPaddleY > 0) leftPaddleY -= paddleSpeed;
+      if (sPressed && leftPaddleY + paddleHeight < canvas.height) leftPaddleY += paddleSpeed;
 
-      if (wPressed && leftPaddleY > 0) {
-        leftPaddleY -= paddleSpeed;
-      } else if (sPressed && leftPaddleY + paddleHeight < canvas.height) {
-        leftPaddleY += paddleSpeed;
-      }
-
-      // Move ball
       ballX += ballSpeedX;
       ballY += ballSpeedY;
 
@@ -208,7 +233,7 @@
     }
 
     function playerWin(player) {
-      var message = "Congratulations! " + player + " win!";
+      var message = "Congratulations! " + player + " wins!";
       $('#message').text(message);
       $('#message-modal').modal('show');
       reset();
@@ -223,7 +248,6 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       ctx.fillStyle = "#FFF";
       ctx.font = "15px Arial";
 
@@ -234,19 +258,14 @@
       ctx.stroke();
       ctx.closePath();
 
-      // Draw ball
       ctx.beginPath();
       ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.closePath();
 
-      // Draw left paddle using image
       ctx.drawImage(leftPaddleImage, 0, leftPaddleY, paddleWidth, paddleHeight);
-
-      // Draw right paddle using image
       ctx.drawImage(rightPaddleImage, canvas.width - paddleWidth, rightPaddleY, paddleWidth, paddleHeight);
 
-      // Draw scores
       ctx.fillText("Score: " + leftPlayerScore, 10, 20);
       ctx.fillText("Score: " + rightPlayerScore, canvas.width - 70, 20);
     }

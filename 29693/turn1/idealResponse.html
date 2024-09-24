@@ -1,356 +1,425 @@
-<!DOCTYPE html>
-<html lang="en">
+  <!DOCTYPE html>
+  <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect four</title>
-    <style>
-     body {
-  font-family: 'Arial', sans-serif;
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Title</title>
+      <style>
+        body {
+  margin: 0;
+  font-family: "Helvetica", "Verdana", "Roboto", sans-serif;
 }
 
-.container {
-  position: relative;
-  margin: 20px auto;
-  max-width: 700px;
-}
-
-h2 {
-  margin-bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+h1 {
+  margin: 0 0 15px;
+  padding: 15px;
   color: #fff;
+  font-size: 40px;
+  font-weight: normal;
+  text-align: center;
+  background-color: #1f90ff;
 }
 
-.yellowWins,
-.redWins {
-  display: none;
-}
-
-input {
-  display: none;
-}
-
-#redOptions {
-  display: none;
-}
-
-#board-overlay,
-#board {
+form {
   display: flex;
-  flex-wrap: wrap;
-  width: 700px;
-  height: 600px;
+  flex-flow: column nowrap;
+  align-items: center;
+}
+
+.board {
+  position: relative;
+  width: 450px;
+  height: 450px;
+}
+
+.field {
   position: absolute;
   top: 0;
+  left: 15px;
+  padding: 75px 0 0 0;
+  box-sizing: border-box;
+  width: 420px;
+  height: 435px;
+  overflow: hidden;
+  cursor: not-allowed;
+}
+
+.grid {
+  display: inline-flex;
+  flex-flow: column wrap;
+  position: relative;
+  min-width: 420px;
+  height: 360px;
+  counter-reset: player 1;
+}
+
+.column {
+  display: inline-flex;
+  flex-flow: column wrap;
+  height: 360px;
+}
+
+.front {
+  position: absolute;
+  top: 60px;
+  border: 15px solid #007fff;
+  border-radius: 4px;
+  box-sizing: border-box;
+  width: 450px;
+  height: 390px;
+  pointer-events: none;
+  background: radial-gradient(circle, transparent, transparent 18px, #007fff 20px, #007fff 23px, #1f90ff 23px, #1f90ff 36px, #007fff) center top/60px 60px;
+}
+
+/* Invisible inputs */
+input {
+  display: none;
+  position: absolute;
+  top: -90px;
+  margin: 0;
+  width: 60px;
+  height: 450px;
+  cursor: pointer;
+  opacity: 0;
+}
+input:indeterminate {
+  display: initial;
+}
+/* Inputs for red */
+.column > input:nth-of-type(2n) {
+  right: 360px;
+}
+.column > .column > input:nth-of-type(2n) {
+  right: 300px;
+}
+.column > .column > .column > input:nth-of-type(2n) {
+  right: 240px;
+}
+.column > .column > .column > .column > input:nth-of-type(2n) {
+  right: 180px;
+}
+.column > .column > .column > .column > .column > input:nth-of-type(2n) {
+  right: 120px;
+}
+.column > .column > .column > .column > .column > .column > input:nth-of-type(2n) {
+  right: 60px;
+}
+.column > .column > .column > .column > .column > .column > .column > input:nth-of-type(2n) {
+  right: 0;
+}
+/* Inputs for yellow */
+.column > input:nth-of-type(2n+1) {
   left: 0;
 }
-
-#board:before,
-#board:after {
-  content: '';
-  position: absolute;
-  top: -5px;
-  bottom: 0;
-  box-shadow: 0px 9px 11px rgba(0, 0, 0, 0.8);
-  display: block;
-  z-index: 2;
-  width: 40px;
-  background: #1458CC;
+.column > .column > input:nth-of-type(2n+1) {
+  left: 60px;
+}
+.column > .column > .column > input:nth-of-type(2n+1) {
+  left: 120px;
+}
+.column > .column > .column > .column > input:nth-of-type(2n+1) {
+  left: 180px;
+}
+.column > .column > .column > .column > .column > input:nth-of-type(2n+1) {
+  left: 240px;
+}
+.column > .column > .column > .column > .column > .column > input:nth-of-type(2n+1) {
+  left: 300px;
+}
+.column > .column > .column > .column > .column > .column > .column > input:nth-of-type(2n+1) {
+  left: 360px;
 }
 
-#board:before {
-  left: -40px;
-}
-
-#board:after {
-  right: -40px;
-}
-
-.slot {
-  height: 90px;
-  width: 90px;
-  padding: 5px;
-  border-radius: 50%;
+/* Disc */
+.disc {
   position: relative;
-  transition: all 0.4s;
+  top: 0;
+  width: 60px;
+  height: 60px;
+  color: #fff;
+  background: radial-gradient(circle, currentcolor 12px, #666 13px, currentcolor 14px, currentcolor 21px, #666 22px, transparent 23px, transparent) center/60px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, top 0s 0.2s, color 0s 0.2s;
 }
 
-.overlay-slot {
-  height: 90px;
-  width: 90px;
-  padding: 5px;
+/* Red's turn */
+input:hover + .disc {
+  color: #ff010b;
+  opacity: 1;
+  transition: opacity 0.2s, top 0s;
+}
+input:checked + .disc {
+  color: #ff010b;
+  opacity: 1;
+}
+/* Yellow's turn */
+input:hover + input + .disc {
+  color: #ffd918;
+  opacity: 1;
+  transition: opacity 0.2s, top 0s;
+}
+input:checked + input + .disc {
+  color: #ffd918;
+  opacity: 1;
+}
+
+/* Height and time of disc fall per row */
+input:hover + .disc:nth-of-type(1),
+input:hover + input + .disc:nth-of-type(1){
+  top: -75px;
+}
+input:checked + .disc:nth-of-type(1),
+input:checked + input + .disc:nth-of-type(1){
+  transition: top 0.14s cubic-bezier(0.56, 0, 1, 1);
+}
+input:hover + .disc:nth-of-type(2),
+input:hover + input + .disc:nth-of-type(6n+2) {
+  top: -135px;
+}
+input:checked + .disc:nth-of-type(2),
+input:checked + input + .disc:nth-of-type(2){
+  transition: top 0.19s cubic-bezier(0.56, 0, 1, 1);
+}
+input:hover + .disc:nth-of-type(3),
+input:hover + input + .disc:nth-of-type(3) {
+  top: -195px;
+}
+input:checked + .disc:nth-of-type(3),
+input:checked + input + .disc:nth-of-type(3) {
+  transition: top 0.23s cubic-bezier(0.56, 0, 1, 1);
+}
+input:hover + .disc:nth-of-type(4),
+input:hover + input + .disc:nth-of-type(4) {
+  top: -255px;
+}
+input:checked + .disc:nth-of-type(4),
+input:checked + input + .disc:nth-of-type(4) {
+  transition: top 0.26s cubic-bezier(0.56, 0, 1, 1);
+}
+input:hover + .disc:nth-of-type(5),
+input:hover + input + .disc:nth-of-type(5){
+  top: -315px;
+}
+input:checked + .disc:nth-of-type(5),
+input:checked + input + .disc:nth-of-type(5){
+  transition: top 0.29s cubic-bezier(0.56, 0, 1, 1);
+}
+input:hover + .disc:nth-of-type(6n),
+input:hover + input + .disc:nth-of-type(6n) {
+  top: -375px;
+}
+input:checked + .disc:nth-of-type(6n),
+input:checked + input + .disc:nth-of-type(6n) {
+  transition: top 0.32s cubic-bezier(0.56, 0, 1, 1);
+}
+
+/* Fix stuck disc */
+input:checked + .disc,
+input:checked + input + .disc {
+  top: 0 !important;
+}
+
+/* Tracking turns */
+input:checked + .disc {
+  counter-increment: player 2;
+}
+input:checked + input + .disc {
+  counter-increment: player -2;
+}
+
+.grid::after {
+  content: counter(player, lower-roman);
+  display: inline-block;
+  max-width: 840px;
+  min-width: 420px;
+  letter-spacing: 375px;
+  font-family: monospace;
+  font-size: 1px;
   overflow: hidden;
 }
 
-.overlay-slot:before {
-  display: inline-block;
-  content: '';
-  height: 80px;
-  width: 80px;
-  border-radius: 50%;
-  vertical-align: -0.4em;
-  border: solid 4px rgba(9, 71, 178, 0.9);
-  box-shadow: 0 0 0 30px #1458CC, inset 0 0 2px rgba(255, 255, 255, 0.25);
-}
-
-#yellowOptions,
-#redOptions {
+/* Draw outcome */
+form:valid .column > .column > .column > .column > .column > .column > .column > .column::after {
+  content: "It's a draw!";
+  z-index: 1;
   position: absolute;
-  top: 0;
   left: 0;
-  width: 700px;
-  height: 600px;
-}
-
-label {
-  width: 100px;
-  position: absolute;
-  top: 0;
-  height: 600px;
-}
-
-label:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-#yellowOptions label:before {
-  background: #E0CB00;
-}
-
-#redOptions label:before {
-  background: #DE3B12;
-}
-
-.result {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 450px;
-  width: 700px;
-  color: #000;
+  top: -75px;
+  width: 420px;
+  height: 435px;
+  visibility: visible;
+  color: #1f90ff;
+  font-size: 30px;
   text-align: center;
-  padding-top: 150px;
-  font-size: 35px;
-  z-index: 100;
+  line-height: 60px;
+  cursor: initial;
+  pointer-events: auto;
+  animation: outcome 1.5s;
 }
 
+/* Red column win */
+input:checked + .disc + input + input:checked + .disc + input + input:checked + .disc + input + input:checked ~ .column::after,
+/* Red row win */
+input:nth-of-type(2):checked ~ .column > input:nth-of-type(2):checked ~ .column > input:nth-of-type(2):checked ~ .column > input:nth-of-type(2):checked ~ .column::after,
+input:nth-of-type(4):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(4):checked ~ .column::after,
+input:nth-of-type(6):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(6):checked ~ .column::after,
+input:nth-of-type(8):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(8):checked ~ .column::after,
+input:nth-of-type(10):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(10):checked ~ .column::after,
+input:nth-of-type(12):checked ~ .column > input:nth-of-type(12):checked ~ .column > input:nth-of-type(12):checked ~ .column > input:nth-of-type(12):checked ~ .column::after,
+/* Red diagonal win */
+input:nth-of-type(2):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(8):checked ~ .column::after,
+input:nth-of-type(4):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(10):checked ~ .column::after,
+input:nth-of-type(6):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(12):checked ~ .column::after,
+input:nth-of-type(8):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(2):checked ~ .column::after,
+input:nth-of-type(10):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(4):checked ~ .column::after,
+input:nth-of-type(12):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(6):checked ~ .column::after {
+  content: "Red wins! :)";
+  z-index: 2;
+  position: absolute;
+  left: 0;
+  top: -75px;
+  width: 420px;
+  height: 435px;
+  visibility: visible;
+  color: #ff010b;
+  font-size: 30px;
+  text-align: center;
+  line-height: 60px;
+  cursor: initial;
+  pointer-events: auto;
+  animation: outcome 1s;
+}
+
+/* Yellow column win */
+input:checked + input + .disc + input:checked + input + .disc + input:checked + input + .disc + input:checked ~ .column::after,
+/* Yellow row win */
+input:nth-of-type(1):checked ~ .column > input:nth-of-type(1):checked ~ .column > input:nth-of-type(1):checked ~ .column > input:nth-of-type(1):checked ~ .column::after,
+input:nth-of-type(3):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(3):checked ~ .column::after,
+input:nth-of-type(5):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(5):checked ~ .column::after,
+input:nth-of-type(7):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(7):checked ~ .column::after,
+input:nth-of-type(9):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(9):checked ~ .column::after,
+input:nth-of-type(11):checked ~ .column > input:nth-of-type(11):checked ~ .column > input:nth-of-type(11):checked ~ .column > input:nth-of-type(11):checked ~ .column::after,
+/* Yellow diagonal win */
+input:nth-of-type(1):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(7):checked ~ .column::after,
+input:nth-of-type(3):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(9):checked ~ .column::after,
+input:nth-of-type(5):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(11):checked ~ .column::after,
+input:nth-of-type(7):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(1):checked ~ .column::after,
+input:nth-of-type(9):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(3):checked ~ .column::after,
+input:nth-of-type(11):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(5):checked ~ .column::after {
+  content: "Yellow wins! :)";
+  z-index: 2;
+  position: absolute;
+  left: 0;
+  top: -75px;
+  width: 420px;
+  height: 435px;
+  visibility: visible;
+  color: #ffd918;
+  font-size: 30px;
+  text-align: center;
+  line-height: 60px;
+  background: linear-gradient(#fff 60px, transparent 60px, transparent);
+  cursor: initial;
+  pointer-events: auto;
+  animation: outcome 1s;
+}
+
+/* Button style */
 button {
-  display: inline-block;
-  padding: 4px 12px;
-  font-size: 14px;
+  margin: 20px auto;
+  border: none;
+  border-radius: 2px;
+  padding: 12px 18px;
+  font-size: 16px;
+  text-transform: uppercase;
   cursor: pointer;
-  background-color: #f5f5f5;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  color: #fff;
+  background: #2196f3 center;
+  box-shadow: 0 0 4px #999;
+  outline: none;
+  transition: background 0.5s;
+}
+button:hover {
+  background: #47a7f5 radial-gradient(circle, transparent 1%, #47a7f5 1%) center/15000%;
+}
+button:active {
+  background-color: #6eb9f7;
+  background-size: 100%;
+  transition: background 0s;
 }
 
-    </style>
-</head>
-
-<body>
-    <form>
-        <div class="container" id="board"></div>
-      
-        <div id="yellowOptions"></div>
-        <div id="redOptions"></div>
-      
-        <div id="board-overlay"></div>
-      
-        <div class="result yellowWins">
-          <h2>Yellow wins
-            <button type="reset" value="Reset">Play again</button>
-          </h2>
-        </div>
-      
-        <div class="result redWins">
-          <h2>Red wins
-            <button type="reset" value="Reset">Play again</button>
-          </h2>
-        </div>
-      </form>
-      
-    <script>
-        // Function to generate the grid dynamically
-function generateGrid() {
-  const board = document.getElementById('board');
-  const yellowOptions = document.getElementById('yellowOptions');
-  const redOptions = document.getElementById('redOptions');
-  const boardOverlay = document.getElementById('board-overlay');
-  
-  for (let x = 1; x <= 6; x++) {
-    // Create rows for the main board
-    for (let i = 1; i <= 7; i++) {
-      const slotDiv = document.createElement('div');
-      slotDiv.classList.add('slot');
-      slotDiv.id = `slot_row${x}place${i}`;
-      board.appendChild(slotDiv);
-    }
-
-    // Create rows for yellow options
-    for (let i = 1; i <= 7; i++) {
-      const yellowRadio = document.createElement('input');
-      yellowRadio.type = 'radio';
-      yellowRadio.name = `row${x}place${i}`;
-      yellowRadio.value = 'yellow';
-      yellowRadio.id = `row${x}place${i}yellow`;
-
-      const yellowLabel = document.createElement('label');
-      yellowLabel.setAttribute('for', `row${x}place${i}yellow`);
-
-      yellowOptions.appendChild(yellowRadio);
-      yellowOptions.appendChild(yellowLabel);
-      yellowOptions.appendChild(document.createElement('br'));
-    }
-
-    // Create rows for red options
-    for (let i = 1; i <= 7; i++) {
-      const redRadio = document.createElement('input');
-      redRadio.type = 'radio';
-      redRadio.name = `row${x}place${i}`;
-      redRadio.value = 'red';
-      redRadio.id = `row${x}place${i}red`;
-
-      const redLabel = document.createElement('label');
-      redLabel.setAttribute('for', `row${x}place${i}red`);
-
-      redOptions.appendChild(redRadio);
-      redOptions.appendChild(redLabel);
-      redOptions.appendChild(document.createElement('br'));
-    }
-
-    // Create overlay slots
-    for (let i = 1; i <= 7; i++) {
-      const overlayDiv = document.createElement('div');
-      overlayDiv.classList.add('overlay-slot');
-      overlayDiv.id = `slot_row${x}place${i}`;
-      boardOverlay.appendChild(overlayDiv);
-    }
+@keyframes outcome {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }
 
-// Call the function to generate the grid when the page loads
-window.onload = generateGrid;
+      </style>
+  </head>
 
-document.addEventListener('DOMContentLoaded', () => {
-  const players = ['yellow', 'red'];
-  let currentPlayer = 'yellow';
-
-  // Function to handle dynamic display of red and yellow options
-  function updateOptions() {
-    const yellowOptions = document.getElementById('yellowOptions');
-    const redOptions = document.getElementById('redOptions');
+  <body>
     
-    if (currentPlayer === 'yellow') {
-      yellowOptions.style.display = 'block';
-      redOptions.style.display = 'none';
-    } else {
-      yellowOptions.style.display = 'none';
-      redOptions.style.display = 'block';
+      <h1>Pure CSS Connect 4</h1>
+<form>
+  <div class="board" id="board"></div>
+  <div class="front"></div>
+</form>
+
+<script>
+function createBoard() {
+  const board = document.getElementById("board");
+  const columns = 7; // Number of columns in Connect 4
+  const rows = 6;    // Number of rows in Connect 4
+
+  // Loop through columns
+  for (let col = 1; col <= columns; col++) {
+    const columnDiv = document.createElement("div");
+    columnDiv.classList.add("column");
+
+    // Loop through rows
+    for (let row = 1; row <= rows; row++) {
+      // Create the first input element (for player red)
+      const inputRed = document.createElement("input");
+      inputRed.type = "radio";
+      inputRed.name = `slot${col}${row}`;
+      inputRed.tabIndex = "-1";
+      inputRed.required = true;
+
+      // Create the second input element (for player yellow)
+      const inputYellow = document.createElement("input");
+      inputYellow.type = "radio";
+      inputYellow.name = `slot${col}${row}`;
+      inputYellow.tabIndex = "-1";
+      inputYellow.required = true;
+
+      // Create div for disc (the visual representation of the checker)
+      const disc = document.createElement("div");
+      disc.classList.add("disc");
+
+      // Append inputs and disc to the column
+      columnDiv.appendChild(inputRed);
+      columnDiv.appendChild(inputYellow);
+      columnDiv.appendChild(disc);
     }
+
+    // Append the column to the board
+    board.appendChild(columnDiv);
   }
+}
 
-  // Check for a winning combination horizontally, vertically, or diagonally
-  function checkWin() {
-    const winConditions = [
-      checkHorizontalWin,
-      checkVerticalWin,
-      checkDiagonalWin,
-      checkReverseDiagonalWin
-    ];
+// Call the function to create the board
+createBoard();
 
-    for (const condition of winConditions) {
-      const winner = condition();
-      if (winner) {
-        displayWinner(winner);
-        return true;
-      }
-    }
-    return false;
-  }
 
-  // Horizontal check logic
-  function checkHorizontalWin() {
-    for (let row = 1; row <= 6; row++) {
-      for (let col = 1; col <= 4; col++) {
-        const yellowCount = countChecked(row, col, 'horizontal', 'yellow');
-        const redCount = countChecked(row, col, 'horizontal', 'red');
-        if (yellowCount >= 4) return 'yellow';
-        if (redCount >= 4) return 'red';
-      }
-    }
-    return null;
-  }
+</script>
+  </body>
 
-  // Vertical check logic
-  function checkVerticalWin() {
-    for (let col = 1; col <= 7; col++) {
-      for (let row = 1; row <= 3; row++) {
-        const yellowCount = countChecked(row, col, 'vertical', 'yellow');
-        const redCount = countChecked(row, col, 'vertical', 'red');
-        if (yellowCount >= 4) return 'yellow';
-        if (redCount >= 4) return 'red';
-      }
-    }
-    return null;
-  }
-
-  // Diagonal check logic
-  function checkDiagonalWin() {
-    for (let row = 1; row <= 3; row++) {
-      for (let col = 1; col <= 4; col++) {
-        const yellowCount = countChecked(row, col, 'diagonal', 'yellow');
-        const redCount = countChecked(row, col, 'diagonal', 'red');
-        if (yellowCount >= 4) return 'yellow';
-        if (redCount >= 4) return 'red';
-      }
-    }
-    return null;
-  }
-
-  // Reverse diagonal check logic
-  function checkReverseDiagonalWin() {
-    for (let row = 1; row <= 3; row++) {
-      for (let col = 4; col <= 7; col++) {
-        const yellowCount = countChecked(row, col, 'reverseDiagonal', 'yellow');
-        const redCount = countChecked(row, col, 'reverseDiagonal', 'red');
-        if (yellowCount >= 4) return 'yellow';
-        if (redCount >= 4) return 'red';
-      }
-    }
-    return null;
-  }
-
-  // Helper function to count checked radio buttons in a given direction
-  function countChecked(row, col, direction, color) {
-    let count = 0;
-    for (let i = 0; i < 4; i++) {
-      const input = document.querySelector(`[name="row${row + (direction === 'vertical' ? i : 0)}place${col + (direction === 'horizontal' ? i : direction === 'diagonal' ? i : direction === 'reverseDiagonal' ? -i : 0)}"][value="${color}"]:checked`);
-      if (input) count++;
-    }
-    return count;
-  }
-
-  // Function to display winner and reset the game
-  function displayWinner(winner) {
-    document.querySelector(`.${winner}Wins`).style.display = 'block';
-  }
-
-  // Event listener to switch players and check for a win
-  document.querySelectorAll('input[type="radio"]').forEach(input => {
-    input.addEventListener('change', () => {
-      if (checkWin()) return;
-      currentPlayer = currentPlayer === 'yellow' ? 'red' : 'yellow';
-      updateOptions();
-    });
-  });
-
-  // Initialize the first option set
-  updateOptions();
-});
-
-    </script>
-</body>
-
-</html>
+  </html>
