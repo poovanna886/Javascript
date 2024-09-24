@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Building Runner</title>
+<style>
+    canvas { border: 1px solid #000; display: block; margin: 0 auto; }
+    #startScreen, #gameOverScreen { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; color: white; font-family: Arial; }
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="startScreen">
+    <button onclick="startGame()">Start Game</button>
+</div>
+<div id="gameOverScreen" class="hidden">
+    <div>
+        <h1>Game Over</h1>
+        <p>Score: <span id="scoreDisplay"></span></p>
+        <button onclick="restartGame()">Restart</button>
+    </div>
+</div>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    let score = 0;
+
+    // Images
+    const images = {
+        run: 'path_to_run_image.png',
+        jump: 'path_to_jump_image.png',
+        idle: 'path_to_idle_image.png',
+        building: 'path_to_building_image.png'
+    };
+
+    // Player
+    const player = {
+        x: 50,
+        y: 300,
+        width: 40,
+        height: 60,
+        dy: 0,
+        jumpStrength: -10,
+        gravity: 0.5,
+        state: 'run'
+    };
+
+    // Buildings
+    const buildings = [];
+    let buildingSpeed = 1;
+    let destroySpeed = 0.1;
+
+    // Game loop and utility functions would go here...
+
+    function startGame() {
+        startScreen.classList.add('hidden');
+        score = 0;
+        buildings.length = 0; // Clear buildings
+        gameLoop();
+    }
+
+    function restartGame() {
+        gameOverScreen.classList.add('hidden');
+        startGame();
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        if (!checkGameOver()) {
+            requestAnimationFrame(gameLoop);
+        } else {
+            document.getElementById('scoreDisplay').textContent = score;
+            gameOverScreen.classList.remove('hidden');
+        }
+    }
+
+    function update() {
+        // Update player, buildings, score, etc.
+    }
+
+    function draw() {
+        // Draw game elements
+    }
+
+    function checkGameOver() {
+        // Check if the player has collided or missed a jump
+        return false; // Placeholder
+    }
+
+    // Event listeners for jumping
+    canvas.addEventListener('click', function() {
+        if(player.state !== 'jump') {
+            player.dy = player.jumpStrength;
+            player.state = 'jump';
+        }
+    });
+
+    // Load images and start game setup here...
+
+</script>
+</body>
+</html>

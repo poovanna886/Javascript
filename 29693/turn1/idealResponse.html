@@ -1,425 +1,414 @@
-  <!DOCTYPE html>
-  <html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Title</title>
-      <style>
-        body {
-  margin: 0;
-  font-family: "Helvetica", "Verdana", "Roboto", sans-serif;
-}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Title</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@1,800&display=swap');
 
-h1 {
-  margin: 0 0 15px;
-  padding: 15px;
-  color: #fff;
-  font-size: 40px;
-  font-weight: normal;
-  text-align: center;
-  background-color: #1f90ff;
-}
-
-form {
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-}
-
-.board {
-  position: relative;
-  width: 450px;
-  height: 450px;
-}
-
-.field {
-  position: absolute;
-  top: 0;
-  left: 15px;
-  padding: 75px 0 0 0;
-  box-sizing: border-box;
-  width: 420px;
-  height: 435px;
-  overflow: hidden;
-  cursor: not-allowed;
-}
-
-.grid {
-  display: inline-flex;
-  flex-flow: column wrap;
-  position: relative;
-  min-width: 420px;
-  height: 360px;
-  counter-reset: player 1;
-}
-
-.column {
-  display: inline-flex;
-  flex-flow: column wrap;
-  height: 360px;
-}
-
-.front {
-  position: absolute;
-  top: 60px;
-  border: 15px solid #007fff;
-  border-radius: 4px;
-  box-sizing: border-box;
-  width: 450px;
-  height: 390px;
-  pointer-events: none;
-  background: radial-gradient(circle, transparent, transparent 18px, #007fff 20px, #007fff 23px, #1f90ff 23px, #1f90ff 36px, #007fff) center top/60px 60px;
-}
-
-/* Invisible inputs */
-input {
-  display: none;
-  position: absolute;
-  top: -90px;
-  margin: 0;
-  width: 60px;
-  height: 450px;
-  cursor: pointer;
-  opacity: 0;
-}
-input:indeterminate {
-  display: initial;
-}
-/* Inputs for red */
-.column > input:nth-of-type(2n) {
-  right: 360px;
-}
-.column > .column > input:nth-of-type(2n) {
-  right: 300px;
-}
-.column > .column > .column > input:nth-of-type(2n) {
-  right: 240px;
-}
-.column > .column > .column > .column > input:nth-of-type(2n) {
-  right: 180px;
-}
-.column > .column > .column > .column > .column > input:nth-of-type(2n) {
-  right: 120px;
-}
-.column > .column > .column > .column > .column > .column > input:nth-of-type(2n) {
-  right: 60px;
-}
-.column > .column > .column > .column > .column > .column > .column > input:nth-of-type(2n) {
-  right: 0;
-}
-/* Inputs for yellow */
-.column > input:nth-of-type(2n+1) {
-  left: 0;
-}
-.column > .column > input:nth-of-type(2n+1) {
-  left: 60px;
-}
-.column > .column > .column > input:nth-of-type(2n+1) {
-  left: 120px;
-}
-.column > .column > .column > .column > input:nth-of-type(2n+1) {
-  left: 180px;
-}
-.column > .column > .column > .column > .column > input:nth-of-type(2n+1) {
-  left: 240px;
-}
-.column > .column > .column > .column > .column > .column > input:nth-of-type(2n+1) {
-  left: 300px;
-}
-.column > .column > .column > .column > .column > .column > .column > input:nth-of-type(2n+1) {
-  left: 360px;
-}
-
-/* Disc */
-.disc {
-  position: relative;
-  top: 0;
-  width: 60px;
-  height: 60px;
-  color: #fff;
-  background: radial-gradient(circle, currentcolor 12px, #666 13px, currentcolor 14px, currentcolor 21px, #666 22px, transparent 23px, transparent) center/60px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s, top 0s 0.2s, color 0s 0.2s;
-}
-
-/* Red's turn */
-input:hover + .disc {
-  color: #ff010b;
-  opacity: 1;
-  transition: opacity 0.2s, top 0s;
-}
-input:checked + .disc {
-  color: #ff010b;
-  opacity: 1;
-}
-/* Yellow's turn */
-input:hover + input + .disc {
-  color: #ffd918;
-  opacity: 1;
-  transition: opacity 0.2s, top 0s;
-}
-input:checked + input + .disc {
-  color: #ffd918;
-  opacity: 1;
-}
-
-/* Height and time of disc fall per row */
-input:hover + .disc:nth-of-type(1),
-input:hover + input + .disc:nth-of-type(1){
-  top: -75px;
-}
-input:checked + .disc:nth-of-type(1),
-input:checked + input + .disc:nth-of-type(1){
-  transition: top 0.14s cubic-bezier(0.56, 0, 1, 1);
-}
-input:hover + .disc:nth-of-type(2),
-input:hover + input + .disc:nth-of-type(6n+2) {
-  top: -135px;
-}
-input:checked + .disc:nth-of-type(2),
-input:checked + input + .disc:nth-of-type(2){
-  transition: top 0.19s cubic-bezier(0.56, 0, 1, 1);
-}
-input:hover + .disc:nth-of-type(3),
-input:hover + input + .disc:nth-of-type(3) {
-  top: -195px;
-}
-input:checked + .disc:nth-of-type(3),
-input:checked + input + .disc:nth-of-type(3) {
-  transition: top 0.23s cubic-bezier(0.56, 0, 1, 1);
-}
-input:hover + .disc:nth-of-type(4),
-input:hover + input + .disc:nth-of-type(4) {
-  top: -255px;
-}
-input:checked + .disc:nth-of-type(4),
-input:checked + input + .disc:nth-of-type(4) {
-  transition: top 0.26s cubic-bezier(0.56, 0, 1, 1);
-}
-input:hover + .disc:nth-of-type(5),
-input:hover + input + .disc:nth-of-type(5){
-  top: -315px;
-}
-input:checked + .disc:nth-of-type(5),
-input:checked + input + .disc:nth-of-type(5){
-  transition: top 0.29s cubic-bezier(0.56, 0, 1, 1);
-}
-input:hover + .disc:nth-of-type(6n),
-input:hover + input + .disc:nth-of-type(6n) {
-  top: -375px;
-}
-input:checked + .disc:nth-of-type(6n),
-input:checked + input + .disc:nth-of-type(6n) {
-  transition: top 0.32s cubic-bezier(0.56, 0, 1, 1);
-}
-
-/* Fix stuck disc */
-input:checked + .disc,
-input:checked + input + .disc {
-  top: 0 !important;
-}
-
-/* Tracking turns */
-input:checked + .disc {
-  counter-increment: player 2;
-}
-input:checked + input + .disc {
-  counter-increment: player -2;
-}
-
-.grid::after {
-  content: counter(player, lower-roman);
-  display: inline-block;
-  max-width: 840px;
-  min-width: 420px;
-  letter-spacing: 375px;
-  font-family: monospace;
-  font-size: 1px;
-  overflow: hidden;
-}
-
-/* Draw outcome */
-form:valid .column > .column > .column > .column > .column > .column > .column > .column::after {
-  content: "It's a draw!";
-  z-index: 1;
-  position: absolute;
-  left: 0;
-  top: -75px;
-  width: 420px;
-  height: 435px;
-  visibility: visible;
-  color: #1f90ff;
-  font-size: 30px;
-  text-align: center;
-  line-height: 60px;
-  cursor: initial;
-  pointer-events: auto;
-  animation: outcome 1.5s;
-}
-
-/* Red column win */
-input:checked + .disc + input + input:checked + .disc + input + input:checked + .disc + input + input:checked ~ .column::after,
-/* Red row win */
-input:nth-of-type(2):checked ~ .column > input:nth-of-type(2):checked ~ .column > input:nth-of-type(2):checked ~ .column > input:nth-of-type(2):checked ~ .column::after,
-input:nth-of-type(4):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(4):checked ~ .column::after,
-input:nth-of-type(6):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(6):checked ~ .column::after,
-input:nth-of-type(8):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(8):checked ~ .column::after,
-input:nth-of-type(10):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(10):checked ~ .column::after,
-input:nth-of-type(12):checked ~ .column > input:nth-of-type(12):checked ~ .column > input:nth-of-type(12):checked ~ .column > input:nth-of-type(12):checked ~ .column::after,
-/* Red diagonal win */
-input:nth-of-type(2):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(8):checked ~ .column::after,
-input:nth-of-type(4):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(10):checked ~ .column::after,
-input:nth-of-type(6):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(12):checked ~ .column::after,
-input:nth-of-type(8):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(4):checked ~ .column > input:nth-of-type(2):checked ~ .column::after,
-input:nth-of-type(10):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(6):checked ~ .column > input:nth-of-type(4):checked ~ .column::after,
-input:nth-of-type(12):checked ~ .column > input:nth-of-type(10):checked ~ .column > input:nth-of-type(8):checked ~ .column > input:nth-of-type(6):checked ~ .column::after {
-  content: "Red wins! :)";
-  z-index: 2;
-  position: absolute;
-  left: 0;
-  top: -75px;
-  width: 420px;
-  height: 435px;
-  visibility: visible;
-  color: #ff010b;
-  font-size: 30px;
-  text-align: center;
-  line-height: 60px;
-  cursor: initial;
-  pointer-events: auto;
-  animation: outcome 1s;
-}
-
-/* Yellow column win */
-input:checked + input + .disc + input:checked + input + .disc + input:checked + input + .disc + input:checked ~ .column::after,
-/* Yellow row win */
-input:nth-of-type(1):checked ~ .column > input:nth-of-type(1):checked ~ .column > input:nth-of-type(1):checked ~ .column > input:nth-of-type(1):checked ~ .column::after,
-input:nth-of-type(3):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(3):checked ~ .column::after,
-input:nth-of-type(5):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(5):checked ~ .column::after,
-input:nth-of-type(7):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(7):checked ~ .column::after,
-input:nth-of-type(9):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(9):checked ~ .column::after,
-input:nth-of-type(11):checked ~ .column > input:nth-of-type(11):checked ~ .column > input:nth-of-type(11):checked ~ .column > input:nth-of-type(11):checked ~ .column::after,
-/* Yellow diagonal win */
-input:nth-of-type(1):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(7):checked ~ .column::after,
-input:nth-of-type(3):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(9):checked ~ .column::after,
-input:nth-of-type(5):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(11):checked ~ .column::after,
-input:nth-of-type(7):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(3):checked ~ .column > input:nth-of-type(1):checked ~ .column::after,
-input:nth-of-type(9):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(5):checked ~ .column > input:nth-of-type(3):checked ~ .column::after,
-input:nth-of-type(11):checked ~ .column > input:nth-of-type(9):checked ~ .column > input:nth-of-type(7):checked ~ .column > input:nth-of-type(5):checked ~ .column::after {
-  content: "Yellow wins! :)";
-  z-index: 2;
-  position: absolute;
-  left: 0;
-  top: -75px;
-  width: 420px;
-  height: 435px;
-  visibility: visible;
-  color: #ffd918;
-  font-size: 30px;
-  text-align: center;
-  line-height: 60px;
-  background: linear-gradient(#fff 60px, transparent 60px, transparent);
-  cursor: initial;
-  pointer-events: auto;
-  animation: outcome 1s;
-}
-
-/* Button style */
-button {
-  margin: 20px auto;
-  border: none;
-  border-radius: 2px;
-  padding: 12px 18px;
-  font-size: 16px;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: #fff;
-  background: #2196f3 center;
-  box-shadow: 0 0 4px #999;
-  outline: none;
-  transition: background 0.5s;
-}
-button:hover {
-  background: #47a7f5 radial-gradient(circle, transparent 1%, #47a7f5 1%) center/15000%;
-}
-button:active {
-  background-color: #6eb9f7;
-  background-size: 100%;
-  transition: background 0s;
-}
-
-@keyframes outcome {
-  0% {
-    opacity: 0;
-  }
-  35% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-      </style>
-  </head>
-
-  <body>
-    
-      <h1>Pure CSS Connect 4</h1>
-<form>
-  <div class="board" id="board"></div>
-  <div class="front"></div>
-</form>
-
-<script>
-function createBoard() {
-  const board = document.getElementById("board");
-  const columns = 7; // Number of columns in Connect 4
-  const rows = 6;    // Number of rows in Connect 4
-
-  // Loop through columns
-  for (let col = 1; col <= columns; col++) {
-    const columnDiv = document.createElement("div");
-    columnDiv.classList.add("column");
-
-    // Loop through rows
-    for (let row = 1; row <= rows; row++) {
-      // Create the first input element (for player red)
-      const inputRed = document.createElement("input");
-      inputRed.type = "radio";
-      inputRed.name = `slot${col}${row}`;
-      inputRed.tabIndex = "-1";
-      inputRed.required = true;
-
-      // Create the second input element (for player yellow)
-      const inputYellow = document.createElement("input");
-      inputYellow.type = "radio";
-      inputYellow.name = `slot${col}${row}`;
-      inputYellow.tabIndex = "-1";
-      inputYellow.required = true;
-
-      // Create div for disc (the visual representation of the checker)
-      const disc = document.createElement("div");
-      disc.classList.add("disc");
-
-      // Append inputs and disc to the column
-      columnDiv.appendChild(inputRed);
-      columnDiv.appendChild(inputYellow);
-      columnDiv.appendChild(disc);
+    *,
+    *::before,
+    *::after {
+      padding: 0;
+      margin: 0 auto;
+      box-sizing: border-box;
     }
 
-    // Append the column to the board
-    board.appendChild(columnDiv);
-  }
-}
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: #111;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
 
-// Call the function to create the board
-createBoard();
+    .game {
+      position: relative;
+      width: 960px;
+      height: 340px;
+      overflow: hidden;
+      background-image: linear-gradient(rgb(125, 171, 255), rgb(42, 141, 255));
+      box-shadow: 0 0 1em #fff1;
+    }
+
+    .score {
+      position: absolute;
+      top: 0.5em;
+      left: 0.5em;
+    }
+
+    .msg {
+      position: absolute;
+      top: 2em;
+      left: 50%;
+      font-size: 1.2em;
+      transform: translateX(-50%);
+      text-align: center;
+      transition: opacity 0.25s;
+    }
+
+    .msg.off {
+      opacity: 0;
+    }
+
+    .player {
+      position: absolute;
+      top: var(--player-y, 320px);
+      left: var(--player-x, 480px);
+      transform: translate(-100%, -100%);
+      width: 44px;
+      height: 44px;
+      background-size: contain;
+    }
+
+    .player.idle {
+      background-image: url('https://freesvg.org/storage/img/thumb/1269851278.png');
+    }
+
+    .player.run {
+      background-image: url('https://cdn.pixabay.com/animation/2023/04/08/02/06/02-06-37-700_512.gif');
+    }
+
+    .player.jump {
+      background-image: url('https://freesvg.org/img/Jumping-Boy-Silhouette.png');
+    }
+
+    .player.dead {
+      background-image: url('https://freesvg.org/storage/img/thumb/nicubunu_Woman_Silhouette_64.png');
+    }
+
+    .building {
+      position: absolute;
+      bottom: 30px;
+      left: var(--building-x, 960px);
+      border: solid #0007;
+      border-width: 0 0px;
+    }
+
+    .building_fragment {
+      position: absolute;
+      width: 25%;
+      height: 33.334%;
+      background-image: url("https://freesvg.org/storage/img/thumb/malaysia-old-shophouses-2.png");
+      background-size: 1600% 300%;
+      filter: hue-rotate(var(--hue));
+    }
+
+    .building_fragment:nth-child(4n + 1) {
+      left: 0%;
+      background-position-x: calc(var(--buildingImageX, 0%) + 0%);
+    }
+
+    .building_fragment:nth-child(4n + 2) {
+      left: 25%;
+      background-position-x: calc(var(--buildingImageX, 0%) + 6.25%);
+    }
+
+    .building_fragment:nth-child(4n + 3) {
+      left: 50%;
+      background-position-x: calc(var(--buildingImageX, 0%) + 12.5%);
+    }
+
+    .building_fragment:nth-child(4n + 4) {
+      left: 75%;
+      background-position-x: calc(var(--buildingImageX, 0%) + 18.75%);
+    }
+
+    .building_fragment:nth-child(n + 1):nth-child(-n + 4) {
+      top: 0%;
+      background-position-y: 0%;
+    }
+
+    .building_fragment:nth-child(n + 5):nth-child(-n + 8) {
+      top: 33.334%;
+      background-position-y: 50%;
+    }
+
+    .building_fragment:nth-child(n + 9):nth-child(-n + 12) {
+      top: 66.668%;
+      background-position-y: 100%;
+    }
+
+    .building.destroy .building_fragment {
+      z-index: 100;
+      animation: destroy 1s ease-out forwards;
+    }
+
+    @keyframes destroy {
+      to {
+        transform: translateX(var(--tx)) translateY(var(--ty)) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz));
+        opacity: 0;
+      }
+    }
 
 
-</script>
-  </body>
+    @keyframes laserOff {
+      to {
+        opacity: 0;
+      }
+    }
 
-  </html>
+    .road {
+      position: absolute;
+      bottom: 0;
+      width: calc(100% + 10px);
+      height: 20px;
+      background-image: linear-gradient(#555, #333);
+    }
+
+    .road::after {
+      content: '';
+      position: absolute;
+      top: calc(50% - 1px);
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-image: repeating-linear-gradient(90deg, #aaa 0px 5px, #aaa0 5px 10px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="game">
+    <div class="player idle"></div>
+    <div class="buildings"></div>
+    <div class="road"></div>
+    <div class="score">Score: 0</div>
+    <div class="msg">Click to Start...</div>
+  </div>
+  <script>
+
+    // DOM variables
+
+    const scoreDiv = document.querySelector('.score');
+    const msgDiv = document.querySelector('.msg');
+    const gameContainer = document.querySelector('.game');
+    const playerDiv = document.querySelector('.player');
+    const buildingsDiv = document.querySelector('.buildings');
+    const road = document.querySelector('.road');
+
+    // Game const / variables
+
+    const g = 0.098;
+    const buildings = [];
+    const player = {
+      x: 320,
+      y: 0,
+      v: 0
+    }
+
+    let gameStatus = 'start';
+    let speed, score, nextBuildingX, gameProgress, lastHeight, lastTime;
+
+    // On click event
+
+    gameContainer.addEventListener('mousedown', () => {
+      switch (gameStatus) {
+
+        case "start":
+        case "end":
+          startGame();
+          break;
+
+        case "on":
+          jump();
+          break;
+      }
+    });
+
+    // Game functions
+
+    function startGame() {
+
+      // Reset all game variables
+      buildings.splice(0, buildings.length);
+      buildingsDiv.innerHTML = '';
+
+      player.x = 480;
+      player.y = 0;
+      player.v = 0;
+
+      speed = 1;
+      score = 0;
+      nextBuildingX = 960;
+      gameProgress = 0;
+      lastHeight = 0;
+
+      lastTime = 0;
+      gameStatus = 'on';
+      render();
+
+      msgDiv.innerHTML = `<h2>Escape the exploding buildings!</h2>(Click to jump)`;
+      setTimeout(() => {
+        msgDiv.classList = 'msg off';
+      }, 3000);
+    }
+
+    function jump() {
+      if (player.v !== 0) { return false; }
+      player.v = 3.2;
+    }
+
+    function render() {
+
+      // set the Delat time
+
+      const thisTime = performance.now();
+      const dt = Math.min(32, Math.max(8, thisTime - lastTime)) / 16.666;
+      lastTime = thisTime;
+
+      // semi render for the end fall
+
+      if ((gameStatus === 'dead')) {
+
+        if (player.y > 0) {
+          player.y = Math.max(0, player.y + player.v * dt);
+          player.v -= g * dt;
+          playerDiv.style.setProperty('--player-y', (320 - player.y) + "px");
+          requestAnimationFrame(render);
+        } else {
+          gameStatus = 'end';
+          msgDiv.innerHTML += `Click to restart`;
+        }
+        return false;
+      }
+
+      // Render buildings
+
+      if (nextBuildingX < gameProgress + 960 + speed * dt) {
+        createBuilding();
+      }
+
+      let base = 0; // current building height
+      const destroyBuildings = []; // building that cross the 'destroy line'
+      let nextBuilding = buildings[0];
+
+      buildings.forEach((building, ix) => {
+
+        if (building.x < player.x) {
+          base = building.height;
+          nextBuilding = buildings[ix + 1]
+        }
+
+        if (building.x < gameProgress + 180) {
+          destroyBuildings.push(ix);
+        }
+
+        building.div.style.setProperty('--building-x', (building.x - gameProgress) + "px");
+      });
+
+      // Render player
+
+      if (player.v > 0) { // is jumping
+        player.y += player.v * dt;
+        player.v = Math.max(0, player.v - g * dt);
+        playerDiv.classList = 'player jump';
+
+      } else if (base < player.y) { // is falling
+        player.y = Math.max(base, player.y + player.v * dt);
+        player.v -= g * dt;
+        playerDiv.classList = 'player jump';
+
+      } else { // is running
+        player.v = 0;
+      }
+
+      playerDiv.classList = `player ${player.v === 0 ? 'run' : 'jump'}`;
+
+      let nextPlayerX = player.x + speed * dt;
+
+      if (nextPlayerX - gameProgress < 720) {
+        nextPlayerX += 1 / speed * dt;
+      }
+
+      if ((nextPlayerX > nextBuilding.x) && (nextBuilding.height > player.y)) {
+        nextPlayerX = nextBuilding.x;
+        playerDiv.classList = 'player idle';
+      }
+
+      player.x = nextPlayerX;
+
+      playerDiv.style.setProperty('--player-x', (nextPlayerX - gameProgress) + "px");
+      playerDiv.style.setProperty('--player-y', (320 - player.y) + "px");
+
+      road.style.left = (gameProgress % 10) * -1 + 'px';
+
+      destroyBuildings.forEach(ix => {
+
+        const thisDiv = buildings[ix].div
+        thisDiv.classList.add('destroy');
+
+        setTimeout(() => {
+          thisDiv.parentNode.removeChild(thisDiv);
+        }, 1000);
+
+        if ((player.x <= buildings[ix].x + buildings[ix].width) && (player.y <= buildings[ix].height)) {
+          gameStatus = 'dead';
+          playerDiv.classList = 'player dead';
+
+          msgDiv.innerHTML = `<h2>You're dead!</h2>`;
+          msgDiv.classList = 'msg';
+
+        } else {
+          buildings.splice(ix, 1);
+          score++;
+        }
+      });
+
+      speed += 0.001 * dt;
+      gameProgress += speed * dt;
+
+      scoreDiv.innerHTML = `Score: ${score}`;
+
+      if ((gameStatus === 'on') || (gameStatus === 'dead')) {
+        requestAnimationFrame(render)
+      }
+    }
+
+    function createBuilding() {
+
+      const building = {};
+      building.x = nextBuildingX;
+      building.width = 60 + Math.round(Math.random() * 60);
+      building.height = Math.min(Math.max((30 + Math.round(Math.random() * 120)), lastHeight - 30), lastHeight + 30);
+
+      const buildingDiv = document.createElement('div');
+      buildingDiv.classList = "building"
+      buildingDiv.style.width = building.width + 'px';
+      buildingDiv.style.height = building.height + 'px';
+
+      buildingDiv.style.setProperty('--hue', Math.round(Math.random() * 360) + 'deg');
+      buildingDiv.style.setProperty('--buildingImageX', Math.floor(Math.random() * 4) * 27.08333 + '%');
+
+      for (let i = 0; i < 12; i++) {
+
+        const fragmentDiv = document.createElement('div');
+
+        fragmentDiv.classList = "building_fragment"
+        fragmentDiv.style.setProperty('--tx', Math.random() * -120 + 'px');
+        fragmentDiv.style.setProperty('--ty', Math.random() * -160 + 'px');
+        fragmentDiv.style.setProperty('--rx', Math.random() * 360 + 'deg');
+        fragmentDiv.style.setProperty('--ry', Math.random() * 360 + 'deg');
+        fragmentDiv.style.setProperty('--rz', Math.random() * 360 + 'deg');
+
+        buildingDiv.appendChild(fragmentDiv);
+      }
+
+      building.div = buildingDiv;
+
+      buildingsDiv.appendChild(buildingDiv);
+      buildings.push(building);
+
+      nextBuildingX += building.width;
+      lastHeight = building.height;
+    }
+  </script>
+</body>
+
+</html>

@@ -2,101 +2,166 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Platform Escape Game</title>
+<title>Run and Jump Game</title>
 <style>
-    canvas { border: 1px solid #000; display: block; margin: auto; }
-    #timeDisplay { text-align: center; font-size: 20px; margin-top: 10px; }
+body { margin: 0; overflow: hidden; }
+#gameCanvas { background: skyblue; display: block; }
+#startScreen, #gameOverScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; display: flex; justify-content: center; align-items: center; flex-direction: column; cursor: pointer; }
+#score, #finalScore { position: absolute; top: 10px; right: 10px; color: black; font-size: 20px; }
+#gameOverScreen { display: none; }
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="800" height="600"></canvas>
-<div id="timeDisplay">Time: <span id="gameTime">0</span>s</div>
-
+<div id="startScreen" onclick="startGame()">Click to Start</div>
+<div id="gameOverScreen">
+    <h1>Game Over</h1>
+    <p>Your Score: <span id="finalScore">0</span></p>
+    <button onclick="restartGame()">Restart</button>
+</div>
+<canvas id="gameCanvas"></canvas>
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const timeDisplay = document.getElementById('gameTime');
+canvas.width = 800;
+canvas.height = 400;
 
-const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false };
+const player = {
+    x: 50,
+    y: 0,
+    width: 50,
+    height: 50,
+    dy: 0,
+    jumpStrength: -10,
+    gravity: 0.5,
+    onGround: false,
+    state: 'running',
+    images: {
+        running: 'URL_TO_RUNNING_IMAGE',
+        jumping: 'URL_TO_JUMPING_IMAGE',
+        idle: 'URL_TO_IDLE_IMAGE'
+    },
+    currentImage: 'running'
+};
 
-document.addEventListener('keydown', (e) => { keys[e.key] = true; });
-document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+let buildings = [];
+let gameSpeed = 2;
+let score = 0;
+let gameState = 'start';
+let frame = 0;
 
-const player = { x: 400, y: 300, width: 30, height: 30, dy: 0, dx: 0, jumpStrength: 10, highJump: false };
-const platforms = [{x:0, y:550, width:800, height:50}, /* Add more platforms here */];
-const lava = [{x:0, y:580, width:800, height:20}];
-const keysToCollect = [{x:100, y:500, color:'red'}, /* Add more keys */];
-const doors = [{x:700, y:450, width:30, height:50, color:'red'}];
-const rocket = {x:400, y:50, width:50, height:70, active: false};
-const powerUp = {x:200, y:200, width:20, height:20, type:'highJump'};
+function createBuilding() {
+    const minHeight = 20;
+    const maxHeight = 150;
+    const height = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+    buildings.push({
+        x: canvas.width,
+        width: 50,
+        height: height,
+        y: canvas.height - height
+    });
+}
 
-let gameTime = 0;
-let gameRunning = true;
-let startTime;
+function drawPlayer() {
+    let img = new Image();
+    img.src = player.images[player.currentImage];
+    ctx.drawImage(img, player.x, player.y, player.width, player.height);
+}
 
-function gameLoop() {
-    if (!gameRunning) return;
-    update();
-    render();
-    if (rocket.active) {
-        gameRunning = false;
-        timeDisplay.textContent = (Date.now() - startTime) / 1000;
-    } else {
-        requestAnimationFrame(gameLoop);
-    }
+function drawBuilding(building) {
+    ctx.fillStyle = 'green';
+    ctx.fillRect(building.x, building.y, building.width, building.height);
 }
 
 function update() {
-    // Player movement
-    if (keys.ArrowLeft) player.dx = -5;
-    else if (keys.ArrowRight) player.dx = 5;
-    else player.dx = 0;
+    if(gameState === 'running') {
+        frame++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (keys.ArrowUp && player.dy === 0) {
-        player.dy = player.highJump ? -15 : -player.jumpStrength;
-    }
-
-    player.dy += 0.5; // Gravity
-    player.x += player.dx;
-    player.y += player.dy;
-
-    // Collision detection with platforms
-    platforms.forEach(platform => {
-        if (player.y + player.height <= platform.y && 
-            player.y + player.height + player.dy >= platform.y &&
-            player.x + player.width > platform.x && 
-            player.x < platform.x + platform.width) {
+        // Player update
+        if(player.y < canvas.height - player.height - 10) {
+            player.dy += player.gravity;
+            player.y += player.dy;
+        } else {
+            player.y = canvas.height - player.height - 10;
+            player.onGround = true;
             player.dy = 0;
-            player.y = platform.y - player.height;
         }
-    });
 
-    // Lava, Key, Door, Power-up, and Rocket interactions
-    // Implement collision checks and game logic here
+        // Buildings update
+        for(let i = 0; i < buildings.length; i++) {
+            buildings[i].x -= gameSpeed;
+            drawBuilding(buildings[i]);
 
-    // Keep player within canvas
-    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-    if (player.y > canvas.height) {
-        player.x = 400;
-        player.y = 300;
-        player.dy = 0;
+            // Check collision
+            if(player.x < buildings[i].x + buildings[i].width &&
+               player.x + player.width > buildings[i].x &&
+               player.y + player.height > buildings[i].y) {
+                player.y = buildings[i].y - player.height;
+                player.onGround = true;
+            }
+
+            // Remove building if off screen or destroy it
+            if(buildings[i].x + buildings[i].width < 0 || (frame % 100 === 0 && i === buildings.length - 1)) {
+                buildings.splice(i, 1);
+                if(player.onGround && player.y >= buildings[i].y - player.height) {
+                    gameOver();
+                }
+                score++;
+            }
+        }
+
+        // Increase difficulty
+        if(frame % 300 === 0) {
+            gameSpeed += 0.5;
+        }
+
+        // Generate new buildings
+        if(frame % 70 === 0) {
+            createBuilding();
+        }
+
+        drawPlayer();
+        document.getElementById('score').innerText = score;
     }
+    
+    requestAnimationFrame(update);
 }
 
-function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'green';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-
-    // Render platforms, lava, keys, doors, power-ups, and rocket
-    // This would involve drawing rectangles or using images for each element
-
-    ctx.fillStyle = 'orange';
-    lava.forEach(l => ctx.fillRect(l.x, l.y, l.width, l.height));
+function gameOver() {
+    gameState = 'over';
+    document.getElementById('gameOverScreen').style.display = 'flex';
+    document.getElementById('finalScore').innerText = score;
 }
 
-startTime = Date.now();
-gameLoop();
+function startGame() {
+    gameState = 'running';
+    document.getElementById('startScreen').style.display = 'none';
+    player.y = canvas.height - player.height - 10;
+    player.onGround = true;
+    update();
+}
+
+function restartGame() {
+    buildings = [];
+    score = 0;
+    gameSpeed = 2;
+    frame = 0;
+    player.y = canvas.height - player.height - 10;
+    player.onGround = true;
+    document.getElementById('gameOverScreen').style.display = 'none';
+    gameState = 'running';
+    update();
+}
+
+document.addEventListener('click', () => {
+    if(gameState === 'running' && player.onGround) {
+        player.dy = player.jumpStrength;
+        player.onGround = false;
+        player.currentImage = 'jumping';
+    }
+});
+
+document.getElementById('score').innerText = score;
 </script>
 </body>
 </html>
