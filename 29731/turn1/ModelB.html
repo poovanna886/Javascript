@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Balloon Popper</title>
+<style>
+    canvas { border: 1px solid black; display: block; margin: auto; }
+    body { margin: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Game variables
+let score = 0;
+let timeLeft = 60;
+let balloons = [];
+let crosshair = {x: canvas.width / 2, y: canvas.height / 2};
+
+// Crosshair image (you need to load this image or draw it)
+const crosshairImg = new Image();
+crosshairImg.src = 'https://freesvg.org/storage/img/thumb/Aim.png'; // Replace with actual path
+
+// Balloon properties
+const balloonColors = ['red', 'blue', 'green', 'yellow', 'purple'];
+const spawnBalloon = () => {
+    balloons.push({
+        x: Math.random() * (canvas.width - 50),
+        y: canvas.height,
+        color: balloonColors[Math.floor(Math.random() * balloonColors.length)],
+        speed: Math.random() * 2 + 1
+    });
+};
+
+// Draw and update functions
+function drawCrosshair() {
+    ctx.drawImage(crosshairImg, crosshair.x - 15, crosshair.y - 15, 30, 30);
+}
+
+function drawBalloon(balloon) {
+    ctx.beginPath();
+    ctx.arc(balloon.x, balloon.y, 20, 0, Math.PI * 2);
+    ctx.fillStyle = balloon.color;
+    ctx.fill();
+}
+
+function updateGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Update balloons
+    balloons = balloons.filter(balloon => {
+        balloon.y -= balloon.speed;
+        if (balloon.y < -20) return false;
+        drawBalloon(balloon);
+        return true;
+    });
+    
+    // Check for pop
+    if (clicked) {
+        balloons = balloons.filter(balloon => {
+            const distance = Math.hypot(balloon.x - crosshair.x, balloon.y - crosshair.y);
+            if (distance < 20) {
+                score++;
+                return false;
+            }
+            return true;
+        });
+    }
+    
+    drawCrosshair();
+    updateUI();
+    
+    if (Math.random() < 0.02) spawnBalloon();
+}
+
+function updateUI() {
+    ctx.fillStyle = "black";
+    ctx.font = "20px Arial";
+    ctx.fillText(`Score: ${score}`, 10, 30);
+    ctx.fillText(`Time: ${timeLeft}`, canvas.width - 100, 30);
+}
+
+// Game loop
+function gameLoop() {
+    if (timeLeft > 0) {
+        updateGame();
+        requestAnimationFrame(gameLoop);
+    } else {
+        alert(`Game Over! Your score: ${score}`);
+        location.reload();
+    }
+}
+
+// Event listeners
+let clicked = false;
+canvas.addEventListener('mousemove', (e) => {
+    crosshair.x = e.clientX;
+    crosshair.y = e.clientY;
+});
+
+canvas.addEventListener('click', () => clicked = true);
+document.addEventListener('click', () => {
+    clicked = false; // Reset click after handling
+});
+
+// Start game
+setInterval(() => { if(timeLeft > 0) timeLeft--; }, 1000);
+gameLoop();
+</script>
+</body>
+</html>

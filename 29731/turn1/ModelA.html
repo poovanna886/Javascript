@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Balloon Popper</title>
+<style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; background: #87CEEB; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+// Setup the canvas
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Game variables
+let balloons = [];
+let score = 0;
+let timeLeft = 60;
+let gameInterval;
+let crosshair = { x: 0, y: 0, size: 20 };
+
+// Balloon object
+function Balloon() {
+    this.x = Math.random() * (canvas.width - 30) + 15;
+    this.y = canvas.height + 50;
+    this.radius = 15;
+    this.speed = Math.random() * 2 + 1;
+    this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+}
+
+// Draw functions
+function drawCrosshair() {
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(crosshair.x - crosshair.size/2, crosshair.y);
+    ctx.lineTo(crosshair.x + crosshair.size/2, crosshair.y);
+    ctx.moveTo(crosshair.x, crosshair.y - crosshair.size/2);
+    ctx.lineTo(crosshair.x, crosshair.y + crosshair.size/2);
+    ctx.stroke();
+}
+
+function drawBalloons() {
+    for(let b of balloons) {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+        ctx.fillStyle = b.color;
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+function updateBalloons() {
+    for(let b of balloons) {
+        b.y -= b.speed;
+        if(b.y < -b.radius) {
+            balloons.splice(balloons.indexOf(b), 1);
+        }
+    }
+}
+
+function popAnimation(b) {
+    let radius = b.radius;
+    let popInterval = setInterval(() => {
+        if(radius < 0) {
+            clearInterval(popInterval);
+            return;
+        }
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = b.color;
+        ctx.fill();
+        radius -= 2;
+    }, 10);
+    balloons.splice(balloons.indexOf(b), 1);
+    score += 10;
+}
+
+// Game loop
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    updateBalloons();
+    drawBalloons();
+    drawCrosshair();
+    
+    // Add new balloon
+    if(Math.random() < 0.02) { // 2% chance each frame to spawn a balloon
+        balloons.push(new Balloon());
+    }
+    
+    // Draw score and timer
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Score: ${score}`, 10, 30);
+    ctx.fillText(`Time: ${timeLeft}`, canvas.width - 100, 30);
+
+    if(timeLeft <= 0) {
+        clearInterval(gameInterval);
+        alert(`Game Over! Your score: ${score}`);
+        location.reload();
+    }
+}
+
+// Mouse move event for crosshair
+canvas.addEventListener('mousemove', function(e) {
+    let rect = canvas.getBoundingClientRect();
+    crosshair.x = e.clientX - rect.left;
+    crosshair.y = e.clientY - rect.top;
+});
+
+// Mouse click event for popping balloons
+canvas.addEventListener('click', function(e) {
+    for(let b of balloons) {
+        if(Math.hypot(b.x - crosshair.x, b.y - crosshair.y) < b.radius) {
+            popAnimation(b);
+            break; // Only pop one balloon per click
+        }
+    }
+});
+
+// Timer
+function countdown() {
+    if(timeLeft > 0) {
+        timeLeft--;
+    }
+}
+
+// Start the game
+gameInterval = setInterval(() => {
+    gameLoop();
+    countdown();
+}, 1000 / 60); // Roughly 60 FPS
+
+</script>
+</body>
+</html>
