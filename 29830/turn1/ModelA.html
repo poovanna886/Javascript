@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bridge Crossing Game</title>
+<style>
+    body { 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        margin: 0; 
+        background: #f0f0f0; 
+    }
+    canvas { 
+        border: 2px solid #000; 
+        background: #87CEEB; 
+    }
+    #score, #gameOver {
+        position: absolute;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        color: #333;
+    }
+    #gameOver {
+        display: none;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+    }
+</style>
+</head>
+<body>
+<div id="score">Score: 0</div>
+<div id="gameOver">Game Over! Click to restart</div>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDiv = document.getElementById('score');
+const gameOverDiv = document.getElementById('gameOver');
+
+let score = 0;
+let pillars = [];
+let bridge = { growing: false, length: 0, angle: 0 };
+let player = { x: 50, y: 350, width: 20, height: 40 };
+let gameOver = false;
+
+function resetGame() {
+    score = 0;
+    pillars = [{x: 50, width: 50}];
+    for(let i = 1; i < 5; i++) {
+        pillars.push({
+            x: pillars[i-1].x + 200 + Math.random() * 300,
+            width: 50
+        });
+    }
+    bridge = { growing: false, length: 0, angle: 0 };
+    gameOver = false;
+    gameOverDiv.style.display = 'none';
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw pillars
+    pillars.forEach(pillar => {
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(pillar.x, canvas.height - pillar.width, pillar.width, -canvas.height);
+    });
+
+    // Draw player
+    ctx.fillStyle = '#FF4500';
+    ctx.fillRect(player.x, player.y, player.width, -player.height);
+
+    // Draw bridge
+    if (bridge.growing || bridge.length > 0) {
+        ctx.save();
+        ctx.translate(player.x + player.width, player.y);
+        ctx.rotate(bridge.angle);
+        ctx.fillStyle = '#D2691E';
+        ctx.fillRect(0, -5, bridge.length, 10);
+        ctx.restore();
+    }
+
+    scoreDiv.textContent = `Score: ${score}`;
+}
+
+function update() {
+    if (!gameOver) {
+        if (bridge.growing) {
+            bridge.length += 2;
+        } else if (bridge.length > 0) {
+            bridge.angle += 0.05;
+            if (bridge.angle > Math.PI / 2) {
+                // Check if bridge has landed
+                let nextPillar = pillars.find(p => p.x > player.x);
+                if (nextPillar) {
+                    const bridgeEndX = player.x + player.width + bridge.length * Math.cos(bridge.angle);
+                    if (Math.abs(bridgeEndX - (nextPillar.x + nextPillar.width / 2)) < 5) {
+                        score += 5000; // Perfect center bonus
+                    }
+                    if (bridgeEndX >= nextPillar.x && bridgeEndX <= nextPillar.x + nextPillar.width) {
+                        score += Math.floor(bridge.length);
+                        player.x = nextPillar.x;
+                        bridge = { growing: false, length: 0, angle: 0 };
+                    } else {
+                        gameOver = true;
+                        gameOverDiv.style.display = 'block';
+                    }
+                }
+            }
+        }
+    }
+}
+
+canvas.addEventListener('mousedown', () => {
+    if (gameOver) resetGame();
+    else bridge.growing = true;
+});
+
+canvas.addEventListener('mouseup', () => {
+    bridge.growing = false;
+    bridge.angle = 0;
+});
+
+function gameLoop() {
+    update();
+    draw();
+    if (!gameOver) requestAnimationFrame(gameLoop);
+}
+
+resetGame();
+gameLoop();
+</script>
+</body>
+</html>

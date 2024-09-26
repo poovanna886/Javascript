@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Connect Four</title>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #f0f0f0;
+        font-family: 'Arial', sans-serif;
+    }
+    #gameBoard {
+        background: #0069aa;
+        display: grid;
+        grid-template-columns: repeat(7, 50px);
+        grid-gap: 10px;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .cell {
+        width: 50px;
+        height: 50px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .chip {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        transition: transform 0.3s ease-out;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .red { background: radial-gradient(circle at 30% 30%, #ff4500, #8b0000); }
+    .yellow { background: radial-gradient(circle at 30% 30%, #ffd700, #daa520); }
+    #message {
+        margin: 20px 0;
+        font-size: 24px;
+        color: #333;
+    }
+    #newGame {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background: #4CAF50;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: background 0.3s;
+    }
+    #newGame:hover { background: #45a049; }
+</style>
+</head>
+<body>
+<div id="gameBoard"></div>
+<div id="message"></div>
+<button id="newGame">New Game</button>
+
+<script>
+    const board = document.getElementById('gameBoard');
+    const message = document.getElementById('message');
+    const newGameBtn = document.getElementById('newGame');
+    let gameState = Array(6).fill().map(() => Array(7).fill(0));
+    let currentPlayer = 1;
+
+    function createBoard() {
+        board.innerHTML = '';
+        gameState.forEach((row, rowIndex) => {
+            row.forEach((_, colIndex) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.onclick = () => dropChip(colIndex);
+                board.appendChild(cell);
+            });
+        });
+    }
+
+    function dropChip(column) {
+        for (let row = 5; row >= 0; row--) {
+            if (gameState[row][column] === 0) {
+                gameState[row][column] = currentPlayer;
+                const chip = document.createElement('div');
+                chip.className = `chip ${currentPlayer === 1 ? 'red' : 'yellow'}`;
+                chip.style.transform = `translateY(${-50 * (6 - row)}px)`;
+                board.children[row * 7 + column].appendChild(chip);
+                if (checkWin(row, column)) {
+                    message.textContent = `Game Over! Player ${currentPlayer} wins!`;
+                    setTimeout(() => alert('Game Over!'), 10);
+                    return;
+                }
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                message.textContent = `Player ${currentPlayer}'s turn`;
+                return;
+            }
+        }
+        message.textContent = "Column full!";
+    }
+
+    function checkWin(row, col) {
+        const directions = [[0,1], [1,0], [1,1], [1,-1]];
+        for(let [dx, dy] of directions) {
+            let count = 1;
+            for(let i = 1; i < 4; i++) {
+                if (row + i*dx < 0 || row + i*dx >= 6 || col + i*dy < 0 || col + i*dy >= 7) break;
+                if (gameState[row + i*dx][col + i*dy] === currentPlayer) count++;
+                else break;
+            }
+            for(let i = 1; i < 4; i++) {
+                if (row - i*dx < 0 || row - i*dx >= 6 || col - i*dy < 0 || col - i*dy >= 7) break;
+                if (gameState[row - i*dx][col - i*dy] === currentPlayer) count++;
+                else break;
+            }
+            if (count >= 4) return true;
+        }
+        return false;
+    }
+
+    function resetGame() {
+        gameState = Array(6).fill().map(() => Array(7).fill(0));
+        currentPlayer = 1;
+        message.textContent = "Player 1's turn";
+        createBoard();
+    }
+
+    newGameBtn.onclick = resetGame;
+    resetGame();
+</script>
+</body>
+</html>

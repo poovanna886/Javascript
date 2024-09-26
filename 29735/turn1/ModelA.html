@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Space Landing Game</title>
+<style>
+    #gameArea {
+        width: 800px;
+        height: 600px;
+        border: 2px solid black;
+        margin: auto;
+        overflow: hidden;
+        position: relative;
+    }
+    .cloud {
+        position: absolute;
+        animation: moveClouds linear infinite;
+    }
+    @keyframes moveClouds {
+        from {transform: translateX(800px);}
+        to {transform: translateX(-200px);}
+    }
+</style>
+</head>
+<body>
+<div id="gameArea">
+    <svg width="100%" height="100%" id="gameCanvas">
+        <rect id="landingPad" width="40" height="10" x="380" y="590" fill="green"/>
+        <!-- Clouds would be added here dynamically -->
+    </svg>
+    <div id="message" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">Click to Start/Restart</div>
+</div>
+<script>
+    const gameArea = document.getElementById('gameArea');
+    const svgNS = "http://www.w3.org/2000/svg";
+    const ship = document.createElementNS(svgNS, 'polygon');
+    const landingPad = document.getElementById('landingPad');
+    const message = document.getElementById('message');
+
+    let game = {
+        state: 'start',
+        ship: {x: 400, y: 50, angle: 0, velocityY: 0, velocityX: 0},
+        gravity: 0.1,
+        thrust: 0.2,
+        rotateSpeed: 2
+    };
+
+    // Create spaceship
+    ship.setAttribute('points', '0,20 10,0 20,20');
+    ship.setAttribute('fill', 'red');
+    svg.appendChild(ship);
+
+    // Function to create clouds
+    function createCloud(x, y, size, speed) {
+        let cloud = document.createElementNS(svgNS, 'ellipse');
+        cloud.setAttribute('cx', x);
+        cloud.setAttribute('cy', y);
+        cloud.setAttribute('rx', size);
+        cloud.setAttribute('ry', size / 2);
+        cloud.setAttribute('fill', 'white');
+        cloud.classList.add('cloud');
+        cloud.style.animationDuration = `${speed}s`;
+        svg.appendChild(cloud);
+    }
+
+    // Setup clouds
+    for(let i = 0; i < 5; i++) {
+        createCloud(Math.random() * 800, Math.random() * 400, 30 + Math.random() * 30, 10 + Math.random() * 10);
+    }
+
+    function update() {
+        if(game.state === 'playing') {
+            // Update ship position and velocity
+            game.ship.velocityY += game.gravity;
+            game.ship.y += game.ship.velocityY;
+            game.ship.x += game.ship.velocityX;
+            ship.setAttribute('transform', `translate(${game.ship.x},${game.ship.y}) rotate(${game.ship.angle})`);
+
+            // Check for game over conditions
+            if(game.ship.y > 580 || game.ship.y < 0 || game.ship.x < 0 || game.ship.x > 780) {
+                gameOver();
+            } else if(checkLanding()) {
+                if(Math.abs(game.ship.velocityY) > 1 || Math.abs(game.ship.angle) > 5) {
+                    gameOver();
+                } else {
+                    alert('Landed Successfully!');
+                    game.state = 'over';
+                }
+            }
+        }
+        requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+        message.style.display = 'block';
+        game.state = 'over';
+    }
+
+    function checkLanding() {
+        return game.ship.y + 20 >= 590 && Math.abs(game.ship.x - landingPad.getAttribute('x')) < 20;
+    }
+
+    // Controls
+    document.addEventListener('keydown', function(e) {
+        if(game.state !== 'playing') return;
+        switch(e.key) {
+            case 'w': game.ship.velocityY -= game.thrust; break;
+            case 'a': game.ship.angle += game.rotateSpeed; break;
+            case 'd': game.ship.angle -= game.rotateSpeed; break;
+            case 's': game.ship.velocityY += game.thrust; break;
+        }
+    });
+
+    // Restart/Start game
+    gameArea.addEventListener('click', function() {
+        if(game.state !== 'playing') {
+            game.ship = {x: 400, y: 50, angle: 0, velocityY: 0, velocityX: 0};
+            game.state = 'playing';
+            message.style.display = 'none';
+            update();
+        }
+    });
+
+    update(); // Start the game loop
+</script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Crossing Game</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Peralta&display=swap" rel="stylesheet">
+    <style>
+        #game_box {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(to bottom, skyblue, dodgerblue 50%);
+            background-size: 100% auto;
+            background-position: 50% -20%;
+            background-blend-mode: multiply;
+            overflow: hidden;
+            font-family: system-ui;
+            --bg-color: goldenrod;
+        }
+
+        #game_box:after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-size: 450px auto;
+            mix-blend-mode: overlay;
+            opacity: .75;
+        }
+
+        #double {
+            position: fixed;
+            left: 50%;
+            top: 45%;
+            font-family: system-ui;
+            color: white;
+            text-shadow: 1px 1px black;
+            transform: translate(-50%, -50%);
+            letter-spacing: 2px;
+            pointer-events: none;
+            opacity: 0;
+            transition: .25s linear;
+        }
+
+        .show_double {
+            opacity: 1 !important;
+        }
+
+        #score_box {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background-size: 40px 40px;
+            background-repeat: repeat;
+            width: 300px;
+            border-radius: 1rem;
+            aspect-ratio: 1/.5;
+            filter: drop-shadow(1px 1px rgba(0, 0, 0, .25));
+        }
+
+        #score_box:after {
+            content: 'Hold mouse down to build bridge... \A release to drop it.';
+            white-space: pre;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translate(-50%, 25%);
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            width: fit-content;
+        }
+
+        #score_box div {
+            width: calc(100% - 1rem);
+            height: calc(100% - 1rem);
+            position: absolute;
+            left: .5rem;
+            top: .5rem;
+            box-sizing: border-box;
+            padding: 1rem 2rem;
+            border-radius: 2rem;
+            font-family: 'Peralta', system-ui;
+            font-size: 2rem;
+            text-shadow: 2px 2px skyblue;
+            display: grid;
+            place-items: center;
+            align-content: center;
+            color: red;
+            text-align: center;
+            background: white;
+            --mask: radial-gradient(20px at 20px 20px, #0000 98%, #000) -20px -20px;
+            -webkit-mask: var(--mask);
+            mask: var(--mask);
+        }
+
+        #score_box span {
+            font-size: 4rem;
+            line-height: 3rem;
+        }
+
+        #santa {
+            width: 50px;
+            aspect-ratio: 1/1.25;
+            position: absolute;
+            left: 44.5%;
+            bottom: calc(40% + 5px);
+            transform-origin: 50% 100%;
+            transition: 2s;
+            z-index: 100;
+            border-radius: 0 1rem 0 0;
+        }
+
+        #santa:after {
+            content: '';
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-image: var(--santa-sprite);
+            background-size: 100% auto;
+            transform-origin: 50% 100%;
+            animation: santa 1s linear infinite;
+        }
+
+        @keyframes santa {
+            50% {
+                transform: scaleY(1.05);
+            }
+        }
+
+        .santa_moving:after {
+            animation: move .5s linear infinite !important;
+        }
+
+        @keyframes move {
+            25% {
+                transform: rotate(5deg);
+            }
+
+            75% {
+                transform: rotate(-5deg);
+            }
+        }
+
+        .fail {
+            animation: fail 2s forwards;
+        }
+
+        @keyframes fail {
+            15% {
+                bottom: 55%;
+            }
+
+            100% {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        #stick {
+            width: 4px;
+            height: 0px;
+            position: absolute;
+            left: calc(45% + 45px);
+            bottom: 40%;
+            background:
+                linear-gradient(to bottom, red 50%, white 50%);
+            background-size: 5px 10px;
+            transform-origin: 100% 100%;
+            box-shadow: 1px 0 firebrick;
+            z-index: 1000;
+        }
+
+        .falling_stick {
+            transition: 1s linear;
+            transform: rotate(90deg);
+        }
+
+        #pillar_box {
+            position: absolute;
+            inset: 0;
+            transition: 2s;
+            background:
+                radial-gradient(100vw 50vh at 50% 100%, #efefef 65%, transparent 66%),
+                radial-gradient(100vw 50vh at 0% 90%, rgba(255, 255, 255, .75) 65%, transparent 66%),
+                radial-gradient(100vw 50vh at 100% 90%, rgba(255, 255, 255, .75) 65%, transparent 66%);
+            background-size: 100vw auto, 100vw auto, 100vw auto;
+        }
+
+        .pillar {
+            width: 50px;
+            height: 40vh;
+            position: absolute;
+            bottom: 0;
+            left: 45%;
+            filter: drop-shadow(0 0 5px rgba(0, 0, 0, .25));
+        }
+
+        .pillar:before {
+            content: '';
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transform-origin: 50% 0%;
+            transform: skewX(var(--skew));
+            background:
+                linear-gradient(45deg, white 25%, transparent 25.5%, transparent 50%, white 50.5%, white 75%, transparent 75.5%, transparent),
+                red;
+            background-size: 40px 40px;
+            background-repeat: repeat;
+        }
+
+        .pillar:after {
+            content: '';
+            width: 100%;
+            height: 15px;
+            position: absolute;
+            left: 0;
+            top: -1vmin;
+            transform-origin: 50% 0%;
+            background:
+                radial-gradient(100% 100% at 50% 50%, red 15%, transparent 15%),
+                white;
+            border-radius: 50%;
+        }
+
+        .pillar:nth-child(n+3) {
+            filter: grayscale(1) brightness(.5);
+        }
+
+
+        .score_block {
+            width: 100%;
+            font-size: 1.5rem;
+            line-height: 2rem;
+        }
+
+        .score_heading {
+            font-size: .75rem;
+            display: inline-block;
+            width: 33%;
+            text-shadow: none;
+            border-top: 1px dotted red;
+            padding-top: 1rem;
+        }
+
+        .score_block span {
+            display: inline-block;
+            width: 33%;
+            box-sizing: border-box;
+            padding: 0 .5rem;
+            font-family: monospace;
+            text-transform: uppercase;
+            margin-top: .5rem;
+        }
+
+        .score_block span:nth-child(1),
+        .rank {
+            width: 20%;
+        }
+
+        .score_block span:nth-child(3),
+        .score_laps {
+            width: 47%;
+        }
+
+        .disclaimer {
+            position: fixed;
+            left: 1.85rem;
+            bottom: 0;
+            text-align: left;
+            font-size: .75rem;
+            font-family: system-ui;
+            color: gray;
+            /*   width: 35ch; */
+        }
+
+        :root {
+            --santa-sprite: url('https://freesvg.org/img/1540584935.png')
+        }
+    </style>
+</head>
+
+<body>
+    <div id='game_box'>
+        <div id='score_box'>
+            <div>SCORE<br><span>0</span></div>
+        </div>
+        <div id='stick'></div>
+        <div id='santa'></div>
+        <div id='pillar_box'>
+            <div class='pillar'></div>
+        </div>
+    </div>
+
+    <div id='double'>5K BONUS</div>
+
+    <script>
+        function init() {
+
+            var stick_h = 0,
+                pillars_x = 0,
+                score = 0,
+                offset = 50,
+                original_x = window.innerWidth * .45,
+                last_p = original_x,
+                stick_growing,
+                growth_rate = 3,
+                check_score = 0;
+
+            function addPillar() {
+                var p = document.createElement('div')
+                p.className = 'pillar'
+                last_p = last_p + Math.floor(Math.random() * 250) + 100
+                p.style.left = last_p + 'px'
+                var skew = Math.random() < .5 ? Math.random() * 5 + 'deg' : -(Math.random() * 5) + 'deg',
+                    color = 'hsl(' + Math.random() * 360 + 'deg, 75%, 40%)'
+
+                p.style.setProperty('--skew', skew)
+                p.style.setProperty('--bg-color', color)
+                pillar_box.appendChild(p)
+            }
+
+            addPillar()
+            addPillar()
+            addPillar()
+            addPillar()
+            addPillar()
+
+            function stickGrow() {
+                stick_h = stick_h + growth_rate
+                stick.style.height = stick_h + 'px'
+                stick_growing = setTimeout(stickGrow, 1000 / 60)
+            }
+
+            function doubleScore() {
+                double.classList.add('show_double')
+                setTimeout(function () { double.classList.remove('show_double') }, 2000)
+            }
+
+            function runTheGame() {
+                window.removeEventListener('mousedown', stickGrow)
+                window.removeEventListener('mouseup', runTheGame)
+                clearTimeout(stick_growing)
+                stick.classList.add('falling_stick')
+
+                var p1 = document.querySelectorAll('.pillar')[0].getBoundingClientRect(),
+                    p2 = document.querySelectorAll('.pillar')[1].getBoundingClientRect()
+
+                stick.ontransitionend = function () {
+                    if (stick_h < p2.right - p1.right && stick_h > p2.left - p1.right) {
+                        score = score + Math.round(p2.x - p1.x)
+                        santa.style.transform = 'translateX(' + (p2.x - original_x) + 'px)'
+                        santa.classList.add('santa_moving')
+                    } else {
+                        santa.style.transform = 'translateX(' + (stick_h + offset) + 'px)'
+                    }
+
+                    if (stick_h < ((p2.right - p2.width * .35) - p1.right) && stick_h > (p2.left + p2.width * .4) - p1.right) {
+                        score = score + 5000
+                        doubleScore()
+                    }
+                    score_box.querySelector('span').innerHTML = score
+
+                    santa.ontransitionend = function () {
+                        // if success else fail
+                        if (stick_h < p2.right - p1.right && stick_h > p2.left - p1.right) {
+                            santa.classList.add('success')
+                            stick_h = 0
+                            stick.style.height = stick_h + 'px'
+                            stick.classList.remove('falling_stick')
+                            santa.style.transform = ''
+                            pillars_x = pillars_x + (p2.x - p1.x)
+                            pillar_box.style.left = -pillars_x + 'px'
+                            document.querySelectorAll('.pillar')[0].remove()
+                            addPillar()
+                            pillar_box.ontransitionend = function () {
+                                window.addEventListener('mousedown', stickGrow)
+                                window.addEventListener('mouseup', runTheGame)
+                                santa.classList.remove('santa_moving')
+                            }
+                        } else {
+                            if (!santa.classList.contains('success')) {
+                                check_score = score
+
+                                score = 0
+                                stick_h = 0
+                                score_box.querySelector('span').innerHTML = score
+                                stick.style.height = stick_h + 'px'
+                                stick.classList.remove('falling_stick')
+                                santa.classList.remove('santa_moving')
+                                santa.classList.add('fail')
+                                santa.onanimationend = function () {
+                                    santa.style.transform = ''
+                                    santa.classList.remove('fail')
+                                    santa.classList.add('success')
+                                }
+                            } else {
+                                santa.classList.remove('success')
+                                window.addEventListener('mousedown', stickGrow)
+                                window.addEventListener('mouseup', runTheGame)
+                            }
+                        }
+                    }
+                }
+            }
+
+            window.addEventListener('mousedown', stickGrow)
+            window.addEventListener('mouseup', runTheGame)
+        }
+
+        setTimeout(init, 1000)
+    </script>
+</body>
+
+</html>

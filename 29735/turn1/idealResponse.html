@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Landing Game</title>
+    <style>
+        div#world {
+            width: 25em;
+            height: 40em;
+            background-color: #8ae;
+            background-image: linear-gradient(#68c, #8ae);
+            position: relative;
+            border: 0.5em solid #457;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        p#alert {
+            font-family: Impact;
+            font-size: 2em;
+            text-align: center;
+            color: #457;
+            position: relative;
+        }
+
+        svg#ship {
+            width: 5em;
+            height: 5em;
+            position: absolute;
+            left: 0em;
+            bottom: 0em;
+            transform-origin: 50% 50%;
+            z-index: 10;
+        }
+
+        svg#ship.explode {
+            border-radius: 50%;
+            animation: explode 1s 1;
+            opacity: 0;
+        }
+
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                box-shadow: inset 0 0 0 10px yellow,
+                    0 0 0 20px yellow;
+            }
+
+            100% {
+                opacity: 0;
+                box-shadow: inset 0 0 0 0px yellow,
+                    0 0 0 -20px yellow;
+            }
+        }
+
+        path#jets {
+            transform: scale(0.9);
+            transform-origin: 50%;
+            transition: all 0.2s;
+        }
+
+        path#jets.on {
+            transform: scale(1.3);
+            transform-origin: 20% 80%;
+        }
+
+        div#ground {
+            background: #8d7;
+            position: absolute;
+            width: 100%;
+            height: 1em;
+            bottom: 0;
+        }
+
+        div#land {
+            width: 4em;
+            height: 0.8em;
+            background: #888;
+            position: absolute;
+            left: 0em;
+            bottom: 0.5em;
+            border-radius: 3px;
+        }
+
+        div#land:before,
+        div#land:after {
+            content: "";
+            display: block;
+            width: 0.8em;
+            height: 0.5em;
+            background: #555;
+            position: absolute;
+        }
+
+        div#land:before {
+            left: 0.5em;
+            top: 0.8em;
+        }
+
+        div#land:after {
+            left: 2.7em;
+            top: 0.8em;
+        }
+
+        div#landmark {
+            width: 0;
+            height: 0;
+            position: absolute;
+            border: 1em solid transparent;
+            border-top: 1em solid #fc2;
+            bottom: 2em;
+            left: 1em;
+            animation: landmark 1s infinite;
+            z-index: 0;
+        }
+
+        @keyframes landmark {
+            0% {
+                bottom: 2em
+            }
+
+            100% {
+                bottom: 0em
+            }
+        }
+
+        b {
+            z-index: 0;
+            animation: cloud 30s infinite linear;
+            position: absolute;
+            display: block;
+            border-radius: 2em;
+            width: 9.2em;
+            height: 2.5em;
+            background: white;
+        }
+
+        .space b {
+            animation: star 30s infinite linear;
+            width: 0.15em;
+            height: 0.15em;
+        }
+
+        b:after,
+        b:before {
+            content: "";
+            display: inline-block;
+            background: white;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        b:after {
+            width: 5em;
+            height: 5em;
+            left: -0.5em;
+            top: -1.5em;
+        }
+
+        b:before {
+            width: 4em;
+            height: 4em;
+            top: -2em;
+            left: 0.8em;
+        }
+
+        .space b:after {
+            width: 0.1em;
+            height: 0.1em;
+            top: -10em;
+        }
+
+        .space b:before {
+            width: 0.3em;
+            height: 0.3em;
+            left: -6em;
+        }
+
+        b:nth-child(1) {
+            top: 1em;
+            left: 1em;
+            animation-delay: -5s
+        }
+
+        b:nth-child(2) {
+            top: 5em;
+            left: 5em;
+            animation-duration: 25s
+        }
+
+        b:nth-child(3) {
+            top: 10em;
+            left: 10em;
+            animation-duration: 20s;
+            animation-delay: -15s
+        }
+
+        b:nth-child(4) {
+            top: 18em;
+            left: 18em;
+            animation-delay: -10s
+        }
+
+        @keyframes cloud {
+            0% {
+                left: -10em;
+            }
+
+            100% {
+                left: 25em;
+            }
+        }
+
+        @keyframes star {
+            0% {
+                top: -10em;
+            }
+
+            100% {
+                top: 25em;
+            }
+        }
+
+        #help {
+            z-index: 9;
+            color: white;
+            position: absolute;
+            right: 1em;
+            top: 1em;
+        }
+
+        .icon {
+            font-family: Impact;
+            display: block;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            text-align: center;
+            background: #abf;
+            position: absolute;
+            right: 0;
+            top: 0;
+            cursor: pointer;
+        }
+
+        #help #msg {
+            display: none;
+            font-family: Sans-serif;
+            text-align: right;
+            background: rgb(7, 39, 168);
+            padding: 1em;
+            border-radius: 1em;
+            border: 2px solid white;
+        }
+
+        #help:hover #msg {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="world">
+        <b></b><b></b><b></b><b></b>
+        <p id="alert">Click to begin</p>
+        <svg id="ship" class="rocket" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <path d="M359.828 328.707L246.761 378.84l37.333 56.533 52.267-48c-5.333-21.333 3.2-44.8 23.467-58.666z"
+                fill="#ced6e0" />
+            <path
+                d="M305.428 512.173l65.067-65.067c23.467-23.467 36.267-55.467 36.267-88.533-33.067 0-65.067 12.8-88.533 36.267l-65.067 65.067 52.266 52.266z"
+                fill="#f3705a" />
+            <path
+                d="M120.894 176.173l-42.667 53.333 56.533 36.267 50.133-113.067c-15.999 21.334-41.599 29.867-63.999 23.467z"
+                fill="#ced6e0" />
+            <path
+                d="M.361 207.107l65.067-65.067c23.467-23.467 55.467-36.267 88.533-36.267 0 33.067-12.8 65.067-36.267 88.533l-65.067 65.067L.361 207.107z"
+                fill="#f3705a" />
+            <g fill="#ffd15c">
+                <path
+                    d="M322.816 495.137l-17.347 17.347-52.042-52.041 17.348-17.348zM69.392 241.284L52.045 258.63.003 206.59l17.347-17.347z" />
+            </g>
+            <path
+                d="M208.361 415.107C551.828 284.973 510.228-3.027 511.294 1.24c4.267 1.067-283.733-39.467-413.867 302.933l110.934 110.934z"
+                fill="#f3f3f3" />
+            <g fill="#415a6b">
+                <path
+                    d="M108.094 279.64c-3.2 8.533-6.4 16-9.6 24.533L209.428 414.04c8.533-3.2 17.067-6.4 24.533-9.6l-125.867-124.8z" />
+                <circle cx="302.228" cy="210.307" r="73.6" />
+            </g>
+            <circle cx="302.228" cy="210.307" r="55.467" fill="#8ad7f8" />
+            <g fill="#55c0eb">
+                <path
+                    d="M340.628 249.773V170.84c-6.4-6.4-13.867-9.6-21.333-12.8v104.533c8.533-3.2 14.933-7.466 21.333-12.8zM294.761 155.907v108.8a25.992 25.992 0 0 0 12.8 0V154.84c-4.267 0-8.533 0-12.8 1.067z" />
+            </g>
+            <path
+                d="M332.094 33.24l146.133 146.133c4.267-8.533 7.467-17.067 10.667-24.533L356.628 23.64c-7.467 3.2-16 6.4-24.534 9.6z"
+                fill="#ffd15c" />
+            <path d="M488.894 154.84c32-86.4 22.4-155.733 22.4-153.6 2.133 0-67.2-8.533-153.6 22.4l131.2 131.2z"
+                fill="#f3705a" />
+            <path class="c-rocket__flame c-rocket__flame--power" id="jets"
+                d="M137.961 455.64c-22.4 22.4-137.6 56.533-137.6 56.533s34.133-115.2 56.533-137.6c22.4-22.4 58.667-22.4 80 0 22.4 22.4 22.4 58.667 1.067 81.067z"
+                fill="#ffd15c" />
+            <path class="c-rocket__flame"
+                d="M137.961 421.507c-12.8 12.8-80 33.067-80 33.067s20.267-67.2 33.067-80c12.8-12.8 34.133-12.8 46.933 0 12.8 12.799 12.8 34.133 0 46.933z"
+                fill="#f7b64c" />
+        </svg>
+        <div id="ground"></div>
+        <div id="land">
+            <div id="landmark"></div>
+        </div>
+        <div id="help">
+            <span class="icon">?</span>
+            <p id="msg">WASD or Arrows to Move<br>Click to restart</p>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        var load = function () {
+            var state = 'stopped';
+            var jets = $('#jets');
+            var flame = $('.c-rocket__flame');
+            var alert = $('#alert');
+            //world
+            var world = $('#world');
+            world.gravity = -0.005;
+            world.bounce = -0.3;
+            world.size = { x: 25, y: 30 };
+            var land = $('#land');
+
+            //ship
+            var ship = $('#ship');
+            ship.size = { x: 5, y: 5 };
+            ship.angle = 0;
+            ship.torque = 0;
+            ship.momento = 0.8;
+            ship.position = { x: 11, y: 20 };
+            ship.velocity = { x: 0, y: 0 };
+            ship.acceleration = 0;
+            ship.agility = 0.01;
+
+            ship.move = function () {
+                //calculate angle
+                ship.angle += ship.torque;
+                //degrees to radians
+                var a = ship.angle * Math.PI / 180;
+                //calculate speed
+                ship.velocity.x += /*wind*/
+                    Math.sin(a) * ship.acceleration;
+                ship.velocity.y += world.gravity +
+                    Math.cos(a) * ship.acceleration;
+                //calculate position
+                ship.position.x += ship.velocity.x;
+                ship.position.y += ship.velocity.y;
+
+                //bot limit 
+                if (ship.position.y < 1) {
+                    if (ship.velocity.x < 0.3
+                        && ship.velocity.y > -0.3
+                        && ship.position.x + (ship.size.x / 2) > land.x + 0.8
+                        && ship.position.x + (ship.size.x / 2) < land.x + land.w
+                        && ship.angle > -7
+                        && ship.angle < 7) {
+                        win();
+                    } else {
+                        ship.position.y = 1;
+                        ship.velocity.y = 0;
+                        ship.velocity.x = 0;
+                        lose();
+                    }
+                }
+                //top limitwdw
+                var max = world.size.y * 2 / 3;
+                if (ship.position.y > max) {
+                    var ty = ship.position.y - max;
+                    $('#world > *:not(#ship, #help)').css('transform', 'translateY(' + ty * 2 + 'px)');
+                    if (ship.position.y > (14 * max)) {
+                        world.addClass('space');
+                        var t = (ship.position.y - (14 * max)) / 5;
+                        world.css('background-image', 'linear-gradient(rgba(' + (102 - t) + ',' + (136 - t) + ',' + (204 - t) + ',1), rgba(' + (136 - t) + ',' + (170 - t) + ',' + (238 - t) + ',1)');
+                        $('#world b').css('transform', 'translateY(0)');
+                    } else {
+                        world.removeClass('space');
+                    }
+                }
+                //left limit
+                if (ship.position.x < 0) {
+                    ship.position.x = 0;
+                    ship.velocity.x *= world.bounce;
+                    lose();
+                }
+                //right limit
+                var max = world.size.x - ship.size.x;
+                if (ship.position.x > max) {
+                    ship.position.x = max;
+                    ship.velocity.x *= world.bounce;
+                    lose();
+                }
+                var x = ship.position.x - 0.8 + 'em';
+                var y = ship.position.y - 0.8 + 'em';
+                if (ship.position.y > max) { y = max + 'em'; }
+                var angle = (ship.angle - 45) + 'deg';
+                ship.css('transform',
+                    'translate(' + x + ', -' + y + ')' +
+                    'rotate(' + angle + ')'
+                );
+            };
+
+            land.place = function () {
+                land.w = 4.6;
+                land.x = Math.random() * (world.size.x - land.w);
+                land.css('left', land.x + 'em');
+            };
+
+            var start = function () {
+                reset();
+                alert.hide();
+                attachEvents();
+                if (state == 'stopped') {
+                    state = 'running';
+                    loop();
+                }
+            };
+
+            var stop = function () {
+                alert.show();
+                state = 'stopped';
+                detachEvents();
+            }
+
+            var win = function () {
+                alert.text('You Win!');
+                flame.hide();
+                stop();
+            };
+
+            var lose = function () {
+                state = 'stopped';
+                ship.attr('class', 'explode');
+                flame.hide();
+                alert.text('Game Over');
+                alert.show();
+                detachEvents();
+                stop();
+            };
+
+            //events
+
+            var reset = function () {
+                ship.velocity = { x: 0, y: 0 };
+                ship.position = { x: 11, y: 18 };
+                ship.acceleration = 0;
+                ship.torque = 0;
+                ship.angle = 0;
+                ship.attr('class', 'rocket');
+                jets.attr('class', 'jets');
+                flame.show();
+                ship.move();
+                land.place();
+                world.removeClass('space');
+                $('#world > *:not(#ship, #help)').css('transform', 'translateY(0)');
+                world.css('background-image', 'linear-gradient(rgba(102,136,204,1), rgba(136,170,238,1)');
+            };
+
+            var doc = $(document);
+
+            doc.on('click tap', start);
+
+            var attachEvents = function () {
+                doc.on('keydown', keydown).on('keyup', keyup);
+            };
+            var detachEvents = function () {
+                doc.off('keydown').off('keyup');
+            };
+            //controls
+            var keydown = function (e) {
+                switch (e.which) {
+                    case 32: case 87: case 38:
+                        spacedown(); break;
+                    case 65: case 37:
+                        leftdown(); break;
+                    case 68: case 39:
+                        rightdown(); break;
+                }
+                return false;
+            };
+            var keyup = function (e) {
+                switch (e.which) {
+                    case 32: case 87: case 38:
+                        spaceup(); break;
+                    case 65: case 37:
+                        leftup(); break;
+                    case 68: case 39:
+                        rightup(); break;
+
+                }
+                return false;
+            };
+            var spacedown = function () {
+                jets.attr('class', 'on');
+                ship.acceleration = ship.agility;
+            };
+            var spaceup = function () {
+                jets.attr('class', 'jets');
+                ship.acceleration = 0;
+            };
+            var leftdown = function () {
+                ship.torque = -ship.momento;
+            };
+            var leftup = function () {
+                ship.torque = 0;
+            };
+            var rightdown = function () {
+                ship.torque = ship.momento;
+            };
+            var rightup = function () {
+                ship.torque = 0;
+            };
+
+            //game loop
+            var timer = requestAnimationFrame
+                || function (callback) {
+                    setTimeout(callback, 1000 / 60);
+                };
+
+            var loop = function () {
+                if (state != 'stopped') {
+                    ship.move();
+                    timer(loop);
+                }
+            };
+
+            reset();
+        };
+        $(load);
+    </script>
+</body>
+
+</html>
