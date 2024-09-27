@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Target Shooting Game</title>
+    <style>
+        body {
+            margin: 0;
+            background: #f0f0f0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            background: #fff;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui">
+        <div>Score: <span id="score">0</span></div>
+        <div>Time: <span id="time">60</span></div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const scoreDisplay = document.getElementById('score');
+        const timeDisplay = document.getElementById('time');
+
+        class Target {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 50) + 25; // Keep within canvas bounds
+                this.y = Math.random() * (canvas.height / 2 - 50) + 25;
+                this.radius = 25;
+                this.angle = 0;
+                this.rotationSpeed = 0.01;
+                this.points = Math.floor(Math.random() * 101); // 0 to 100 points
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillText(this.points, 0, 0);
+                ctx.restore();
+            }
+
+            update() {
+                this.angle += this.rotationSpeed;
+            }
+
+            hit(x, y) {
+                return Math.hypot(this.x - x, this.y - y) <= this.radius;
+            }
+        }
+
+        let targets = [];
+        let score = 0;
+        let timeLeft = 60;
+        let gameLoop;
+        let speedMultiplier = 1;
+
+        function createTarget() {
+            if (Math.random() < 0.1 && targets.length < 5) { // Limit number of targets
+                targets.push(new Target());
+            }
+        }
+
+        function updateGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw targets
+            targets.forEach((target, index) => {
+                target.update();
+                target.draw();
+                if (target.y > canvas.height / 2) target.y = canvas.height / 2 - 25; // Keep in top half
+            });
+
+            // Increase difficulty
+            if (score >= 50 && speedMultiplier === 1) speedMultiplier = 1.5;
+            if (score >= 150 && speedMultiplier === 1.5) speedMultiplier = 2;
+            targets.forEach(t => t.rotationSpeed *= speedMultiplier);
+
+            scoreDisplay.textContent = score;
+            timeDisplay.textContent = timeLeft;
+            if (timeLeft > 0) {
+                gameLoop = requestAnimationFrame(updateGame);
+            } else {
+                cancelAnimationFrame(gameLoop);
+                ctx.fillText("Game Over! Score: " + score, canvas.width / 2 - 50, canvas.height / 2);
+            }
+        }
+
+        function startGame() {
+            gameLoop = requestAnimationFrame(updateGame);
+            setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    createTarget();
+                }
+            }, 1000);
+        }
+
+        canvas.onclick = function (e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            targets = targets.filter(target => {
+                if (target.hit(x, y)) {
+                    score += target.points;
+                    // Simple vibration effect by moving the canvas
+                    canvas.style.transform = 'translateX(5px)';
+                    setTimeout(() => canvas.style.transform = 'translateX(0)', 50);
+                    return false; // Remove the target
+                }
+                return true;
+            });
+        };
+
+        startGame();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ski Slope Stunt</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+    body { margin: 0; background: #f0f8ff; font-family: 'Arial', sans-serif; }
+    #gameCanvas { background: #87ceeb; border: 2px solid #000; display: block; margin: auto; }
+    #startScreen, #endScreen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 10px; }
+    #score { position: absolute; top: 10px; left: 10px; color: white; font-size: 24px; }
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="startScreen">
+    <h1>Ski Slope Stunt</h1>
+    <p>Use arrow keys to avoid trees, jump over ramps, and perform stunts!</p>
+    <p>Press 'S' to Start</p>
+</div>
+<div id="endScreen" class="hidden">
+    <h2>Game Over</h2>
+    <p>Your Score: <span id="finalScore"></span></p>
+    <p>Press 'S' to Restart</p>
+</div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<script>
+// Game Logic
+$(document).ready(function() {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let gameRunning = false;
+    let score = 0;
+
+    // Player properties
+    let player = {x: 50, y: 0, width: 40, height: 40, dy: 0, jumping: false, stunt: false};
+
+    // Obstacles and ramps
+    let obstacles = [];
+    let ramps = [];
+
+    // Game loop function
+    function gameLoop() {
+        if (!gameRunning) return;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Update player position
+        if (!player.jumping) player.y += 5; // Gravity
+        else player.dy += 0.5; // Jump physics
+        player.y += player.dy;
+
+        // Limit player's y-position to ground level
+        if (player.y > canvas.height - player.height) {
+            player.y = canvas.height - player.height;
+            player.jumping = false;
+            player.dy = 0;
+        }
+
+        // Draw and update game elements
+        drawPlayer();
+        updateObstacles();
+        updateScore();
+
+        // Check for collisions or finish line
+        if (checkCollisions() || player.y >= canvas.height - player.height) {
+            endGame();
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Draw player
+    function drawPlayer() {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+        if (player.stunt) {
+            ctx.fillText('+250', player.x, player.y - 10);
+        }
+    }
+
+    // Obstacles and ramps generation
+    function updateObstacles() {
+        if (Math.random() < 0.02) obstacles.push({x: canvas.width, y: canvas.height - 50, width: 30, height: 50});
+        if (Math.random() < 0.01) ramps.push({x: canvas.width, y: canvas.height - 20, width: 50, height: 20});
+
+        // Move and draw obstacles and ramps
+        for(let i in obstacles) {
+            obstacles[i].x -= 5;
+            ctx.fillStyle = 'green';
+            ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+        }
+        for(let i in ramps) {
+            ramps[i].x -= 5;
+            ctx.fillStyle = 'brown';
+            ctx.fillRect(ramps[i].x, ramps[i].y, ramps[i].width, ramps[i].height);
+        }
+    }
+
+    // Collision check
+    function checkCollisions() {
+        for(let ob of obstacles) {
+            if (player.x < ob.x + ob.width &&
+                player.x + player.width > ob.x &&
+                player.y < ob.y + ob.height &&
+                player.y + player.height > ob.y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Score update
+    function updateScore() {
+        ctx.fillStyle = 'black';
+        ctx.font = '20px Arial';
+        ctx.fillText('Score: ' + score, 10, 30);
+    }
+
+    // Start game
+    function startGame() {
+        gameRunning = true;
+        $('#startScreen').addClass('hidden');
+        score = 0;
+        player.y = 0;
+        obstacles = [];
+        ramps = [];
+        gameLoop();
+    }
+
+    // End game
+    function endGame() {
+        gameRunning = false;
+        $('#finalScore').text(score);
+        $('#endScreen').removeClass('hidden');
+    }
+
+    // Key events
+    $(document).keydown(function(e) {
+        if (e.key === 's' || e.key === 'S') {
+            if (!gameRunning) {
+                $('#endScreen').addClass('hidden');
+                startGame();
+            }
+        }
+        if (gameRunning) {
+            if (e.key === 'ArrowUp' && !player.jumping) {
+                player.dy = -10; // Jump
+                player.jumping = true;
+            }
+            if (player.jumping) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    score += 250;
+                    player.stunt = true;
+                    setTimeout(() => player.stunt = false, 500);
+                }
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>

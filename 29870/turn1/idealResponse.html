@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driving Game</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100,300,500,700,900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: SeaGreen;
+        }
+
+        html {
+            font-family: sans-serif;
+            text-align: center;
+            background: SeaGreen;
+            overflow-x: hidden;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        #lp-offer-box {
+            width: 100%;
+            max-width: 500px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #lp-offer-box h1 {
+            text-align: left;
+            color: white;
+            font-weight: 300;
+            font-size: 40px;
+            margin-bottom: 0;
+            line-height: 100%;
+        }
+
+        #lp-offer-box .subhead {
+            color: white;
+            font-weight: 300;
+            font-size: 28px;
+            margin-bottom: 50px;
+            text-align: left;
+        }
+
+        #lp-game-box {
+            width: 750px;
+            height: 700px;
+            max-height: 100vh;
+            position: relative;
+            display: inline-block;
+            margin: 0 auto;
+            vertical-align: middle;
+            background: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=cb517b24-8f2d-582a-a9d0-055c32ad60d2&637358737184929359');
+            background-position: 50% 50%;
+        }
+
+        #lp-game-box:after {
+            content: '';
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=0907ef02-3ccd-550f-9f1a-fb56fc512c68&637358737734059919');
+            background-position: 50% 50%;
+        }
+
+        svg {
+            position: absolute;
+            left: 27.5%;
+            overflow: visible;
+        }
+
+        #car_image {
+            opacity: 0;
+        }
+
+
+        #start_btn {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px 20px;
+            font-size: 48px;
+            background: white;
+            color: #333;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 10px;
+            box-shadow: 15px 15px 30px rgba(0, 0, 0, .25);
+            z-index: 99;
+            cursor: pointer;
+            font-weight: 900;
+            letter-spacing: 5px;
+            line-height: 100%;
+            box-sizing: border-box;
+        }
+
+        #start_btn p {
+            font-size: 12px;
+            line-height: 150%;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        #start_btn span {
+            display: block;
+            background: var(--bg-color);
+            color: white;
+            border-radius: 25px;
+        }
+
+        .road_block,
+        .hit {
+            position: absolute;
+        }
+
+        .finish {
+            width: 75px;
+            height: 30px;
+            bottom: 0;
+            left: 35.75%;
+        }
+
+        .butterfly {
+            width: 30px;
+            height: 30px;
+            background: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=2a25cc9f-58a6-5b14-adb2-da3381139a36&637358739887127329');
+            background-size: 100% 85%;
+            background-repeat: no-repeat;
+            left: 40%;
+            top: 54%;
+            z-index: 1;
+            animation: butterfly 8s linear infinite;
+        }
+
+        .butterfly:after {
+            content: '';
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, .25);
+            position: absolute;
+            left: 55%;
+            top: 50%;
+            z-index: -1;
+            border-radius: 50%;
+            filter: blur(5px);
+        }
+
+        @keyframes butterfly {
+            25% {
+                transform: rotate(30deg);
+            }
+
+            50% {
+                top: 66%;
+                transform: rotate(0deg);
+            }
+
+            75% {
+                transform: rotate(30deg);
+            }
+        }
+
+        .car {
+            width: 70px;
+            height: 36px;
+            background: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=d8937bda-d635-5ff8-bd75-6100d21a4948&637358767839442864');
+            background-size: contain;
+            background-repeat: no-repeat;
+            left: 45%;
+            top: 92%;
+            z-index: 1;
+            animation: car 5s linear infinite;
+        }
+
+        @keyframes car {
+            33% {
+                transform: translateX(-75%);
+            }
+
+            50% {
+                transform: translateX(-75%);
+            }
+
+            85% {
+                transform: translateX(0%);
+            }
+        }
+
+        .bigfoot {
+            width: 38px;
+            height: 56px;
+            background: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=5af72cdd-1847-59e5-a449-6361ba67872c&637359473773786611');
+            background-size: contain;
+            background-repeat: no-repeat;
+            left: 56%;
+            top: 28%;
+            z-index: 0;
+            animation: bigfoot 8s linear infinite;
+            filter: brightness(1.1);
+        }
+
+        .bigfoot:after {
+            content: '';
+            width: 75%;
+            height: 50%;
+            background: rgba(0, 0, 0, .25);
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: -1;
+            transform-origin: 50% 100%;
+            transform: skewX(-25deg);
+            filter: blur(5px);
+        }
+
+        @keyframes bigfoot {
+            25% {
+                left: 50%;
+                top: 32%;
+            }
+
+            52% {
+                left: 50%;
+                top: 32%;
+            }
+
+            75% {
+                left: 56%;
+                top: 28%;
+            }
+        }
+
+        @media screen and (max-width:750px) {
+            #lp-game-box {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id='lp-game-box'>
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
+            width="272.08px" height="100%" viewBox="0 0 272.08 700">
+
+            <path
+                d="M168.66,0V104s-5.63,30.89-46.51,30.89H71.81c-59.72.2-59.72,82.47,0,82.81h83.84s37.07,2.16,37.65,41.64c.67,45.62,0,95.54,0,95.54s.8,41.45-35.55,42.74c-41.36,1.48-122.25,0-122.25,0-46.43.38-46.9,76.85,0,80.12,0,0,141.51-1,197.13,0s47.83,81.32.87,82.81H133.45s-35.29,5.37-35.29,51.94V700"
+                stroke="rgba(0,0,0,0)" stroke-width="15" fill="none" id="wire"></path>
+
+            <image id="car_image" x="-5" y="-5" width="35" height="50"
+                xlink:href="https://freesvg.org/storage/img/thumb/SimpleYellowCarTopView.png">
+                <animateMotion dur="10s" repeatCount="1" rotate="auto" id="car_path">
+                    <mpath xlink:href="#wire"></mpath>
+                </animateMotion>
+            </image>
+        </svg>
+        <div class='road_block finish'></div>
+        <div class='road_block butterfly'></div>
+        <div class='road_block car'></div>
+        <div class='road_block bigfoot'></div>
+        <div id='start_btn'>
+            <p>To avoid hazards, Press & hold down, with mouse<br><br></p>
+            <span>PLAY</span>
+        </div>
+    </div>
+
+    <div id='hb'></div>
+
+    <script>
+        var svg = document.querySelector('svg')
+        var hb = document.querySelector('#hb')
+        var car = document.querySelector('#car_image')
+        var speed = 12
+
+        var keyState;
+        window.addEventListener('mousedown', function (e) {
+            keyState = true;
+        });
+
+        window.addEventListener('mouseup', function (e) {
+            keyState = false;
+        });
+
+        window.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+        }, false);
+
+        svg.pauseAnimations()
+
+        function gameLoop() {
+            if (keyState) {
+                svg.pauseAnimations()
+            } else {
+                svg.unpauseAnimations()
+                var car = document.querySelector('#car_image')
+                var car_deets = car.getBoundingClientRect()
+                hb.style.width = car_deets.width * .5 + 'px'
+                hb.style.height = car_deets.height * .5 + 'px'
+                hb.style.left = car_deets.left + (car_deets.width * .25) + 'px'
+                hb.style.top = car_deets.top + (car_deets.height * .25) + 'px'
+
+                if (document.querySelector('.road_block')) {
+                    var rb = document.querySelectorAll('.road_block')
+                    rb.forEach(function (elm) {
+                        var rb_deets = elm.getBoundingClientRect()
+                        var hb_deets = hb.getBoundingClientRect()
+                        var crash = !(rb_deets.right < car_deets.left ||
+                            rb_deets.left > car_deets.right ||
+                            rb_deets.bottom < car_deets.top ||
+                            rb_deets.top > car_deets.bottom)
+                        if (crash) {
+                            if (elm.classList[1] == 'finish') {
+                                document.querySelector('#start_btn').style.display = ''
+                                document.querySelector('#start_btn p').innerHTML = 'Play again for a bit more of a challenge.'
+                                if (speed <= 2) {
+                                    document.querySelector('#start_btn p').innerHTML = '<strong>Well played. You have mastered the roads.</strong>'
+                                }
+                                car.style.opacity = ''
+                            } else {
+                                document.querySelector('#car_path').beginElement();
+                            }
+                        }
+                    })
+                }
+            }
+            setTimeout(gameLoop, 1000 / 60);
+        }
+
+        document.querySelector('#start_btn').addEventListener('click', function () {
+            this.style.display = 'none'
+            car.style.opacity = '1'
+            if (speed <= 2) {
+                speed = 2
+            } else {
+                speed = speed - 2
+            }
+            document.querySelector('#car_path').setAttribute('dur', speed + 's')
+            document.querySelector('#car_path').beginElement();
+            gameLoop();
+        })
+
+    </script>
+</body>
+
+</html>

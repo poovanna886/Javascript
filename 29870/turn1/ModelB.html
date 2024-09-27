@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Road Racer</title>
+    <style>
+        body { margin: 0; background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial', sans-serif; }
+        #gameCanvas { background: #696969; border: 2px solid #000; }
+        .modal {
+            display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.4); 
+        }
+        .modal-content {
+            background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 300px; text-align: center;
+        }
+        button { padding: 10px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <button id="playAgain">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const modal = document.getElementById('gameModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const playAgainBtn = document.getElementById('playAgain');
+
+    // Game variables
+    let carSpeed = 2;
+    let gameLoop;
+    let car = {x: 400, y: 500, width: 30, height: 50};
+    let obstacles = [];
+    const road = {start: 0, end: canvas.width, height: canvas.height};
+
+    // Car control
+    canvas.onclick = function() { carSpeed = -1; };
+
+    function drawRoad() {
+        ctx.fillStyle = 'green';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'grey';
+        ctx.fillRect(road.start, 0, road.end - road.start, road.height);
+    }
+
+    function drawCar() {
+        ctx.fillStyle = 'red';
+        ctx.fillRect(car.x, car.y, car.width, car.height);
+    }
+
+    function createObstacle() {
+        if (Math.random() < 0.02) { // Chance to spawn obstacle
+            obstacles.push({
+                x: Math.random() * (road.end - road.start - 20) + road.start,
+                y: 0,
+                width: 20,
+                height: 20,
+                speed: 1
+            });
+        }
+    }
+
+    function moveObstacles() {
+        for (let obstacle of obstacles) {
+            obstacle.y += obstacle.speed;
+            if (obstacle.y > canvas.height) obstacles.shift(); // Remove if off-screen
+        }
+    }
+
+    function drawObstacles() {
+        ctx.fillStyle = 'brown';
+        for (let obstacle of obstacles) {
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
+    }
+
+    function checkCollision() {
+        for (let obstacle of obstacles) {
+            if (car.x < obstacle.x + obstacle.width && 
+                car.x + car.width > obstacle.x &&
+                car.y < obstacle.y + obstacle.height &&
+                car.y + car.height > obstacle.y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function gameOver() {
+        clearInterval(gameLoop);
+        modalMessage.textContent = "Game Over! Try again?";
+        modal.style.display = "block";
+    }
+
+    function winGame() {
+        clearInterval(gameLoop);
+        modalMessage.textContent = "You Win! Speed up?";
+        modal.style.display = "block";
+        carSpeed += 0.5; // Increase speed for next round
+    }
+
+    function game() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRoad();
+        createObstacle();
+        moveObstacles();
+        drawObstacles();
+        drawCar();
+
+        // Move car with mouse or touch
+        canvas.onmousemove = function(e) {
+            let rect = canvas.getBoundingClientRect();
+            car.x = e.clientX - rect.left - car.width / 2;
+            car.x = Math.max(road.start, Math.min(car.x, road.end - car.width));
+        };
+
+        if (checkCollision()) gameOver();
+        if (car.y < 0) winGame();
+
+        car.y -= carSpeed; // Move car forward
+    }
+
+    function startGame() {
+        modal.style.display = "none";
+        car.x = 400;
+        car.y = 500;
+        obstacles = [];
+        gameLoop = setInterval(game, 1000/60);
+    }
+
+    playAgainBtn.onclick = startGame;
+
+    // Initial start
+    startGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Target Shooting Game</title>
+<style>
+    body { margin: 0; overflow: hidden; }
+    #gameCanvas { background: #f0f0f0; }
+    #score, #timer { position: absolute; top: 10px; font-family: Arial, sans-serif; }
+    #score { left: 10px; }
+    #timer { right: 10px; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="score">Score: 0</div>
+<div id="timer">Time: 60</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+const timerDisplay = document.getElementById('timer');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight / 2; // Only top half of the screen
+
+let score = 0;
+let timeLeft = 60;
+let targets = [];
+let rotationSpeed = 0.02;
+const maxRotationSpeed = 0.1;
+
+class Target {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 30 + Math.random() * 20;
+        this.points = Math.floor(Math.random() * 101);
+        this.rotation = 0;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    update() {
+        this.rotation += rotationSpeed;
+        this.draw();
+    }
+}
+
+function createTarget() {
+    if (Math.random() < 0.05) { // Random chance to spawn a target
+        targets.push(new Target(Math.random() * canvas.width, Math.random() * canvas.height));
+    }
+}
+
+function updateGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    targets.forEach((target, index) => {
+        target.update();
+        if (target.rotation > Math.PI * 2) targets.splice(index, 1); // Remove if rotated fully
+    });
+    createTarget();
+    
+    // Speed increase logic
+    if (score > 50 && rotationSpeed < maxRotationSpeed / 2) rotationSpeed += 0.005;
+    if (score > 150 && rotationSpeed < maxRotationSpeed) rotationSpeed += 0.005;
+
+    scoreDisplay.textContent = `Score: ${score}`;
+}
+
+function gameOver() {
+    alert(`Game Over! Your score: ${score}`);
+    // Reset or offer restart here
+}
+
+canvas.onclick = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    targets.forEach((target, index) => {
+        if (Math.sqrt((x - target.x)**2 + (y - target.y)**2) < target.radius) {
+            score += target.points;
+            // Simple vibration effect - not actual device vibration
+            canvas.style.transform = 'translate(2px, 2px)';
+            setTimeout(() => { canvas.style.transform = ''; }, 100);
+            targets.splice(index, 1);
+        }
+    });
+};
+
+function gameLoop() {
+    if (timeLeft > 0) {
+        updateGame();
+        timeLeft--;
+        timerDisplay.textContent = `Time: ${timeLeft}`;
+    } else {
+        gameOver();
+        return;
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>

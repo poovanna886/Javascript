@@ -4,362 +4,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sking Game</title>
+    <title>Title</title>
     <style>
-        #game_box {
-  position: fixed;
-  inset: 0;
-}
+        :root {
+            --roll-speed: 10s;
+        }
 
-#skier {
-  width: 32px;
-  aspect-ratio: 1/1;
-  background: 
-    var(--sprite);
-  background-size: 160px 64px;
-  background-position: 0 0;
-  position: absolute;
-  left: calc(50% - 16px);
-  top: 33vh; 
-  image-rendering: pixelated;
-}
-#skier:before {
-  content: var(--score);
-  font-family: system-ui;
-  font-size: .8rem;
-  color: gray;
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translate(-50%,-100%);
-}
+        #game_start {
+            user-select: none;
+        }
 
-#obstacles {
-  width: 300%;
-  height: 1000vh;
-  position: absolute;
-  left: -100%;
-  top: 0;
-  box-sizing: border-box;
-  border-left: 25px dashed darkorange;
-  border-right: 25px dashed darkorange;
-}
-#obstacles:before {
-  content: '*FINISH*FINISH*FINISH*';
-  width: 100%;
-  height: 100px;
-  text-align: center;
-  font-size: 3rem;
-  font-family: system-ui;
-  color: black;
-  font-weight: 900;
-  line-height: 100px;
-  letter-spacing: 10vw;
-  position: absolute;
-  bottom: 50px;
-  left: 0;
-  --check-color: lightgray;
-  background-image: linear-gradient(45deg, var(--check-color) 25%, transparent 25%), linear-gradient(-45deg, var(--check-color) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--check-color) 75%), linear-gradient(-45deg, transparent 75%, var(--check-color) 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-}
+        #game_console {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: lightblue;
+            z-index: -1;
+            cursor: crosshair;
+            display: grid;
+            place-items: center;
+        }
 
-.sign {
-  background: yellow;
-  color: black;
-  font-family: system-ui;
-  font-size: 1rem;
-  font-weight: 900;
-  text-align: center;
-  padding: 1rem;
-  outline: 2px solid black;
-  position: absolute;
-  z-index: 1000;
-}
-.sign:after {
-  content: '';
-  width: 100%;
-  height: 1rem;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  border-right: 2px solid black;
-  border-left: 2px solid black;
-  box-sizing: border-box;
-}
+        #game_console:after {
+            content: '';
+            width: 100%;
+            height: 50%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background:
+                url('https://www.transparenttextures.com/patterns/tileable-wood-colored.png'),
+                saddleBrown;
+            background-blend-mode: multiply;
+            box-shadow: 0 0 10px black;
+        }
 
-#hidden_start {
-  left: 5rem;
-  bottom: 5rem;
-  opacity: 0;
-  transition: .25s;
-}
-#start_sign {
-  left: 50%;
-  top: 15vh;
-  transform: translateX(-200%);
-}
-#move_sign {
-  left: 50%;
-  top: 25vh;
-  transform: translateX(-200%);
-}
-#tricks_sign {
-  left: 50%;
-  top: 35vh;
-  transform: translateX(-200%);
-}
+        #game_score {
+            position: absolute;
+            z-index: 100;
+            font-size: 48px;
+            transform: translateY(60%);
+            font-family: monospace;
+            color: black;
+            opacity: .5;
+            user-select: none;
+        }
 
-.obstacle {
-  width: 32px;
-  height: 32px;
-  /*   outline: 1px solid red; */
-  position: absolute;
-}
+        .game_row {
+            width: 400px;
+            height: 400px;
+            box-sizing: border-box;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 0;
+            position: absolute;
+            background:
+                radial-gradient(circle, saddlebrown 35%, transparent 35%);
+            animation: roll_pigs var(--roll-speed) linear infinite;
+            animation-duration: var(--roll-speed);
+            perspective: 400px;
+            border-radius: 25%;
+        }
 
-.tree:after {
-  content: '';
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: 
-    linear-gradient(to top, saddlebrown 20%, forestgreen 20%);
-  clip-path: polygon(50% 0%, 100% 80%, 60% 80%, 60% 100%, 40% 100%, 40% 80%, 0% 80%);
-  pointer-events: none;
-}
+        .game_row:nth-child(1) {
+            top: 50px;
+            /* Set the position for the first row */
+        }
 
-.ramp:after {
-  content: '';
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: 
-    linear-gradient(to bottom, transparent 20%, brown 20% 50%, transparent 50%);
-  pointer-events: none;
-}
+        .game_row:nth-child(2) {
+            top: 500px;
+            /* Set a different position for the second row */
+        }
 
-.hump:after {
-  content: '';
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  background: 
-    radial-gradient(circle at 50% 100%, transparent 25%, lightgray 25% 30%, transparent 30%);
-  pointer-events: none;
-}
+        @keyframes roll_pigs {
+            100% {
+                transform: rotate(-360deg);
+            }
+        }
 
-.ramp_jump {
-  z-index: 1000;
-  animation: ramp_jump 3s linear forwards;  
-}
-@keyframes ramp_jump {
-  50% { transform: scale(2) translateZ(0); }
-}
+        .game_row:after {
+            content: '';
+            width: 50%;
+            height: 50%;
+            background:
+                url('https://www.transparenttextures.com/patterns/tileable-wood-colored.png'),
+                saddleBrown;
+            background-blend-mode: multiply;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            box-shadow: 0 0 10px black;
+        }
 
-.hump_jump {
-  z-index: 1000;
-  animation: hump_jump 1.5s linear forwards;
-}
-@keyframes hump_jump {
-  50% { transform: scale(1.5) translateZ(0); }
-}
+        .game_object {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+        }
 
-:root {
-  --score: '0';
-  --sprite: url(data:image/gif;base64,R0lGODlhoABAAKIHAPWYLDApIcTU1GqRonVMJP///wAAAAAAACH5BAEAAAcALAAAAACgAEAAAAP/eLrc/jDKSau9OOvNu/9gKI5kaZ5oqq5s675wLM90TdzMTdQ8aoi6HC7061kMv6IoCbwhD4YgEUpKKj/I7BOk3X4IgW5giO0Su1cO2qtepzXhdaC8pps9bnYm/97n7WgdfIIGAwUFA4aIehdRhwIEj4yNhYeJlpNHBgKHBJwFBH0VSIqXi6IUSAKfq4eZE6qHsp2oqQYFrbicr6mRs5K1EUiPrAK8EqSliscQpK2rnKELZKO3ppfMQguO0LoD2Q7DiMrgDVkDAgDqAALf5dsGAQPr7MZPOjvVhenr7VkW+KCo4qduQBwN5wiycxfsQZYA9NTFaWguS0QAoZDgy2cr/97FiQDxZSFwUYsfjxFB+glwiN6hgxiycCKIKd7GaiwLuCwAc8LGOIr64foXM17LdS/fKRB3VJY9P4pwAZgVZkxAW7PUOc3206gsdrLc+ck6VZZSgb9+KSWVVlbVq1jbuqJ4AF9VuafG4j3LtO3aTXjfUoN1ay/dujfuyn1aFG8BvoXl/v3UNtTguJIPK3Diqy1jSo6ZbQTDB4lVuMJKa4aneoPqhqMn5jktRchoejdwj+YYgSTuiB7oKRDeIaLvdbwh7D6OkflyB8ujR/cpHURtxMk3SM/eYLv36y22N+ENvoN4IyG8j7he3vx59O6fk2B/+ct0+PFvmqDP3fpu/P8ejIYCfwPqByAHqO1HTXvrMXggQOGR118JEz7YhIX+hYShbe4pV+EKDnb3IQ9BhChBeSaCWJ+II5JoYAaoJfjAihhclmKKLu6A44xSyMhji73ZSOM0Q6InIIL/VbCjh9yZuCQNJRZ54ovUAcnkj1VuqABtT7JoJXYBrhhilw4xMcITUeBApm7EZdmMmVjGeSUhdwCi0ZH6lOZmRXWyOOefrtVh551gahJaMO25ISd0NFpFp6BtuCESXX2ldUx5g/gJ6FKBUJAcW+PU1J0mymAyRhxzVHPonpyWmheHQXLqRgCpBsnbMLm0wgaOuBbzWBQjjZgRWbNoNOWnt+S6Sxr/YzphmkxhkXQsR8NcY4gXPoZjTaldOJlRTjvFQSN41XLL7JCkGcVJAJQhIu20Au1Djz/38OrMvAzFU+iPD30UbH/pooEOvrN+CJQuYEULgKc69JvSv0A6TM9EaorZ8L39MORjwGL4K8eH54yjDmUDvFulaUdpxdOdVqKsE1Irg4miFOVacm0RMpILLsxhaJpaLAR98s0FzhILjJQM9KXyS9glCFevxPxK5GDg5dSUWz6/WYlcBtVYqVpR6MX1ZhVLeOvW1+xK9WBRtTVA1tq27bbJqhqGUGRykU1ldpnmwGhyjh0CtwOBP0I3Zn6thpZjU+/7c5/HNlD44AwU7tTCa5S0dlLfSSLTqZKDad54BJZ/pQGb6wSX+gFt6o2YJlQQfRlxrbsOQemzIJltgRF++TfpuAuuu+9aUi77hMELrwGexcOItK3AB69d580fHybyyS/fI5nFcz+6DDF6X/34g4tP/vkWn69+BAkAADs=);
-}
+        .game_row .game_target {
+            background:
+                radial-gradient(circle, red 20%, white 20%, white 30%, red 30%, red 40%, white 40%, white 45%, transparent 45%);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+            transition: .25s;
+            filter: drop-shadow(0 0 5px rgba(0, 0, 0, .5));
+            font-size: 24px;
+            font-family: monospace;
+            text-align: center;
+            line-height: 150px;
+            color: white;
+            user-select: none;
+        }
+
+        .game_row .game_target:after {
+            content: '';
+            width: 10px;
+            height: 100%;
+            background:
+                saddlebrown;
+            position: absolute;
+            left: calc(50% - 5px);
+            top: 81%;
+        }
+
+        .game_row .game_target:nth-child(1) {
+            top: 0;
+            left: 0;
+            transform: rotate(-45deg);
+        }
+
+        .game_row .game_target:nth-child(2) {
+            top: 0;
+            right: 0;
+            transform: rotate(45deg);
+        }
+
+        .game_row .game_target:nth-child(3) {
+            bottom: 0;
+            right: 0;
+            transform: scale(-1) rotate(-45deg);
+        }
+
+        .game_row .game_target:nth-child(4) {
+            bottom: 0;
+            left: 0;
+            transform: scale(-1) rotate(45deg);
+        }
+
+        .dead {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #explode_balloon {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            display: grid;
+            place-items: center;
+            pointer-events: none;
+        }
+
+        .particle {
+            width: 50%;
+            height: 50%;
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .shake {
+            animation: shake .1s linear infinite;
+        }
+
+        @keyframes shake {
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .nope {
+            filter: grayscale(1) drop-shadow(0 0 5px rgba(0, 0, 0, .5)) !important;
+        }
+
+        #game_timer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 48px;
+            font-family: monospace;
+            color: black;
+            user-select: none;
+        }
     </style>
 </head>
 
 <body>
-    <div id='game_box'>
-        <div id='hidden_start' class='sign'>Press 'S' to restart</div>
-        <div id='obstacles'>
-          <div id='start_sign' class='sign'>Press 'S' to start</div>
-          <div id='move_sign' class='sign'>Arrows to move</div>
-          <div id='tricks_sign' class='sign'>While in air,<br>use arrows for tricks</div>
+    <div id='game_console'>
+        <div id='game_timer'>60</div>
+
+        <div class='game_row'>
+            <div class='game_object game_target'>10</div>
+            <div class='game_object game_target'>10</div>
+            <div class='game_object game_target'>10</div>
+            <div class='game_object game_target'>10</div>
         </div>
-        <div id='skier'></div>
-      </div>
+        <div class='game_row'>
+            <div class='game_object game_target'>15</div>
+            <div class='game_object game_target'>15</div>
+            <div class='game_object game_target'>15</div>
+            <div class='game_object game_target'>15</div>
+        </div>
+        <div id='game_score'>0</div>
+    </div>
+    <div id='game_start'></div>
+    <div id='explode_balloon'></div>
     <script>
-        const obs_loc = obstacles.getBoundingClientRect(),
-      obs_width = obs_loc.width,
-      obs_list = ['tree','ramp','hump']
+        let timeLeft = 60;
+        score = 0
+        const gs = document.querySelector('#game_score')
+        const gt = document.querySelectorAll('.game_target')
+        const gc = document.querySelector('#game_console')
+        const timerDisplay = document.querySelector('#game_timer')
 
-var keys = {},
-    rot = 90,
-    obs = 400,
-    obs_y = 0,
-    obs_x = -window.innerWidth,
-    score = 0,
-    trick_list = [],
-    run;
+        function radiusNum() {
+            return Math.random() * 50 + 'px'
+        }
 
-// skier.style.transform = 'rotate('+rot+'deg)'
-function startGame(e) {  
-  if(e.key == 's') {
-    window.removeEventListener('keyup', startGame)
-    hidden_start.style.opacity = ''
-    obs_y = 0,
-      obs_x = -window.innerWidth,
-      score = 0,
-      rot = 0
+        const explode = document.querySelector('#explode_balloon')
+        particles = 25
+        for (var i = 0; i < particles; i++) {
+            var p = document.createElement('div')
+            p.className = 'particle'
+            p.style.borderRadius = radiusNum() + ' ' + radiusNum() + ' ' + radiusNum() + ' ' + radiusNum()
+            explode.appendChild(p)
+        }
+        var ps = document.querySelectorAll('.particle')
 
-    obstacles.style.left = obs_x + 'px'
-    obstacles.style.top = obs_y + 'px'
-    run = setInterval(updateGame,1000/60)    
-  }
-}
+        gt.forEach(function (elm) {
+            elm.addEventListener('click', function (e) {
+                var respawn = Math.random() < .5 ? 3000 : 1500
+                var points = parseInt(elm.innerHTML)
+                score += points
+                gs.innerHTML = score
+                elm.classList.add('dead')
 
-window.addEventListener('keyup', startGame)
+                gc.classList.toggle('shake')
+                setTimeout(function () {
+                    gc.classList.toggle('shake')
+                }, 300)
 
-function turnSkier(e) {
-  if(!document.querySelector('.ramp_jump')
-     && !document.querySelector('.hump_jump')) {
-    if(e.keyCode == 37 && rot < 90) {
-      rot += 45
-    }
-    if(e.keyCode == 39 && rot > -90) {
-      rot -= 45
-    }
-    if(e.keyCode == 40) {
-      rot = 0
-    }
-  } 
+                var x = e.clientX
+                var y = e.clientY
+                explode.style.left = x + 'px'
+                explode.style.top = y + 'px'
 
-  if(rot == -90) {
-    skier.style.backgroundPosition = '-128px 0'
-  }
-  if(rot == -45) {
-    skier.style.backgroundPosition = '-96px 0'
-  }
-  if(rot == 0) {
-    skier.style.backgroundPosition = '-64px 0'
-  }
-  if(rot == 45) {
-    skier.style.backgroundPosition = '-32px 0'
-  }
-  if(rot == 90) {
-    skier.style.backgroundPosition = '0 0'
-  }
+                ps.forEach(function (elm) {
+                    elm.style.transition = '.3s'
+                    elm.style.background = Math.random() < .5 ? 'red' : 'white'
+                    var x = Math.random() < .5 ? -1 : 1;
+                    var y = Math.random() < .5 ? -1 : 1;
+                    elm.style.transform = 'translate(' + Math.random() * 100 * x + 'px,' + Math.random() * 100 * y + 'px)'
+                    elm.style.opacity = '0'
 
-  if(document.querySelector('.ramp_jump')
-     || document.querySelector('.hump_jump')) {
-    trick_list.push(e.keyCode)
-    if(e.keyCode == trick_list[trick_list.length - 2]) {
-      score += 50
-    } else {
-      score += 250
-    }
-    skier.style.setProperty('--score', "'"+score+"'")
+                    setTimeout(function () {
+                        elm.style.transition = ''
+                        elm.style.transform = ''
+                        elm.style.background = ''
+                        elm.style.opacity = ''
+                    }, 300)
+                })
 
-    if(e.keyCode == 37) {
-      skier.style.backgroundPosition = '0 32px'
-    }
-    if(e.keyCode == 38) {
-      skier.style.backgroundPosition = '-32px 32px'
-    }
-    if(e.keyCode == 39) {
-      skier.style.backgroundPosition = '-64px 32px'
-    }
-    if(e.keyCode == 40) {
-      skier.style.backgroundPosition = '-96px 32px'
-    }
-  }
-}
+                // respawn target
+                setTimeout(function () {
+                    var nope = Math.random() < .25 ? true : false;
+                    if (nope) {
+                        elm.className = 'game_object game_target nope'
+                        elm.innerHTML = '0'
+                    } else {
+                        elm.className = 'game_object game_target'
+                        elm.innerHTML = parseInt(elm.innerHTML) + 10
+                    }
+                }, respawn)
 
-window.addEventListener('keyup', turnSkier)
+                // increase speed based on score
+                if (score >= 50) {
+                    setTimeout(function () {
+                        document.documentElement.style.setProperty('--roll-speed', '5s')
+                    }, 500)
+                }
+                if (score >= 150) {
+                    setTimeout(function () {
+                        document.documentElement.style.setProperty('--roll-speed', '3s')
+                    }, 500)
+                }
+            })
+        })
 
-function addObstacles() {
-  var o = document.createElement('div'),
-      ob = obs_list[Math.floor(Math.random()*obs_list.length)]
-  o.className = 'obstacle ' + ob
-  if(ob == 'tree') {
-    o.style.height = Math.random()*32 + 32 + 'px'
-  }
-  o.style.left = Math.random()*100 + '%'
-  o.style.top = Math.random()*95 + 5 + '%'
-  obstacles.appendChild(o)
-}
+        // Countdown logic
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerHTML = timeLeft;
 
-for(var i=0;i<obs;i++) {
-  addObstacles()
-}
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                endGame();
+            }
+        }, 1000);
 
-function updateGame() {
-  if(rot == 0) {
-    obs_y -= 6
-  }
-  if(rot == 45) {
-    obs_y -= 4
-    obs_x += 2
-  }
-  if(rot == -45) {
-    obs_y -= 3
-    obs_x -= 2
-  }
-  if(rot == 90) {
-    obs_y -= 0
-    obs_x += 1
-  }
-  if(rot == -90) {
-    obs_y -= 0
-    obs_x -= 1
-  }
-
-  var skier_loc = skier.getBoundingClientRect(),
-      sbm = document.elementFromPoint(skier_loc.x + 16, skier_loc.y + skier_loc.height)
-
-  if(sbm.classList.contains('tree') 
-     && !document.querySelector('.ramp_jump')
-     && !document.querySelector('.hump_jump')) {
-    sbm.style.pointerEvents = 'none'
-    rot = 100
-    skier.style.backgroundPosition = '-128px 32px'
-    window.removeEventListener('keyup', turnSkier)
-    setTimeout(function(){
-      window.addEventListener('keyup', turnSkier)
-    }, 3000)
-  }
-  if(sbm.classList.contains('ramp')) {
-    rot = 0
-    skier.style.transform = 'rotate('+rot+'deg)' 
-    skier.classList.add('ramp_jump')
-    setTimeout(function(){
-      skier.classList.remove('ramp_jump')
-      skier.style.backgroundPosition = '-64px 0'
-    },3000)
-  }
-
-  if(sbm.classList.contains('hump')) {
-    rot = 0
-    skier.style.transform = 'rotate('+rot+'deg)' 
-    skier.classList.add('hump_jump')
-    setTimeout(function(){
-      skier.classList.remove('hump_jump')
-      skier.style.backgroundPosition = '-64px 0'
-    },1500)
-  }
-
-  if(sbm.id == 'game_box' 
-     && !document.querySelector('.ramp_jump')
-     && !document.querySelector('.hump_jump')) {
-    clearInterval(run)
-    window.addEventListener('keyup', startGame)
-    hidden_start.style.opacity = '1'
-  } else {
-    obstacles.style.left = obs_x + 'px'
-    obstacles.style.top = obs_y + 'px'
-  }
-}
-
-
+        function endGame() {
+            gc.style.pointerEvents = 'none'; // Disable all interactions
+            alert('Game Over! Your score: ' + score);
+            location.reload()
+        }
 
 
     </script>

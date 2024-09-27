@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Road Racer</title>
+<style>
+    body { 
+        background: #f0f0f0; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        height: 100vh; 
+        margin: 0; 
+        font-family: 'Arial', sans-serif; 
+    }
+    canvas { 
+        border: 2px solid #333; 
+        background: #87CEEB; 
+    }
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 1; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; 
+        padding: 20px;
+        border: 1px solid #888;
+        width: 30%;
+        text-align: center;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 1em;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="endGameModal" class="modal">
+    <div class="modal-content">
+        <p>Congratulations! You've reached the finish line!</p>
+        <button id="playAgain">Play Again</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const modal = document.getElementById('endGameModal');
+const playAgainBtn = document.getElementById('playAgain');
+
+class Car {
+    constructor() {
+        this.x = canvas.width / 2 - 25;
+        this.y = canvas.height - 100;
+        this.width = 50;
+        this.height = 100;
+        this.speed = 3;
+        this.color = 'red';
+    }
+
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    move(direction) {
+        if (direction === 'left' && this.x > 0) this.x -= this.speed;
+        if (direction === 'right' && this.x < canvas.width - this.width) this.x += this.speed;
+    }
+
+    brake() {
+        this.speed = 0;
+    }
+
+    resetSpeed() {
+        this.speed = 3;
+    }
+}
+
+class Obstacle {
+    constructor(x, speed) {
+        this.x = x;
+        this.y = -50;
+        this.width = 50;
+        this.height = 50;
+        this.color = 'brown';
+        this.speed = speed;
+    }
+
+    draw() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    update() {
+        this.y += this.speed;
+    }
+}
+
+class Road {
+    constructor() {
+        this.obstacles = [];
+        this.obstacleInterval = 1000; // ms
+        this.lastObstacleTime = 0;
+    }
+
+    draw() {
+        ctx.fillStyle = 'grey';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Draw road lines or turns here if needed
+    }
+
+    update(time) {
+        if (time - this.lastObstacleTime > this.obstacleInterval) {
+            this.obstacles.push(new Obstacle(Math.random() * (canvas.width - 50), 2));
+            this.lastObstacleTime = time;
+        }
+        this.obstacles.forEach((obs, index) => {
+            obs.update();
+            if (obs.y > canvas.height) this.obstacles.splice(index, 1);
+        });
+    }
+}
+
+let car = new Car();
+let road = new Road();
+let gameRunning = true;
+let speedIncrement = 1;
+
+function gameLoop(timestamp) {
+    if (!gameRunning) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    road.draw();
+    road.update(timestamp);
+    car.draw();
+
+    road.obstacles.forEach(obs => {
+        if (
+            car.x < obs.x + obs.width &&
+            car.x + car.width > obs.x &&
+            car.y < obs.y + obs.height &&
+            car.y + car.height > obs.y
+        ) {
+            resetGame();
+        }
+    });
+
+    if (car.y < 0) {
+        winGame();
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+function resetGame() {
+    car = new Car();
+    road.obstacles = [];
+    gameRunning = true;
+}
+
+function winGame() {
+    gameRunning = false;
+    modal.style.display = "block";
+    car.speed += speedIncrement;
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') car.move('left');
+    if (e.key === 'ArrowRight') car.move('right');
+});
+
+canvas.addEventListener('click', () => {
+    car.brake();
+});
+
+playAgainBtn.addEventListener('click', () => {
+    modal.style.display = "none";
+    resetGame();
+});
+
+gameLoop();
+</script>
+</body>
+</html>
