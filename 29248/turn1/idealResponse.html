@@ -1,284 +1,592 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>Ping Pong Game</title>
-  <!-- Add the Bootstrap CSS file -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bouncing Cloud</title>
   <style>
+    :root {
+      --pl-rot: rotate(0deg);
+      --pl-color: black;
+      --pl-score: '';
+      --bg-color: white;
+    }
+
+    ::-webkit-scrollbar {
+      width: 0px;
+    }
+
+    html {
+      background:
+        #222;
+      overflow: hidden;
+    }
+
+    html,
     body {
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
       margin: 0;
-      background: linear-gradient(120deg, #2980b9, #6dd5fa, #ffffff);
     }
-    
-    .game-container {
-      display: flex;
-      flex-direction: column;
+
+    #game_console {
+      width: 100%;
+      height: 100vh;
+      aspect-ratio: 9 / 16;
+      background:linear-gradient(to bottom, black 25%, indigo),
+        #111;
+      background-size: auto 100%;
+      background-position: 50% 50%;
+      position: relative;
+      box-shadow:
+        0 0 50px black,
+        0 0 150px black;
+      overflow: hidden;
+    }
+
+    #start_screen {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent, rgb(0, 15, 130) 40%);
+      outline-offset: -20px;
+      z-index: 3000;
+      display: grid;
+      place-items: center;
       align-items: center;
-      justify-content: center;
-      padding: 20px;
-      border-radius: 10px;
-      background: white;
-      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
-
-    }
-
-    canvas {
-      border-radius: 10px;
-      background: #02c62f;
-      margin: 0 auto;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      }
-
-    .button {
-      display: flex;
-      justify-content: center;
-      margin-top: 15px;
-    }
-
-    .btn {
-      background-color: #4caf50;
-      border: none;
+      font-family: system-ui;
       color: white;
-      padding: 10px 20px;
+      user-select: none;
+      transition: 1s;
       text-align: center;
-      font-size: 16px;
-      margin: 10px;
+     }
+
+    #start_screen p {
+      font-size: 36px;
+      font-weight: 100;
+    }
+
+    #start_screen p span {
+      font-size: 14px;
+    }
+
+    #start_screen #player {
+      position: relative;
+      left: 0;
+      display: inline-block;
+      margin: 0 2rem;
+      pointer-events: all;
+      transition: .5s;
+    }
+
+    #start_screen #player:hover {
       cursor: pointer;
-      border-radius: 5px;
-      transition: all 0.3s ease;
+      transform: scale(1.25);
+      filter: drop-shadow(0 0 10px rgba(0, 0, 0, .5));
     }
 
-    .btn:hover {
-      background-color: #3e8e41;
-      transform: scale(1.1);
-    }
-
-    .control {
-      text-align: center;
-      margin-top: 15px;
+    #score {
+      width: 100%;
+      padding: 1rem;
       font-size: 18px;
-      color: #333;
+      color: black;
+      text-shadow: 1px 1px gray;
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-family: monospace;
+      z-index: 2000;
     }
 
-    .score {
-      font-size: 24px;
-      color: #000;
-      margin-bottom: 10px;
+    /* player details */
+    #player {
+      width: 100px;
+      height: 100px;
+      border-radius: 5px;
+      position: absolute;
+      left: calc(50% - 50px);
+      top: 50%;
+      pointer-events: none;
     }
 
-    .modal-content {
+    .penguin .animal {
+      width: inherit;
+      height: inherit;
+      border-radius: 50% 50% 20% 20%;
+      box-sizing: border-box;
+      border: 5px solid black;
+      background:
+        radial-gradient(circle at 68% 41%, white 2.5%, transparent 3%),
+        radial-gradient(circle at 31% 41%, white 2.5%, transparent 3%),
+        radial-gradient(circle at 66% 45%, black 10%, transparent 11%),
+        radial-gradient(circle at 33% 45%, black 10%, transparent 11%),
+        radial-gradient(circle at 33% 40%, white 20%, transparent 21%),
+        radial-gradient(circle at 66% 40%, white 20%, transparent 21%),
+        radial-gradient(circle at 50% 100%, white 40%, transparent 41%),
+        black;
+      background-size: 100% 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: var(--pl-rot);
+      transition: .5s;
+    }
+
+    .penguin .animal:before {
+      content: '';
+      width: 30%;
+      height: 30%;
+      position: absolute;
+      top: 42.5%;
+      left: 35%;
+      border-radius: 100% 0 0 0;
+      transform: rotate(45deg);
+      background: orange;
+      box-shadow: 3px 3px 3px rgba(0, 0, 0, .25);
+    }
+
+    .penguin .animal:after {
+      content: '';
+      width: 80%;
+      height: 10%;
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 10%;
       border-radius: 10px;
+      background:
+        linear-gradient(to right, orange 45%, transparent 45%, transparent 55%, orange 55%);
     }
 
-    .modal-content h5 {
-      color: #333;
-      font-size: 24px;
+    .penguin .p_hair {
+      width: 50%;
+      height: 25%;
+      background: black;
+      position: absolute;
+      left: 20%;
+      top: -20px;
+      clip-path: polygon(100% 100%, 75% 0%, 80% 65%, 30% 0%, 60% 75%, 0% 50%, 30% 100%);
+      ;
     }
 
-    @media (max-width: 768px) {
-      canvas {
-        width: 90% !important;
-        height: 300px !important;
+    .penguin .p_wings {
+      width: calc(100% + 10px);
+      height: 100%;
+      position: absolute;
+      left: -5px;
+      top: 0;
       }
 
-      .btn {
-        padding: 8px 15px;
+    .penguin .p_wings:before {
+      content: '';
+      width: 20%;
+      height: 60%;
+      background: black;
+      position: absolute;
+      top: 50%;
+      left: -5%;
+      border-radius: 50% 0 50% 50%;
+      transform-origin: 100% 0%;
       }
 
-      .control {
-        font-size: 16px;
+    .penguin .p_wings:after {
+      content: '';
+      width: 20%;
+      height: 60%;
+      background: black;
+      position: absolute;
+      top: 50%;
+      right: -5%;
+      border-radius: 0 50% 50% 50%;
+      transform-origin: 0% 0%;
+    }
+
+    .falling .p_wings:before {
+      transform: rotate(45deg);
+    }
+
+    .falling .p_wings:after {
+      transform: rotate(-45deg);
+    }
+
+    .winner {
+      animation: winner 2s linear infinite;
+    }
+
+    @keyframes winner {
+      25% {
+        transform: rotate(45deg);
       }
+
+      75% {
+        transform: rotate(-45deg);
+      }
+    }
+
+    .p_wings,
+    .animal {
+      pointer-events: none;
+    }
+
+
+    /* platforms platforms platforms */
+    #platform_box {
+      width: 100%;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, transparent, indigo 10%, midnightblue 50%, dodgerblue 75%, lightblue 95%, limegreen);
+    }
+
+    .platform {
+      width: 25%;
+      height: 50px;
+      background:
+        radial-gradient(circle at 20% 50%, white 20px, transparent 22px),
+        radial-gradient(circle at 40% 40%, white 18px, transparent 20px),
+        radial-gradient(circle at 60% 55%, white 20px, transparent 22px),
+        radial-gradient(circle at 80% 50%, white 16px, transparent 18px);
+      border-radius: 25px;
+      position: relative;
+      margin-top: 50%;
+      pointer-events: all;
+      z-index: 1000;
+      filter: drop-shadow(0 5px 5px rgba(0, 0, 0, .15));
+    }
+
+    .platform:last-child {
+      width: 100%;
+      background: white !important;
+      margin-left: 0% !important;
+    }
+
+    .platform:first-child {
+      margin-top: 0 !important;
+    }
+
+    /* platform styles */
+    .break {
+      width: 25%;
+      height: 50px;
+      background:
+        radial-gradient(circle at 20% 50%, white 20px, transparent 10px),
+        radial-gradient(circle at 40% 40%, white 18px, transparent 10px),
+        radial-gradient(circle at 60% 60%, white 20px, transparent 10px),
+        radial-gradient(circle at 80% 50%, white 16px, transparent 10px);
+      border-radius: 25px;
+      position: relative;
+      margin-top: 50%;
+      pointer-events: all;
+      z-index: 1000;
+      filter: blur(3px);
+      opacity: .75;
+    }
+
+    .move {
+      animation: move 3s linear infinite;
+    }
+
+    @keyframes move {
+      25% {
+        transform: translateX(-100%);
+      }
+
+      75% {
+        transform: translateX(100%);
+      }
+    }
+
+    .blast:before,
+    .blast:after {
+      content: '';
+      width: 100%;
+      height: 50%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      background-image:
+        radial-gradient(circle at 15% 50%, white 10%, transparent 11%),
+        radial-gradient(circle at 50% 30%, white 10%, transparent 11%),
+        radial-gradient(circle at 85% 60%, white 10%, transparent 11%);
+      animation: blast .5s linear infinite;
+    }
+
+    .blast:after {
+      left: 10%;
+      animation-delay: .25s;
+      transform-origin: 50% 0%;
+      transform: scale(.5);
+    }
+
+    @keyframes blast {
+      100% {
+        top: -100%;
+        opacity: 0;
+      }
+    }
+
+    .lightning {
+      background:
+        radial-gradient(circle at 20% 50%, gray 20px, transparent 22px),
+        radial-gradient(circle at 40% 40%, gray 18px, transparent 20px),
+        radial-gradient(circle at 60% 55%, gray 20px, transparent 22px),
+        radial-gradient(circle at 80% 50%, gray 16px, transparent 18px) !important;
+    }
+
+    .lightning:before {
+      content: '';
+      width: 50%;
+      height: 100%;
+      background: gold;
+      position: absolute;
+      left: -2%;
+      top: 75%;
+      clip-path: polygon(95% 0%, 70% 40%, 100% 40%, 30% 100%, 60% 55%, 40% 55%, 75% 0%);
+      opacity: 0;
+      z-index: -1;
+      animation: lightning .8s linear infinite;
+    }
+
+    @keyframes lightning {
+      10% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .game_on {
+      opacity: 0;
+      pointer-events: none;
+      z-index: -1 !important;
     }
   </style>
 </head>
-<body>
-  <div class="game-container">
-    <canvas id="canvas" width="600" height="400"></canvas>
-    <div class="button">
-      <button id="start-btn" class="btn">Start</button>
-      <button id="pause-btn" class="btn">Pause</button>
-      <button id="restart-btn" class="btn">Restart</button>
-    </div>
-    <p class="control">Control: Player Left (W and S) | Player Right (Up arrow, Down Arrow)</p>
-  </div>
 
-  <!-- Modal for game result -->
-  <div class="modal fade" id="message-modal" tabindex="-1" role="dialog" aria-labelledby="message-modal-title" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-body">
-          <h5 id="message"></h5>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" id="message-modal-close" data-dismiss="modal">Close</button>
+<body>
+  <div id='game_console'>
+    <div id='score'>0</div>
+    <div id='platform_box'></div>
+    <div id='player' class='pig'>
+      <div class='animal'>
+        <div class='p_hair'></div>
+        <div class='p_wings'></div>
+      </div>
+    </div>
+    <div id='start_screen'>
+      <div>
+        <p>Cloud Jumper<br>
+        <div id='instructions'>left/right arrows to move<br>
+          bounce on clouds</div>
+        </p>
+        <hr style='max-width: 75%; margin-bottom: 2.5rem; border: 0; border-bottom: 2px dotted white;' />
+        <div id='player_select'>
+          Click your character: <br><br><br>
+          <div id='player' class='penguin' onclick='characterSelect(this)'>
+            <div class='animal'>
+              <div class='p_hair'></div>
+              <div class='p_wings'></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script>
-    // Initialize canvas and other variables
-    var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");
+    const pl = document.querySelector('#player')
+    var pl_loc = pl.getBoundingClientRect()
 
-    var startBtn = document.getElementById("start-btn");
-    var pauseBtn = document.getElementById("pause-btn");
-    var restartBtn = document.getElementById("restart-btn");
-    var animationId;
-    var gameRunning = false;
+    const gc = document.querySelector('#game_console')
+    var gc_loc = gc.getBoundingClientRect()
+    const score_box = document.querySelector('#score')
+    const peng = document.querySelector('.animal')
+    pl.style.top = gc_loc.height * .5 + 'px'
 
-    var leftPaddleImage = new Image();
-    leftPaddleImage.src = 'https://freesvg.org/img/1412529636.png';
+    var number_of_platforms = 250,
+      gravity = 20,
+      kd,
+      x = pl_loc.left,
+      x_speed = 25,
+      pb_y = 0,
+      score = 0,
+      rot = 0,
+      data_p = 0,
+      bonus = 1,
+      dead = false,
+      d = {};
 
-    var rightPaddleImage = new Image();
-    rightPaddleImage.src = 'https://freesvg.org/img/1412529636.png';
-
-    startBtn.addEventListener("click", function () {
-      if (!gameRunning) {
-        gameRunning = true;
-        loop();
-      }
-    });
-
-    pauseBtn.addEventListener("click", function () {
-      gameRunning = false;
-      cancelAnimationFrame(animationId);
-    });
-
-    restartBtn.addEventListener("click", function () {
-      document.location.reload();
-    });
-
-    // Define ball properties
-    var ballRadius = 10;
-    var ballX = canvas.width / 2;
-    var ballY = canvas.height / 2;
-    var ballSpeedX = 5;
-    var ballSpeedY = 5;
-
-    var paddleHeight = 80;
-    var paddleWidth = 40;
-    var leftPaddleY = canvas.height / 2 - paddleHeight / 2;
-    var rightPaddleY = canvas.height / 2 - paddleHeight / 2;
-    var paddleSpeed = 10;
-
-    var leftPlayerScore = 0;
-    var rightPlayerScore = 0;
-    var maxScore = 10;
-
-    document.addEventListener("keydown", keyDownHandler);
-    document.addEventListener("keyup", keyUpHandler);
-
-    var upPressed = false;
-    var downPressed = false;
-    let wPressed = false;
-    let sPressed = false;
-
-    function keyDownHandler(e) {
-      if (e.key === "ArrowUp") upPressed = true;
-      if (e.key === "ArrowDown") downPressed = true;
-      if (e.key === "w") wPressed = true;
-      if (e.key === "s") sPressed = true;
+    function characterSelect(e) {
+      var char = e.classList[0]
+      pl.className = char
+      startScreenClick()
     }
 
-    function keyUpHandler(e) {
-      if (e.key === "ArrowUp") upPressed = false;
-      if (e.key === "ArrowDown") downPressed = false;
-      if (e.key === "w") wPressed = false;
-      if (e.key === "s") sPressed = false;
-    }
+    var p_types = ['break', 'platform move', 'platform blast', 'platform lightning']
+    var plats = []
+    // add platforms before starting
+    const pb = document.querySelector('#platform_box')
+    function addPlatforms() {
+      for (var i = 0; i < number_of_platforms; i++) {
+        data_p++
+        var p = document.createElement('div')
+        p.className = 'platform'
+        var plat = Math.random() < .3 ? p_types[Math.floor(Math.random() * p_types.length)] : 'platform'
+        plats.push[plat]
+        p.className = plat
+        if (plats[plats.length - 1] == plat) {
+          p.className = 'platform'
+        }
 
-    function update() {
-      if (upPressed && rightPaddleY > 0) rightPaddleY -= paddleSpeed;
-      if (downPressed && rightPaddleY + paddleHeight < canvas.height) rightPaddleY += paddleSpeed;
-      if (wPressed && leftPaddleY > 0) leftPaddleY -= paddleSpeed;
-      if (sPressed && leftPaddleY + paddleHeight < canvas.height) leftPaddleY += paddleSpeed;
-
-      ballX += ballSpeedX;
-      ballY += ballSpeedY;
-
-      if (ballY - ballRadius < 0 || ballY + ballRadius > canvas.height) {
-        ballSpeedY = -ballSpeedY;
-      }
-
-      if (ballX - ballRadius < paddleWidth && ballY > leftPaddleY && ballY < leftPaddleY + paddleHeight) {
-        ballSpeedX = -ballSpeedX;
-      }
-
-      if (ballX + ballRadius > canvas.width - paddleWidth && ballY > rightPaddleY && ballY < rightPaddleY + paddleHeight) {
-        ballSpeedX = -ballSpeedX;
-      }
-
-      if (ballX < 0) {
-        rightPlayerScore++;
-        reset();
-      } else if (ballX > canvas.width) {
-        leftPlayerScore++;
-        reset();
-      }
-
-      if (leftPlayerScore === maxScore) {
-        playerWin("Left player");
-      } else if (rightPlayerScore === maxScore) {
-        playerWin("Right player");
+        p.style.width = '20%'
+        p.style.marginLeft = Math.floor(Math.random() * 5) * 20 + '%'
+        if (i < 6) {
+          p.className = 'platform'
+          p.style.marginTop = '35%'
+        }
+        if (i == 0) {
+          p.style.width = '100%'
+          p.style.height = '25px'
+          p.style.marginLeft = '0%'
+        }
+        if (i == number_of_platforms - 1) {
+          p.className = 'platform'
+        }
+        p.style.marginTop = (Math.random() * 30) + 10 + '%'
+        pb.prepend(p)
       }
     }
 
-    function playerWin(player) {
-      var message = "Congratulations! " + player + " wins!";
-      $('#message').text(message);
-      $('#message-modal').modal('show');
-      reset();
+    function updatePlayer() {
+      var pl_loc = pl.getBoundingClientRect()
+      var pl_xy1 = document.elementFromPoint(pl_loc.x + (pl_loc.width * .25), pl_loc.y + pl_loc.height)
+      var pl_xy2 = document.elementFromPoint(pl_loc.x + (pl_loc.width * .75), pl_loc.y + pl_loc.height)
+
+      function endGame() {
+        var s = Math.abs(pb_y)
+        instructions.innerHTML = s.toLocaleString()
+        ss.classList.remove('game_on')
+      }
+
+      var pb_loc = pb.getBoundingClientRect()
+      //if dead stop, else update player and everything else
+      if (!pl_xy1 || !pl_xy2 || dead) {
+        endGame()
+      } else if (Math.abs(pb_y) > pb_loc.height - 15) {
+        var s = Math.abs(pb_y)
+        document.querySelector('#start_screen p span').innerHTML = s.toLocaleString()
+        pl.classList.add('winner')
+        setTimeout(function () {
+          ss.style.background = 'none'
+          ss.classList.remove('game_on')
+        }, 2000)
+      } else {
+        // bounce off platforms only if falling 
+        if ((pl_xy1.classList.contains('platform') ||
+          pl_xy2.classList.contains('platform'))
+          && gravity >= 0) {
+
+          if ((pl_xy1.classList.contains('lightning') ||
+            pl_xy2.classList.contains('lightning'))) {
+            dead = true
+          }
+
+          if ((pl_xy1.classList.contains('blast') ||
+            pl_xy2.classList.contains('blast'))) {
+            gravity = -60
+          } else {
+            gravity = -30
+          }
+          peng.classList.toggle('falling')
+        } else {
+          if (gravity < 20) {
+            peng.classList.toggle('falling')
+            gravity += 2
+          } else {
+            gravity = 20
+          }
+        }
+
+        // track left/right movement
+        if (d[37] && x > gc_loc.x) {
+          x -= x_speed
+        }
+        if (d[39] && x + pl_loc.width < gc_loc.x + gc_loc.width) {
+          x += x_speed
+        }
+        pl.style.left = x - gc_loc.left + 'px'
+
+        // keep player from leaving the window
+        if (pl_loc.top <= 0 + pl_loc.height && gravity <= 0) {
+          pl.style.top = pl_loc.top + 'px'
+        } else {
+          pl.style.top = pl_loc.top + gravity + 'px'
+        }
+
+        // scroll platforms  
+        if (gravity <= 0) {
+          pb_y += gravity * 2
+        }
+
+        pb.style.bottom = pb_y + 'px'
+
+        var s = Math.abs(pb_y)
+        score_box.innerHTML = s.toLocaleString()
+
+        setTimeout(updatePlayer, 1000 / 30)
+      }
     }
 
-    function reset() {
-      ballX = canvas.width / 2;
-      ballY = canvas.height / 2;
-      ballSpeedX = -ballSpeedX;
-      ballSpeedY = Math.random() * 10 - 5;
+    function checkForKeyPress(e) {
+      if (e.type == 'keydown') {
+        kd = e.which
+      }
+      if (e.type == 'keyup') {
+        kd = false
+      }
+    }
+    window.addEventListener('keydown', function (e) { d[e.which] = true; })
+    window.addEventListener('keyup', function (e) {
+      d[e.which] = false;
+    })
+
+    const ss = document.querySelector('#start_screen')
+    function startScreenClick() {
+      pb.innerHTML = ''
+      addPlatforms()
+      pb.style.bottom = 0 + 'px'
+
+      ss.classList.add('game_on')
+      ss.removeEventListener('click', startScreenClick)
+
+      gravity = 20,
+        kd = false,
+        x = pl_loc.left,
+        x_speed = 10,
+        pb_y = 0,
+        score = 0,
+        rot = 0,
+        dead = false;
+
+      pl.classList.remove('winner')
+      pl.style.top = gc_loc.height * .5 + 'px'
+      pl.style.left = (gc_loc.width * .5) - (pl_loc.width * .5) + 'px'
+
+      setTimeout(function () {
+        ss.style.background = ''
+        updatePlayer()
+      }, 1000)
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#FFF";
-      ctx.font = "15px Arial";
-
-      ctx.beginPath();
-      ctx.moveTo(canvas.width / 2, 0);
-      ctx.lineTo(canvas.width / 2, canvas.height);
-      ctx.strokeStyle = "#FFF";
-      ctx.stroke();
-      ctx.closePath();
-
-      ctx.beginPath();
-      ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.closePath();
-
-      ctx.drawImage(leftPaddleImage, 0, leftPaddleY, paddleWidth, paddleHeight);
-      ctx.drawImage(rightPaddleImage, canvas.width - paddleWidth, rightPaddleY, paddleWidth, paddleHeight);
-
-      ctx.fillText("Score: " + leftPlayerScore, 10, 20);
-      ctx.fillText("Score: " + rightPlayerScore, canvas.width - 70, 20);
-    }
-
-    function loop() {
-      update();
-      draw();
-      animationId = requestAnimationFrame(loop);
-    }
-
-    $('#message-modal-close').on('click', function () {
-      document.location.reload();
-    });
   </script>
 </body>
+
 </html>

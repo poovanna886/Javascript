@@ -2,150 +2,237 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>2 Player Ping Pong</title>
+<title>Cloud Jumper</title>
 <style>
-body { font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0; }
-#gameCanvas { background: black; display: block; margin: 0 auto; }
-#buttons { position: absolute; top: 10px; width: 600px; text-align: center; }
-button { margin: 0 5px; padding: 10px; font-size: 16px; cursor: pointer; }
-#score { position: absolute; top: 50px; width: 600px; text-align: center; font-size: 24px; color: white; }
-.modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
-.modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 50%; text-align: center; }
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #87CEEB;
+    font-family: 'Arial', sans-serif;
+}
+
+#gameContainer {
+    width: 800px;
+    height: 400px;
+    border: 2px solid #000;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+}
+
+#character {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#character svg {
+    width: 100%;
+    height: 100%;
+    fill: #FF6347;
+}
+
+.cloud {
+    position: absolute;
+    width: 100px;
+    height: 30px;
+    background: white;
+    border-radius: 50px;
+}
+
+#startScreen, #endScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+    z-index: 10;
+}
+
+#score, #finalScore {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: white;
+    font-size: 1.2em;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+}
 </style>
 </head>
 <body>
 
-<div id="gameArea">
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
-    <div id="buttons">
-        <button onclick="startGame()">Start</button>
-        <button onclick="pauseGame()">Pause</button>
-        <button onclick="restartGame()">Restart</button>
+<div id="gameContainer">
+    <div id="startScreen">
+        <h2>Cloud Jumper</h2>
+        <p>Click the character to start.<br>Use left/right arrows to move.<br>Avoid thunderclouds!</p>
+        <div id="character">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+            </svg>
+        </div>
     </div>
-    <div id="score">Player 1: 0 | Player 2: 0</div>
+    <div id="endScreen" style="display:none;">
+        <h2>Game Over</h2>
+        <p>Your Score: <span id="finalScore">0</span></p>
+        <button onClick="startGame()">Restart</button>
+    </div>
+    <div id="character">
+        <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+        </svg>
+    </div>
+    <div id="score">0</div>
 </div>
 
-<div id="winModal" class="modal">
-    <div class="modal-content">
-        <p id="winMessage">Player X Wins!</p>
-        <button onclick="document.getElementById('winModal').style.display='none'">Close</button>
-    </div>
-</div>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const scoreDisplay = document.getElementById('score');
-const winModal = document.getElementById('winModal');
-const winMessage = document.getElementById('winMessage');
+let gameState = 'start';
+let character = $('#character');
+let gameContainer = $('#gameContainer');
+let score = 0;
+let gravity = 2;
+let jumpStrength = -30;
+let clouds = [];
 
-let ball = {x: canvas.width / 2, y: canvas.height / 2, radius: 10, speed: 5, dx: 5, dy: 5};
-let paddleHeight = 100, paddleWidth = 10;
-let leftPaddle = {x: 0, y: canvas.height / 2 - paddleHeight / 2, dy: 5, score: 0};
-let rightPaddle = {x: canvas.width - paddleWidth, y: canvas.height / 2 - paddleHeight / 2, dy: 5, score: 0};
-let gameState = 'paused';
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw paddles
-    ctx.fillStyle = 'white';
-    ctx.fillRect(leftPaddle.x, leftPaddle.y, paddleWidth, paddleHeight);
-    ctx.fillRect(rightPaddle.x, rightPaddle.y, paddleWidth, paddleHeight);
-    
-    // Draw ball
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
-    ctx.fillStyle = 'white';
-    ctx.fill();
-    ctx.closePath();
-    
-    // Score
-    scoreDisplay.textContent = `Player 1: ${leftPaddle.score} | Player 2: ${rightPaddle.score}`;
+function startGame() {
+    $('#startScreen').hide();
+    $('#endScreen').hide();
+    gameState = 'play';
+    score = 0;
+    $('#score').text(score);
+    character.css({bottom: '0px', left: '50%'});
+    clouds = [];
+    generateCloud();
+    requestAnimationFrame(gameLoop);
 }
 
-function moveBall() {
-    ball.x += ball.dx;
-    ball.y += ball.dy;
-
-    // Ball collision with top and bottom walls
-    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-        ball.dy = -ball.dy;
+function generateCloud() {
+    let cloudType = Math.random();
+    let cloud = $('<div class="cloud"></div>');
+    let left = Math.random() * (gameContainer.width() - 100);
+    let bottom = gameContainer.height() + 50;
+    let type = 'normal';
+    
+    if (cloudType < 0.1) {
+        type = 'thunder';
+        cloud.css('background', 'grey');
+    } else if (cloudType < 0.2) {
+        type = 'blast';
+        jumpStrength = -60;
+    } else if (cloudType < 0.3) {
+        type = 'moving';
+        cloud.css('animation', 'moveCloud 10s linear infinite');
     }
 
-    // Ball collision with paddles or scoring
-    let paddle = (ball.x < canvas.width / 2) ? leftPaddle : rightPaddle;
-    if (collision(paddle)) {
-        ball.dx = -ball.dx;
-    } else if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
-        if (ball.x > canvas.width / 2) leftPaddle.score++;
-        else rightPaddle.score++;
-        resetBall();
-    }
+    cloud.attr('data-type', type);
+    cloud.css({left: left, bottom: bottom});
+    gameContainer.append(cloud);
+    clouds.push(cloud);
 
-    // Check for win
-    if (leftPaddle.score >= 10 || rightPaddle.score >= 10) {
-        gameState = 'ended';
-        winMessage.textContent = `Player ${leftPaddle.score >= 10 ? '1' : '2'} Wins!`;
-        winModal.style.display = 'block';
-    }
-}
-
-function collision(paddle) {
-    return ball.x < paddle.x + paddleWidth && ball.x > paddle.x && 
-           ball.y > paddle.y && ball.y < paddle.y + paddleHeight;
-}
-
-function resetBall() {
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
-    ball.dx = -ball.dx; // Alternate direction
-    ball.dy = Math.random() > 0.5 ? 5 : -5; // Randomize vertical direction
+    // Schedule next cloud
+    setTimeout(generateCloud, 2000 + Math.random() * 2000);
 }
 
 function gameLoop() {
-    if (gameState === 'running') {
-        moveBall();
-        movePaddles();
-        draw();
+    if (gameState !== 'play') return;
+
+    let characterBottom = parseInt(character.css('bottom'));
+    
+    // Gravity effect
+    characterBottom += gravity;
+    character.css('bottom', characterBottom + 'px');
+
+    // Score update
+    if (characterBottom > 0) {
+        score += 1;
+        $('#score').text(score);
+    }
+
+    // Check for cloud collision or game over
+    let onCloud = false;
+    clouds.forEach(cloud => {
+        if (checkCollision(character, cloud)) {
+            onCloud = true;
+            if (cloud.attr('data-type') === 'thunder') {
+                gameOver();
+            } else {
+                character.css('bottom', parseInt(cloud.css('bottom')) + 30 + 'px');
+                gravity = cloud.attr('data-type') === 'blast' ? 2 : 2; // Reset gravity if not blast cloud
+                jumpStrength = cloud.attr('data-type') === 'blast' ? -60 : -30;
+            }
+        }
+    });
+
+    if (!onCloud && characterBottom <= 0) {
+        gameOver();
+    } else if (characterBottom < gameContainer.height()) {
         requestAnimationFrame(gameLoop);
+    } else {
+        character.css('bottom', gameContainer.height() + 'px');
     }
 }
 
-function movePaddles() {
-    if (keys['w'] && leftPaddle.y > 0) leftPaddle.y -= leftPaddle.dy;
-    if (keys['s'] && leftPaddle.y < canvas.height - paddleHeight) leftPaddle.y += leftPaddle.dy;
-    if (keys['ArrowUp'] && rightPaddle.y > 0) rightPaddle.y -= rightPaddle.dy;
-    if (keys['ArrowDown'] && rightPaddle.y < canvas.height - paddleHeight) rightPaddle.y += rightPaddle.dy;
+function checkCollision($div1, $div2) {
+    let x1 = $div1.offset().left;
+    let y1 = $div1.offset().top;
+    let h1 = $div1.outerHeight(true);
+    let w1 = $div1.outerWidth(true);
+    let b1 = y1 + h1;
+    let r1 = x1 + w1;
+    let x2 = $div2.offset().left;
+    let y2 = $div2.offset().top;
+    let h2 = $div2.outerHeight(true);
+    let w2 = $div2.outerWidth(true);
+    let b2 = y2 + h2;
+    let r2 = x2 + w2;
+
+    return !(b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2);
 }
 
-let keys = {};
+function gameOver() {
+    gameState = 'end';
+    $('#finalScore').text(score);
+    $('#endScreen').show();
+}
 
-document.addEventListener('keydown', (e) => keys[e.key] = true);
-document.addEventListener('keyup', (e) => keys[e.key] = false);
-
-function startGame() {
-    if (gameState !== 'running') {
-        gameState = 'running';
-        gameLoop();
+$(document).keydown(function(e) {
+    if (gameState !== 'play') return;
+    switch(e.which) {
+        case 37: // left
+            character.css('left', Math.max(0, parseInt(character.css('left')) - 10) + 'px');
+            break;
+        case 39: // right
+            character.css('left', Math.min(gameContainer.width() - 50, parseInt(character.css('left')) + 10) + 'px');
+            break;
     }
-}
+});
 
-function pauseGame() {
-    gameState = gameState === 'running' ? 'paused' : 'running';
-}
+$('#startScreen #character').on('click', startGame);
 
-function restartGame() {
-    leftPaddle.score = rightPaddle.score = 0;
-    resetBall();
-    gameState = 'running';
-    winModal.style.display = 'none';
-    gameLoop();
-}
-
-// Start the game loop for the first time
-startGame();
+// Animation for character
+setInterval(() => {
+    if (gameState === 'play') {
+        character.animate({bottom: '+=5'}, 100).animate({bottom: '-=5'}, 100);
+    }
+}, 1000);
 </script>
-
 </body>
 </html>
