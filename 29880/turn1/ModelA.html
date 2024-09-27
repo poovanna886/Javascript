@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dodge the Asteroids</title>
+<style>
+    @font-face {
+        font-family: 'RetroFont';
+        src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    }
+    body {
+        margin: 0;
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+        font-family: 'RetroFont', sans-serif;
+    }
+    #gameCanvas {
+        border: 2px solid #808080;
+        background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj4KICAgIDxzdHlsZT4KICAgICAuYmcgeyBmaWxsOiB3aGl0ZTsgb3BhY2l0eTogMC4wNSB9IAogICAgPC9zdHlsZT4KICAgIDxyZWN0IGNsYXNzPSJiZyIgd2lkdGg9IjUwMCIgaGVpZ2h0PSI1MDAiLz4KICAgIDxjaXJjbGUgY3g9IjI1MCIgY3k9IjI1MCIgci0yMDAiIGNsYXNzPSJiZyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDAwIiByPSI2MCIgY2xhc3M9ImJnIi8+CiAgICA8Y2lyY2xlIGN4PSIzMDAiIGN5PSIxMDAiIHI9IjQwIiBjbGFzcz0iYmciLz4KPC9zdmc+'); /* Base64 encoded star background for performance */
+    }
+    #startScreen, #gameOverScreen {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 1em;
+        background: #666;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-family: 'RetroFont', sans-serif;
+    }
+    #score {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-size: 1.2em;
+    }
+</style>
+</head>
+<body>
+<div id="startScreen">
+    <h1>Dodge the Asteroids</h1>
+    <p>Move your mouse to control the spaceship. Avoid the asteroids!</p>
+    <button onclick="startGame()">Start Game</button>
+</div>
+<canvas id="gameCanvas"></canvas>
+<div id="score">Score: 0</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 800;
+    canvas.height = 600;
+    
+    let gameActive = false;
+    let score = 0;
+    
+    // Ship properties
+    const ship = {
+        x: canvas.width / 2,
+        y: canvas.height - 30,
+        size: 20,
+        color: "#FF0000"
+    };
+
+    // Asteroid properties
+    const asteroids = [];
+
+    function createAsteroid() {
+        if (gameActive) {
+            asteroids.push({
+                x: Math.random() * (canvas.width - 20),
+                y: -20,
+                size: Math.random() * 20 + 10,
+                color: `hsl(${Math.random() * 360}, 50%, 50%)`,
+                speed: Math.random() * 2 + 1
+            });
+        }
+    }
+
+    function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw ship
+        ctx.fillStyle = ship.color;
+        ctx.fillRect(ship.x - ship.size / 2, ship.y - ship.size / 2, ship.size, ship.size);
+
+        // Move and draw asteroids
+        asteroids.forEach((asteroid, index) => {
+            asteroid.y += asteroid.speed;
+            ctx.fillStyle = asteroid.color;
+            ctx.fillRect(asteroid.x, asteroid.y, asteroid.size, asteroid.size);
+
+            // Check collision
+            if (
+                ship.x < asteroid.x + asteroid.size &&
+                ship.x + ship.size > asteroid.x &&
+                ship.y < asteroid.y + asteroid.size &&
+                ship.y + ship.size > asteroid.y
+            ) {
+                gameOver();
+            }
+
+            // Remove asteroid if out of view and update score
+            if (asteroid.y > canvas.height) {
+                asteroids.splice(index, 1);
+                score++;
+                document.getElementById('score').innerText = `Score: ${score}`;
+            }
+        });
+
+        if (gameActive) requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+        gameActive = false;
+        $('#gameOverScreen').fadeIn();
+        // Here you can animate the crash or simply reset game
+    }
+
+    function startGame() {
+        $('#startScreen').fadeOut();
+        gameActive = true;
+        score = 0;
+        asteroids.length = 0; // Clear asteroids
+        setInterval(createAsteroid, 1000);
+        update();
+    }
+
+    // Mouse move event
+    canvas.addEventListener('mousemove', (e) => {
+        if (gameActive) {
+            let rect = canvas.getBoundingClientRect();
+            ship.x = e.clientX - rect.left;
+            ship.x = Math.max(ship.size / 2, Math.min(ship.x, canvas.width - ship.size / 2)); // Keep ship within canvas
+        }
+    });
+
+    // Initially hide game over screen
+    $('#gameOverScreen').hide();
+</script>
+</body>
+</html>

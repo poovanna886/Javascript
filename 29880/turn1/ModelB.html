@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dodge the Asteroids</title>
+<style>
+body {
+    margin: 0;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Press Start 2P', cursive;
+    overflow: hidden;
+}
+#gameCanvas {
+    border: 2px solid #fff;
+    background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj4KICAgIDxzdHlsZT4KICAgICAuYmcgeyBmaWxsOiB3aGl0ZTsgb3BhY2l0eTogMC4wNSB9IAogICAgPC9zdHlsZT4KICAgIDxyZWN0IGNsYXNzPSJiZyIgd2lkdGg9IjUwMCIgaGVpZ2h0PSI1MDAiLz4KICAgIDxjaXJjbGUgY3g9IjI1MCIgY3k9IjI1MCIgci0yMDAiIGNsYXNzPSJiZyIvPgogICAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iNDAwIiByPSI2MCIgY2xhc3M9ImJnIi8+CiAgICA8Y2lyY2xlIGN4PSIzMDAiIGN5PSIxMDAiIHI9IjQwIiBjbGFzcz0iYmciLz4KPC9zdmc+') repeat;
+    animation: moveStars 200s linear infinite;
+}
+@keyframes moveStars {
+    from { background-position: 0 0; }
+    to { background-position: -10000px 10000px; }
+}
+#startScreen, #gameOverScreen {
+    position: absolute;
+    width: 600px;
+    height: 400px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    text-align: center;
+    padding-top: 100px;
+    font-size: 20px;
+}
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #ff6f61;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+}
+#score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-size: 14px;
+}
+</style>
+</head>
+<body>
+<div id="startScreen">
+    <h1>Dodge the Asteroids</h1>
+    <p>Move mouse to control the spaceship. Avoid asteroids!</p>
+    <button onclick="startGame()">Start Game</button>
+</div>
+<div id="gameOverScreen" style="display:none;">
+    <h1>Crash!</h1>
+    <p>Your Score: <span id="finalScore"></span></p>
+    <button onclick="startGame()">Play Again</button>
+</div>
+<canvas id="gameCanvas" width="600" height="400"></canvas>
+<div id="score">Score: 0</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const startScreen = document.getElementById('startScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const scoreDisplay = document.getElementById('score');
+const finalScoreDisplay = document.getElementById('finalScore');
+
+let gameState = 'start';
+let score = 0;
+let spaceship = {x: canvas.width / 2, y: canvas.height - 30, width: 30, height: 30};
+let asteroids = [];
+
+function startGame() {
+    gameState = 'play';
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    score = 0;
+    asteroids = [];
+    animate();
+}
+
+canvas.addEventListener('mousemove', (e) => {
+    if(gameState === 'play') {
+        let rect = canvas.getBoundingClientRect();
+        spaceship.x = e.clientX - rect.left - spaceship.width / 2;
+        spaceship.x = Math.max(spaceship.width / 2, Math.min(spaceship.x, canvas.width - spaceship.width / 2));
+    }
+});
+
+function createAsteroid() {
+    asteroids.push({
+        x: Math.random() * (canvas.width - 30),
+        y: -30,
+        width: 30,
+        height: 30,
+        speed: 2 + Math.random() * 2,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`
+    });
+}
+
+function drawSpaceship() {
+    ctx.fillStyle = 'white';
+    ctx.fillRect(spaceship.x - spaceship.width / 2, spaceship.y - spaceship.height / 2, spaceship.width, spaceship.height);
+}
+
+function drawAsteroids() {
+    ctx.fillStyle = 'grey';
+    asteroids.forEach((asteroid, index) => {
+        ctx.fillStyle = asteroid.color;
+        ctx.fillRect(asteroid.x, asteroid.y, asteroid.width, asteroid.height);
+        asteroid.y += asteroid.speed;
+        if(asteroid.y > canvas.height) {
+            score++;
+            asteroids.splice(index, 1);
+        }
+    });
+}
+
+function checkCollision() {
+    asteroids.forEach((asteroid) => {
+        if (
+            spaceship.x < asteroid.x + asteroid.width &&
+            spaceship.x + spaceship.width > asteroid.x &&
+            spaceship.y < asteroid.y + asteroid.height &&
+            spaceship.y + spaceship.height > asteroid.y
+        ) {
+            gameState = 'end';
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+    });
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawSpaceship();
+    drawAsteroids();
+    checkCollision();
+    scoreDisplay.textContent = `Score: ${score}`;
+    
+    if(gameState === 'play') {
+        if(Math.random() < 0.02) createAsteroid();
+        requestAnimationFrame(animate);
+    }
+}
+
+</script>
+</body>
+</html>
