@@ -2,690 +2,384 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bouncing Cloud</title>
-    <style>
-        :root {
-  --pl-rot: rotate(0deg);
-  --pl-color: black;
-  --pl-score: '';
-  --bg-color: white;
-}
-::-webkit-scrollbar {
-  width: 0px;
-} 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haunted Shooting</title>
+  <style>
+    html {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      background: #222;
+      color: gray;
+      text-align: center;
+      font-family: system-ui;
+    }
 
-html {
-  background:
-    #222;
-  overflow: hidden;
-}
+    body {
+      width: 100%;
+      height: 400px;
+      position: relative;
+    }
 
-html,
-body {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  margin: 0;  
-}
+    #balloon_game {
+      width: 100%;
+      max-width: 1200px;
+      height: 400px;
+      background:
+        url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=ff9821d0-acbe-5486-8d90-0929a265884e&637854562628119940');
+      background-size: 1200px 400px;
+      background-position: 50% 50%;
+      cursor: crosshair;
+      overflow: hidden;
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      margin: 0 auto;
+      filter: drop-shadow(0 25px 50px black);
+      border-radius: .5rem;
+      user-select: none;
+    }
 
-#game_console {
-  width: 100%;
-  height: 100vh;
-  aspect-ratio: 9 / 16;
-  background:
-    radial-gradient(circle at 75% 75%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 85% 25%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 98% 90%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 65% 45%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 20% 60%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 75% 5%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 75% 15%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 95% 10%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 55% 30%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 5% 40%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 90% 35%, rgba(255,255,255,.5) .25%, transparent .25%),
-    radial-gradient(circle at 26% 3%, rgba(0,0,0,.15) 2%, transparent 2.5%),
-    radial-gradient(circle at 55% 7.5%, rgba(0,0,0,.15) 2%, transparent 2.5%),
-    radial-gradient(circle at 45% 0%, rgba(0,0,0,.15) 5%, transparent 5.5%),
-    radial-gradient(circle at 20% 20%, rgba(0,0,0,.15) 10%, transparent 10.5%),
-    radial-gradient(circle at -5% -5%, rgba(255,255,255,.15) 33%, transparent 34%),
-    radial-gradient(circle at 0% 0%, #888 33%, transparent 37%),
-    linear-gradient(to bottom, black 25%, indigo),
-    #111;
-  background-size: auto 100%;
-  background-position: 50% 50%;
-  position: relative;
-  box-shadow:
-    0 0 50px black,
-    0 0 150px black;
-  overflow: hidden;
-}
+    #balloon_game:before {
+      content: '';
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      /*   background: red; */
+      mix-blend-mode: overlay;
+      animation: lightning 20s linear infinite;
+    }
 
-#start_screen {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent, indigo 40%);
-  outline-offset: -20px;
-/*   outline: 3px solid white; */
-  z-index: 3000;
-  display: grid;
-  place-items: center;  
-  align-items: center;
-  font-family: system-ui;
-  color: white;
-  user-select: none;
-  transition: 1s;
-  text-align: center;
-/*   opacity: 0; */
-}
+    @keyframes lightning {
+      0.5% {
+        background: rgba(255, 255, 255, 0)
+      }
 
-#start_screen p {
-  font-size: 36px;
-  font-weight: 100;
-}
-#start_screen p span {
-  font-size: 14px;
-}
+      1% {
+        background: rgba(255, 255, 255, 1)
+      }
 
-#start_screen #player {
-  position: relative;
-  left:0;
-  display: inline-block;
-  margin: 0 2rem;
-  pointer-events: all;
-  transition: .5s;
-}
+      1.5% {
+        background: rgba(255, 255, 255, 0)
+      }
 
-#start_screen #player:hover {
-  cursor: pointer;
-  transform: scale(1.25);
-  filter: drop-shadow(0 0 10px rgba(0,0,0,.5));
-}
+      2% {
+        background: rgba(255, 255, 255, 0)
+      }
 
-#score {
-  width: 100%;
-  padding: 1rem;
-  font-size: 18px;
-  color: black;
-  text-shadow: 1px 1px gray;
-  position: absolute;
-  left: 0;
-  top: 0;
-  font-family: monospace;
-  z-index: 2000;
-}
+      2.5% {
+        background: rgba(255, 255, 255, 1)
+      }
 
-/* player details */
-#player {
-  width: 100px;
-  height: 100px;
-  border-radius: 5px;
-  /*   background: black; */
-  position: absolute;
-  left: calc(50% - 50px);
-  top: 50%;
-  pointer-events: none;
-}
-.penguin .animal {
-  width: inherit;
-  height: inherit;
-  border-radius: 50% 50% 20% 20%;
-  box-sizing: border-box;
-  border: 5px solid black;
-  background: 
-    radial-gradient(circle at 68% 41%, white 2.5%, transparent 3%),
-    radial-gradient(circle at 31% 41%, white 2.5%, transparent 3%),
-    radial-gradient(circle at 66% 45%, black 10%, transparent 11%),
-    radial-gradient(circle at 33% 45%, black 10%, transparent 11%),
-    radial-gradient(circle at 33% 40%, white 20%, transparent 21%),
-    radial-gradient(circle at 66% 40%, white 20%, transparent 21%),
-    radial-gradient(circle at 50% 100%, white 40%, transparent 41%),
-    black;
-  background-size: 100% 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: var(--pl-rot);
-  transition: .5s;
-}
-.penguin .animal:before {
-  content: '';
-  width: 30%;
-  height: 30%;
-  position: absolute;
-  top: 42.5%;
-  left: 35%;
-  border-radius: 100% 0 0 0;
-  transform: rotate(45deg);
-  background: orange;
-  box-shadow: 3px 3px 3px rgba(0,0,0,.25);
-}
-.penguin .animal:after {
-  content: '';
-  width: 80%;
-  height: 10%;
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 10%;
-  border-radius: 10px;
-  background:
-    linear-gradient(to right, orange 45%, transparent 45%, transparent 55%, orange 55%);
-}
+      3% {
+        background: rgba(255, 255, 255, 0)
+      }
 
-.penguin .p_hair {
-  width: 50%;
-  height: 25%;
-  background: black;
-  position: absolute;
-  left: 20%;
-  top: -20px;
-  clip-path: polygon(100% 100%, 75% 0%, 80% 65%, 30% 0%, 60% 75%, 0% 50%, 30% 100%);;
-}
+      10% {
+        background: rgba(255, 255, 255, 0)
+      }
 
-.penguin .p_wings {
-  width: calc(100% + 10px);
-  height: 100%;
-  position: absolute;
-  left: -5px;
-  top: 0;
-/*   outline: 1px solid red; */
-}
-.penguin .p_wings:before {
-  content: '';
-  width: 20%;
-  height: 60%;
-  background: black;
-  position: absolute;
-  top: 50%;
-  left: -5%;
-  border-radius: 50% 0 50% 50%;
-  transform-origin: 100% 0%;
-/*   transform: rotate(45deg); */
-}
-.penguin .p_wings:after {
-  content: '';
-  width: 20%;
-  height: 60%;
-  background: black;
-  position: absolute;
-  top: 50%;
-  right: -5%;
-  border-radius: 0 50% 50% 50%;
-  transform-origin: 0% 0%;
-/*   transform: rotate(-45deg); */
-}
+      10.5% {
+        background: rgba(255, 255, 255, 1)
+      }
 
-/* pig pig pig pig pig */
-.pig .animal {
-  width: 100px;
-  height: 100px;
-  border-radius: 15%;
-  box-sizing: border-box;
-  border: 5px solid Salmon;
-  background: 
-    radial-gradient(circle at 68% 41%, white 2.5%, transparent 3%),
-    radial-gradient(circle at 31% 41%, white 2.5%, transparent 3%),
-    radial-gradient(circle at 66% 45%, black 10%, transparent 11%),
-    radial-gradient(circle at 33% 45%, black 10%, transparent 11%),
-    radial-gradient(circle at 33% 40%, white 20%, transparent 21%),
-    radial-gradient(circle at 66% 40%, white 20%, transparent 21%),
-    Salmon;
-  background-size: 100% 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: var(--pl-rot);
-  transition: .5s;
-}
-.pig .animal:before {
-  content: '';
-  width: 50%;
-  height: 30%;
-  position: absolute;
-  top: 49%;
-  left: 25%;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 25% 50%, black 10%, transparent 12%),
-    radial-gradient(circle at 75% 50%, black 10%, transparent 12%),
-    tomato;
-  box-shadow: 0px 0px 10px rgba(0,0,0,.25);
-}
-.pig .animal:after {
-  content: '';
-  width: 80%;
-  height: 15%;
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 10%;
-  background:
-    linear-gradient(to right, Tomato 35%, transparent 35%, transparent 65%, Tomato 65%),
-    linear-gradient(to right, black 35%, transparent 35%, transparent 65%, black 65%);
-  background-size: 100% 50%, 100% 100%;
-  background-repeat: no-repeat;
-}
-.pig .p_hair {
-  width: 50%;
-  height: 25%;
-  background: Salmon;
-  position: absolute;
-  left: 30%;
-  top: -30%;
-  clip-path: polygon(100% 100%, 75% 0%, 80% 65%, 30% 0%, 60% 75%, 0% 50%, 30% 100%);
-  transform: scaleX(-1);
-}
-.pig .p_wings {
-  width: calc(100% + 10px);
-  height: 100%;
-  position: absolute;
-  left: -5px;
-  top: 0;
-/*   outline: 1px solid red; */
-}
-.pig .p_wings:before {
-  content: '';
-  width: 30%;
-  height: 30%;
-  background: tomato;
-  box-sizing: border-box;
-  border: 5px solid Salmon;
-  position: absolute;
-  top: 10%;
-  left: -20%;
-  border-radius: 75% 0 75% 0;
-  transform-origin: 100% 0%;
-/*   transform: rotate(45deg); */
-}
-.pig .p_wings:after {
-  content: '';
-  width: 30%;
-  height: 30%;
-  background: tomato;
-  box-sizing: border-box;
-  border: 5px solid Salmon;
-  position: absolute;
-  top: 10%;
-  right: -20%;
-  border-radius: 0 75% 0 75%;
-  transform-origin: 0% 0%;
-/*   transform: rotate(-45deg); */
-}
+      11% {
+        background: rgba(255, 255, 255, 0)
+      }
+    }
 
-.falling .p_wings:before {
-  transform: rotate(45deg);
-}
-.falling .p_wings:after {
-  transform: rotate(-45deg);
-}
+    #balloon_game:after {
+      content: '';
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      left: 0;
+      top: 0;
+      background:
+        url('https://i.gifer.com/2ii5.gif');
+      background-position: 50% 50%;
+      background-size: 105% 105%;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      z-index: 9;
+      opacity: .15;
+      transform: skewX(-10deg);
+    }
 
-.winner {
-  animation: winner 2s linear infinite;
-}
-@keyframes winner {
-  25% { transform: rotate(45deg); }
-  75% { transform: rotate(-45deg); }
-}
+    #balloon_game p {
+      width: 100%;
+      max-width: 300px;
+      background: rgba(240, 230, 140, .5);
+      padding: 1rem;
+      border-radius: 2rem;
+      color: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-transform: uppercase;
+      box-sizing: border-box;
+      border: 3px solid white;
+      backdrop-filter: blur(5px);
+      transition: 1s;
+    }
 
-.p_wings,
-.animal {
-  pointer-events: none;
-}
+    .game_on {
+      opacity: 0;
+      top: 35% !important;
+      pointer-events: none !important;
+    }
 
+    #dart {
+      width: 50px;
+      height: 50px;
+      background:
+        radial-gradient(circle, white 10px, transparent 10px),
+        linear-gradient(to bottom right, transparent 47%, white 47%, white 53%, transparent 53%),
+        linear-gradient(to bottom left, transparent 47%, white 47%, white 53%, transparent 53%);
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
 
-/* platforms platforms platforms */
-#platform_box {
-  width: 100%;
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(to bottom, transparent, indigo 10%, midnightblue 50%, dodgerblue 75%, lightblue 95%, limegreen);
-}
+    #explode_balloon {
+      width: 50px;
+      height: 50px;
+      position: absolute;
+      /*   background: red; */
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
 
-.platform {
-  width: 25%;
-  height: 50px;
-  background: 
-    radial-gradient(circle at 20% 50%, white 20px, transparent 22px),
-    radial-gradient(circle at 40% 40%, white 18px, transparent 20px),
-    radial-gradient(circle at 60% 55%, white 20px, transparent 22px),
-    radial-gradient(circle at 80% 50%, white 16px, transparent 18px);  
-  border-radius: 25px;
-  position: relative;
-  margin-top: 50%;
-  pointer-events: all;
-  z-index: 1000;
-  filter: drop-shadow(0 5px 5px rgba(0,0,0,.15));
-}
+    .particle {
+      width: 50%;
+      height: 50%;
+      position: absolute;
+      border-radius: 50%;
+    }
 
-.platform:last-child {
-  width: 100%;
-  background: white !important;
-  margin-left: 0% !important;
-}
-.platform:first-child {
-  margin-top: 0 !important;
-}
+    #score {
+      font-size: 72px;
+      font-family: system-ui;
+      opacity: .25;
+      text-align: center;
+      user-select: none;
+      color: white;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      line-height: 100%;
+    }
 
-/* platform styles */
-.break {
-  width: 25%;
-  height: 50px;
-  background: 
-    radial-gradient(circle at 20% 50%, white 20px, transparent 10px),
-    radial-gradient(circle at 40% 40%, white 18px, transparent 10px),
-    radial-gradient(circle at 60% 60%, white 20px, transparent 10px),
-    radial-gradient(circle at 80% 50%, white 16px, transparent 10px);  
-  border-radius: 25px;
-  position: relative;
-  margin-top: 50%;
-  pointer-events: all;
-  z-index: 1000;
-  filter: blur(3px);
-  opacity: .75;
-}
+    .throw {
+      animation: throw .25s linear forwards;
+    }
 
-.move {
-  animation: move 3s linear infinite;
-}
-@keyframes move {
-  25% { transform: translateX(-100%); }
-  75% { transform: translateX(100%); }
-}
+    @keyframes throw {
+      0% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+      }
 
-.blast:before,
-.blast:after {
-  content:'';
-  width: 100%;
-  height: 50%;
-  position: absolute;
-  left: 0;
-  top: 0;
-  background-image:
-    radial-gradient(circle at 15% 50%, white 10%, transparent 11%),
-    radial-gradient(circle at 50% 30%, white 10%, transparent 11%),
-    radial-gradient(circle at 85% 60%, white 10%, transparent 11%);
-  animation: blast .5s linear infinite;
-}
+      100% {
+        opacity: 0;
+        transform: rotate(360deg) scale(.01);
+      }
+    }
 
-.blast:after {
-  left: 10%;
-  animation-delay: .25s;
-  transform-origin: 50% 0%;
-  transform: scale(.5);
-}
+    .balloon {
+      border-radius: 50%;
+      background-image:
+        radial-gradient(circle at 40% 33%, beige 10%, transparent 13%),
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, .75) 25%, red 26% 40%, transparent 41%);
+    }
 
-@keyframes blast {
-  100% {
-    top: -100%;
-    opacity: 0;
-  }
-}
+    .balloon:before,
+    .balloon:after {
+      content: '';
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      background:
+        linear-gradient(to top, black, #222);
+    }
 
-.lightning {
-  background: 
-    radial-gradient(circle at 20% 50%, gray 20px, transparent 22px),
-    radial-gradient(circle at 40% 40%, gray 18px, transparent 20px),
-    radial-gradient(circle at 60% 55%, gray 20px, transparent 22px),
-    radial-gradient(circle at 80% 50%, gray 16px, transparent 18px) !important; 
-}
-.lightning:before {
-  content:'';
-  width: 50%;
-  height: 100%;
-  background: gold;
-  position: absolute;
-  left: -2%;
-  top: 75%;
-  clip-path: polygon(95% 0%, 70% 40%, 100% 40%, 30% 100%, 60% 55%, 40% 55%, 75% 0%);
-  opacity: 0;
-  z-index: -1;
-  animation: lightning .8s linear infinite;
-}
-@keyframes lightning {
-  10% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 0; }
-}
+    .balloon:before {
+      left: -95%;
+      transform-origin: 100% 50%;
+      clip-path: polygon(100% 35%, 80% 15%, 85% 0, 40% 10%, 10% 45%, 0 100%, 20% 80%, 30% 90%, 45% 65%, 55% 80%, 70% 45%, 100% 50%);
+      animation: flap 1s linear infinite;
+    }
 
-.game_on {
-  opacity: 0;
-  pointer-events: none;
-  z-index: -1 !important;
-}
-    </style>
+    .balloon:after {
+      content: '';
+      left: 95%;
+      transform-origin: 0% 50%;
+      clip-path: polygon(0% 35%, 20% 15%, 15% 0, 60% 10%, 90% 45%, 100% 100%, 80% 80%, 70% 90%, 55% 65%, 45% 80%, 30% 45%, 0% 50%);
+      animation: flap2 1s linear infinite;
+    }
+
+    @keyframes flap {
+      50% {
+        transform: rotate(-55deg);
+      }
+    }
+
+    @keyframes flap2 {
+      50% {
+        transform: rotate(55deg);
+      }
+    }
+
+    .float {
+      animation: float 10s linear forwards;
+    }
+
+    @keyframes float {
+      100% {
+        top: -150px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <div id='game_console'> 
-        <div id='score'>0</div>  
-        <div id='platform_box'></div>
-        <div id='player' class='pig'>
-          <div class='animal'>
-            <div class='p_hair'></div>
-            <div class='p_wings'></div>
-          </div>
-        </div>
-        <div id='start_screen'>
-          <div>
-            <p>WHEN PIGS FLY<br>
-              <div id='instructions'>left/right arrows to move<br>
-              bounce on clouds to reach the moon</div>
-            </p>  
-            <hr style='max-width: 75%; margin-bottom: 2.5rem; border: 0; border-bottom: 2px dotted white;' />
-            <div id='player_select'>
-              Click your character: <br><br><br>
-              <div id='player' class='pig' onclick='characterSelect(this)'>
-                <div class='animal'>
-                  <div class='p_hair'></div>
-                  <div class='p_wings'></div>
-                </div>
-              </div>
-              <div id='player' class='penguin' onclick='characterSelect(this)'>
-                <div class='animal'>
-                  <div class='p_hair'></div>
-                  <div class='p_wings'></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-    <script>
-        const pl = document.querySelector('#player')
-var pl_loc = pl.getBoundingClientRect() 
+  <div id='balloon_game'>
+    <p>start game</p>
+    <div id='dart'></div>
+    <div id='explode_balloon'></div>
+    <div id='score'>0</div>
+  </div>
 
-const gc = document.querySelector('#game_console')
-var gc_loc = gc.getBoundingClientRect()
-const score_box = document.querySelector('#score')
-const peng = document.querySelector('.animal')
-pl.style.top = gc_loc.height * .5 + 'px'
+  <script>
+    const bg = document.querySelector('#balloon_game'),
+      dart = document.querySelector('#dart'),
+      explode = document.querySelector('#explode_balloon'),
+      score_box = document.querySelector('#score')
+    var size = 50
+    var score = 0
+    var particles = 25
+    var balloon_count = 0
 
-var number_of_platforms = 250,
-    gravity = 20,
-    kd,
-    x = pl_loc.left,
-    x_speed = 25,
-    pb_y = 0,
-    score = 0,
-    rot = 0,
-    data_p = 0,
-    bonus = 1,
-    dead = false,
-    d = {};
+    for (var i = 0; i < particles; i++) {
+      var p = document.createElement('div')
+      p.className = 'particle'
+      explode.appendChild(p)
+    }
+    var ps = document.querySelectorAll('.particle')
 
-function characterSelect(e){
-  var char = e.classList[0]
-  pl.className = char
-  startScreenClick()
-  // console.log(char)
-}
+    function blowItUp(e) {
+      var color = e.style.background
+      ps.forEach(function (elm) {
+        elm.style.transition = '.275s'
+        elm.style.background = 'red'
+        var x = Math.random() < .5 ? -1 : 1;
+        var y = Math.random() < .5 ? -1 : 1;
+        elm.style.transform = 'translate(' + Math.random() * 100 * x + 'px,' + Math.random() * 100 * y + 'px)'
+        elm.style.opacity = '0'
 
-var p_types = ['break','platform move', 'platform blast', 'platform lightning']
-var plats = []
-// add platforms before starting
-const pb = document.querySelector('#platform_box')
-function addPlatforms() {
-  for(var i=0;i<number_of_platforms;i++) {
-    data_p++
-    var p = document.createElement('div')
-    p.className = 'platform'
-    var plat = Math.random() < .3 ? p_types[Math.floor(Math.random()*p_types.length)] : 'platform'
-    plats.push[plat]
-    p.className = plat
-    if(plats[plats.length - 1] == plat) {
-      p.className = 'platform'
+        setTimeout(function () {
+          elm.style.transition = ''
+          elm.style.transform = ''
+          elm.style.background = ''
+          elm.style.opacity = ''
+        }, 300)
+      })
+
+      score = score + Number(e.dataset.points)
+      score_box.innerHTML = score
+      e.remove()
     }
 
-    p.style.width = '20%'    
-    p.style.marginLeft = Math.floor(Math.random()*5) * 20 + '%'
-    if(i < 6) {
-      p.className = 'platform'
-      p.style.marginTop = '35%'
-    }
-    if(i==0) {
-      p.style.width = '100%'
-      p.style.height = '25px'
-      p.style.marginLeft = '0%'
-    }
-    if(i==number_of_platforms - 1) {
-      p.className = 'platform'
-    }
-    p.style.marginTop = (Math.random()*30) + 10 + '%'
-    pb.prepend(p)
-  }
-  // console.log('plats: '+document.querySelectorAll('.platform').length)
-}
-
-function updatePlayer() {
-  var pl_loc = pl.getBoundingClientRect()  
-  var pl_xy1 = document.elementFromPoint(pl_loc.x + (pl_loc.width*.25), pl_loc.y + pl_loc.height)
-  var pl_xy2 = document.elementFromPoint(pl_loc.x + (pl_loc.width*.75), pl_loc.y + pl_loc.height)
-  
-  // console.log(pl_xy1)
-  // console.log(pl_xy2)
-
-  function endGame() {
-    var s = Math.abs(pb_y)
-    instructions.innerHTML = s.toLocaleString()
-    ss.classList.remove('game_on')
-  }
-
-  var pb_loc = pb.getBoundingClientRect()
-  //if dead stop, else update player and everything else
-  if(!pl_xy1 || !pl_xy2 || dead) {
-    endGame()
-  } else if(Math.abs(pb_y) > pb_loc.height - 15) {
-    var s = Math.abs(pb_y)
-    document.querySelector('#start_screen p span').innerHTML = s.toLocaleString()
-    pl.classList.add('winner')
-    setTimeout(function(){
-      ss.style.background = 'none'
-      ss.classList.remove('game_on')    
-    },2000)
-  } else {
-    // bounce off platforms only if falling 
-    if((pl_xy1.classList.contains('platform') ||
-        pl_xy2.classList.contains('platform'))
-       && gravity >= 0) {
-
-      if((pl_xy1.classList.contains('lightning') ||
-          pl_xy2.classList.contains('lightning'))) {
-        dead = true
+    var b_locations = [0]
+    function addBalloon() {
+      var b = document.createElement('div')
+      b.className = 'balloon'
+      b.style.backgroundColor = 'beige'
+      b.style.width = size + 'px'
+      b.style.height = size + 'px'
+      b.style.position = 'absolute'
+      b.style.filter = 'hue-rotate(' + Math.random() * 360 + 'deg)'
+      var new_loc = Math.ceil(Math.random() * 19) * 5
+      if (new_loc != b_locations[b_locations.length - 1]) {
+        b_locations.push(new_loc)
+      } else {
+        var new_loc = Math.ceil(Math.random() * 19) * 5
+        b_locations.push(new_loc)
+      }
+      b.style.left = b_locations[b_locations.length - 1] + '%'
+      b.style.top = '100%'
+      var small = Math.random() < .5 ? true : false
+      if (small) {
+        b.dataset.points = 100
+        b.style.transform = 'scale(.75)'
+        b.style.animationDuration = '10s'
+      } else {
+        b.dataset.points = 25
+        b.style.transform = 'scale(1.5)'
+        b.style.animationDuration = '6s'
+      }
+      b.onanimationend = function () {
+        this.remove()
+        if (!document.querySelector('.balloon')) {
+          setTimeout(function () {
+            bg.querySelector('p').classList.remove('game_on')
+          }, 1000)
+        }
       }
 
-      if((pl_xy1.classList.contains('blast') ||
-          pl_xy2.classList.contains('blast'))) {
-        gravity = -60
-      } else {
-        gravity = -30  
+      b.setAttribute('onclick', 'blowItUp(this)')
+      bg.appendChild(b)
+      document.querySelectorAll('.balloon')[document.querySelectorAll('.balloon').length - 1].classList.add('float')
+
+      balloon_count++
+      // console.log(balloon_count)
+    }
+
+    bg.querySelector('p').addEventListener('click', () => {
+      if (!document.querySelector('.balloon')) {
+        score = 0
+        score_box.innerHTML = score
+        bg.querySelector('p').classList.add('game_on')
+
+        var let_them_float = setInterval(function () {
+          addBalloon()
+          if (score > 5) {
+            addBalloon()
+          }
+          if (score >= 500) {
+            addBalloon()
+          }
+        }, 500)
+        setTimeout(() => {
+          clearInterval(let_them_float)
+
+        }, 10000);
       }
-      peng.classList.toggle('falling')
-    } else {
-      if(gravity < 20) {
-        peng.classList.toggle('falling')
-        gravity += 2
-      } else {
-        gravity = 20
-      }        
-    }
+    });
 
-    // track left/right movement
-    if(d[37] && x > gc_loc.x) {
-      x -= x_speed
-    }
-    if(d[39] && x + pl_loc.width < gc_loc.x + gc_loc.width) {
-      x += x_speed
-    }  
-    pl.style.left = x - gc_loc.left + 'px'  
+    // clearInterval(let_them_float)
+    var bg_loc = bg.getBoundingClientRect()
 
-    // keep player from leaving the window
-    if(pl_loc.top <= 0 + pl_loc.height && gravity <= 0){
-      pl.style.top = pl_loc.top + 'px'  
-    } else {
-      pl.style.top = pl_loc.top + gravity + 'px'  
-    }  
-
-    // scroll platforms  
-    if(gravity <= 0) {    
-      pb_y += gravity*2      
-    }  
-
-    pb.style.bottom = pb_y + 'px'
-
-    var s = Math.abs(pb_y)
-    score_box.innerHTML = s.toLocaleString()
-
-    setTimeout(updatePlayer, 1000/30)
-  }  
-}
-
-function checkForKeyPress(e) {
-  if(e.type == 'keydown') {
-    kd = e.which
-  } 
-  if(e.type == 'keyup') {
-    kd = false
-  }
-}
-window.addEventListener('keydown', function(e) { d[e.which] = true; })
-window.addEventListener('keyup', function(e) {   
-  d[e.which] = false;  
-})
-
-const ss = document.querySelector('#start_screen')
-function startScreenClick() {
-  pb.innerHTML = ''
-  addPlatforms()
-  pb.style.bottom = 0 + 'px'  
-
-  ss.classList.add('game_on')
-  ss.removeEventListener('click', startScreenClick)
-
-  gravity = 20,
-    kd = false,
-    x = pl_loc.left,
-    x_speed = 10,
-    pb_y = 0,
-    score = 0,
-    rot = 0,
-    dead = false;
-
-  pl.classList.remove('winner')
-  pl.style.top = gc_loc.height * .5 + 'px'  
-  pl.style.left = (gc_loc.width * .5) - (pl_loc.width * .5) + 'px'  
-
-  setTimeout(function() {   
-    ss.style.background = ''
-    updatePlayer()
-  }, 1000)  
-}
-
-    </script>
+    window.addEventListener('click', function (e) {
+      dart.classList.toggle('throw')
+      setTimeout(function () {
+        dart.classList.toggle('throw')
+      }, 250)
+      var x = e.clientX - bg_loc.left - 25
+      var y = e.clientY - bg_loc.top - 25
+      dart.style.left = x + 'px'
+      dart.style.top = y + 'px'
+      explode.style.left = x + 'px'
+      explode.style.top = y + 'px'
+    })
+  </script>
 </body>
 
 </html>

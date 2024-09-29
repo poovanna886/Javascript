@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fishing Game</title>
+<style>
+  body { margin: 0; overflow: hidden; }
+  #gameCanvas {
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(to bottom, #87CEEB 0%, #00BFFF 50%, #1E90FF 100%);
+    position: relative;
+  }
+  #line {
+    position: absolute;
+    width: 2px;
+    height: 0;
+    background: black;
+    bottom: 0;
+    left: 50%;
+    transform-origin: bottom;
+  }
+  .fish {
+    position: absolute;
+    width: 30px;
+    height: 20px;
+    background: url('https://freesvg.org/storage/img/thumb/Benzfish.png'); /* Assume we have an image */
+    background-size: cover;
+  }
+  #score, #startScreen {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: Arial, sans-serif;
+    color: white;
+  }
+  #startScreen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    flex-direction: column;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div id="gameCanvas">
+  <div id="line"></div>
+  <div id="score">Score: 0</div>
+  <div id="startScreen"><button id="startButton">Drop Line</button></div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('gameCanvas');
+    const line = document.getElementById('line');
+    const scoreDisplay = document.getElementById('score');
+    const startScreen = document.getElementById('startScreen');
+    const startButton = document.getElementById('startButton');
+    
+    let score = 0;
+    const fishArray = [];
+    let linePosition = { x: canvas.clientWidth / 2, y: canvas.clientHeight };
+    let lineRising = false;
+
+    // Fish creation
+    for(let i = 0; i < 20; i++) {
+        const fish = document.createElement('div');
+        fish.className = 'fish';
+        fish.style.left = `${Math.random() * (canvas.clientWidth - 30)}px`;
+        fish.style.bottom = `${Math.random() * canvas.clientHeight}px`;
+        canvas.appendChild(fish);
+        fishArray.push({element: fish, x: parseFloat(fish.style.left), y: parseFloat(fish.style.bottom), speedX: (Math.random() - 0.5) * 2});
+    }
+
+    function animateFish() {
+        fishArray.forEach(fish => {
+            fish.x += fish.speedX;
+            if(fish.x <= 0 || fish.x >= canvas.clientWidth - 30) fish.speedX *= -1;
+            fish.element.style.left = `${fish.x}px`;
+            fish.element.style.bottom = `${fish.y}px`;
+        });
+        requestAnimationFrame(animateFish);
+    }
+
+    function animateLine() {
+        if (lineRising) {
+            if (linePosition.y > 0) {
+                linePosition.y -= 2; // Speed of line rising
+                line.style.height = `${canvas.clientHeight - linePosition.y}px`;
+                line.style.transform = `translateX(${linePosition.x - canvas.clientWidth/2}px)`;
+                checkCatch();
+            } else {
+                lineRising = false;
+                // Reset line for next drop
+                line.style.height = '0px';
+            }
+        }
+        requestAnimationFrame(animateLine);
+    }
+
+    function dropLine() {
+        linePosition.y = canvas.clientHeight;
+        lineRising = true;
+    }
+
+    function checkCatch() {
+        const hookX = linePosition.x;
+        fishArray.forEach((fish, index) => {
+            if (fish.y < linePosition.y && Math.abs(fish.x - hookX) < 15) {
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+                canvas.removeChild(fish.element);
+                fishArray.splice(index, 1);
+            }
+        });
+    }
+
+    startButton.onclick = function() {
+        startScreen.style.display = 'none';
+        dropLine();
+    };
+
+    canvas.onmousemove = function(e) {
+        if (lineRising) {
+            linePosition.x = e.clientX;
+        }
+    };
+
+    animateFish();
+    animateLine();
+});
+</script>
+</body>
+</html>

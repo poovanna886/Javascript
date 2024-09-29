@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fishing Frenzy</title>
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #87CEEB; /* Sky blue background */
+    font-family: 'Arial', sans-serif;
+}
+
+#gameArea {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#fishingLine {
+    position: absolute;
+    width: 2px;
+    background: #000;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    transition: bottom 5s linear;
+    z-index: 10;
+}
+
+.fish {
+    position: absolute;
+    width: 50px;
+    height: 30px;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 50 30" xmlns="http://www.w3.org/2000/svg"><path d="M25 5 A20 20 0 0 0 5 15 L5 15 A20 20 0 0 1 25 25 Z" fill="orange" stroke="black"/></svg>') no-repeat;
+    background-size: contain;
+    animation: swim 10s infinite linear;
+}
+
+@keyframes swim {
+    from {left: -50px; transform: scaleX(1);}
+    to {left: 100%; transform: scaleX(-1);}
+}
+
+#hook {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: #8B4513;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+}
+
+#score {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: white;
+    background: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#startScreen {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+#startButton {
+    padding: 20px 40px;
+    font-size: 20px;
+    cursor: pointer;
+    background: #2E8B57;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+</style>
+</head>
+<body>
+<div id="gameArea">
+    <div id="fishingLine"><div id="hook"></div></div>
+    <div id="score">Score: 0</div>
+    <div id="startScreen">
+        <button id="startButton">Drop Line</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const gameArea = document.getElementById('gameArea');
+    const fishingLine = document.getElementById('fishingLine');
+    const hook = document.getElementById('hook');
+    const scoreDisplay = document.getElementById('score');
+    const startScreen = document.getElementById('startScreen');
+    const startButton = document.getElementById('startButton');
+    let score = 0;
+    let isLineDropping = false;
+
+    // Fish creation
+    for(let i = 0; i < 20; i++) {
+        const fish = document.createElement('div');
+        fish.className = 'fish';
+        fish.style.top = `${Math.random() * (gameArea.clientHeight - 30)}px`;
+        fish.style.animationDuration = `${Math.random() * (15 - 5) + 5}s`;
+        gameArea.appendChild(fish);
+    }
+
+    // Mouse movement for hook
+    document.addEventListener('mousemove', (e) => {
+        if(!isLineDropping) return;
+        const maxLeft = gameArea.clientWidth / 2 - 7.5; // 7.5 is half of hook width
+        const minLeft = -maxLeft;
+        let left = e.clientX - gameArea.getBoundingClientRect().left - 7.5;
+        hook.style.left = `${Math.max(minLeft, Math.min(maxLeft, left))}px`;
+    });
+
+    // Start game function
+    function startGame() {
+        startScreen.style.display = 'none';
+        isLineDropping = true;
+        fishingLine.style.bottom = '0';
+        setTimeout(() => {
+            isLineDropping = false;
+            checkCatch();
+            resetLine();
+        }, 5000);
+    }
+
+    // Check if any fish were caught
+    function checkCatch() {
+        const fishElements = document.querySelectorAll('.fish');
+        fishElements.forEach(fish => {
+            if(Math.abs(fish.offsetLeft - hook.offsetLeft) < 30 && 
+               fish.offsetTop > gameArea.clientHeight - 100) { // assuming fish height is 30 and line animates for 100px from bottom
+                fish.remove();
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+            }
+        });
+    }
+
+    // Reset line for next drop
+    function resetLine() {
+        fishingLine.style.bottom = '100%';
+        setTimeout(startGame, 2000); // Wait for 2 seconds before next drop
+    }
+
+    // Start button event
+    startButton.addEventListener('click', startGame);
+});
+</script>
+</body>
+</html>
