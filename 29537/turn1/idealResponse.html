@@ -273,7 +273,6 @@
             selectedLetters = [];
             currentWord = '';
             selectedWordDisplay.textContent = '';
-            messageDisplay.textContent = '';
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the lines on canvas
         }
 
@@ -284,8 +283,9 @@
                 guessedArtists.push(currentWord.toUpperCase());  // Add to guessed artists list
                 markCorrectSelection();  // Mark the correct word as permanent
                 checkForCompletion();  // Check if all artists have been found
-            } else if (currentWord.length > 0) {
+            } else{
                 messageDisplay.textContent = `"${currentWord}" is not a valid artist in this puzzle.`;
+                messageDisplay.style.color = "red";
                 clearSelection();  // Clear the incorrect selection
             }
         }
