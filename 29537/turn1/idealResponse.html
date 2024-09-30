@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,8 +32,8 @@
             text-decoration: underline;
         }
 
-          /* Modal styles */
-          .modal {
+        /* Modal styles */
+        .modal {
             display: none;
             position: fixed;
             top: 0;
@@ -64,15 +65,20 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            position: relative; /* For positioning canvas over the grid */
+            position: relative;
+            /* For positioning canvas over the grid */
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(6, 60px); /* Changed to 6 columns */
-            grid-template-rows: repeat(8, 60px);    /* Changed to 8 rows */
-            gap: 10px; /* Added spacing between cells */
-            position: relative; /* Position relative for canvas overlay */
+            grid-template-columns: repeat(6, 60px);
+            /* Changed to 6 columns */
+            grid-template-rows: repeat(8, 60px);
+            /* Changed to 8 rows */
+            gap: 10px;
+            /* Added spacing between cells */
+            position: relative;
+            /* Position relative for canvas overlay */
             z-index: 1;
             user-select: none;
         }
@@ -96,7 +102,8 @@
 
         .grid div.correct {
             background-color: lightblue;
-            pointer-events: none; /* Prevent further interaction with correct cells */
+            pointer-events: none;
+            /* Prevent further interaction with correct cells */
         }
 
         .word-container {
@@ -113,11 +120,13 @@
             position: absolute;
             top: 0;
             left: 0;
-            pointer-events: none; /* Let mouse events pass through */
+            pointer-events: none;
+            /* Let mouse events pass through */
             z-index: 0;
         }
     </style>
 </head>
+
 <body>
 
     <h3 class="hint">Hint: Painters <span class="help" id="help-btn">?</span></h3>
@@ -175,25 +184,25 @@
         const canvas = document.getElementById('connection-canvas');
         const ctx = canvas.getContext('2d');
 
-            // Modal handling
-    const modal = document.getElementById('modal');
-    const helpBtn = document.getElementById('help-btn');
-    const closeBtn = document.getElementById('close-btn');
+        // Modal handling
+        const modal = document.getElementById('modal');
+        const helpBtn = document.getElementById('help-btn');
+        const closeBtn = document.getElementById('close-btn');
 
-    helpBtn.addEventListener('click', () => {
-        modal.style.display = 'flex'; // Show the modal
-        modal.style.zIndex = 99;
-    });
+        helpBtn.addEventListener('click', () => {
+            modal.style.display = 'flex'; // Show the modal
+            modal.style.zIndex = 99;
+        });
 
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none'; // Hide the modal
-    });
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none'; // Hide the modal
+        });
 
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none'; // Hide the modal if clicked outside
-        }
-    });
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none'; // Hide the modal if clicked outside
+            }
+        });
 
         // Set canvas size dynamically based on the grid size
         function adjustCanvasSize() {
@@ -283,7 +292,7 @@
                 guessedArtists.push(currentWord.toUpperCase());  // Add to guessed artists list
                 markCorrectSelection();  // Mark the correct word as permanent
                 checkForCompletion();  // Check if all artists have been found
-            } else{
+            } else {
                 messageDisplay.textContent = `"${currentWord}" is not a valid artist in this puzzle.`;
                 messageDisplay.style.color = "red";
                 clearSelection();  // Clear the incorrect selection
@@ -339,4 +348,5 @@
         createGrid();
     </script>
 </body>
+
 </html>
