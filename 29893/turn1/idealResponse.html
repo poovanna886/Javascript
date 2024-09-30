@@ -2,384 +2,666 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Haunted Shooting</title>
-  <style>
-    html {
-      display: grid;
-      place-items: center;
-      min-height: 100vh;
-      background: #222;
-      color: gray;
-      text-align: center;
-      font-family: system-ui;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drop the Present</title>
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100,300,500,700,900&display=swap" rel="stylesheet">
 
-    body {
-      width: 100%;
-      height: 400px;
-      position: relative;
-    }
+    <link href="https://fonts.googleapis.com/css?family=Mali&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #238A86;
+            --base-red: #DC3B31;
+            --pale-red: #E86934;
+            --dark-red: #BD3524;
+            --paper-bg: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=bafe9067-2055-56a9-8c19-1fcd02f55ab9&637364822924768594');
+        }
 
-    #balloon_game {
-      width: 100%;
-      max-width: 1200px;
-      height: 400px;
-      background:
-        url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=ff9821d0-acbe-5486-8d90-0929a265884e&637854562628119940');
-      background-size: 1200px 400px;
-      background-position: 50% 50%;
-      cursor: crosshair;
-      overflow: hidden;
-      position: absolute;
-      left: 50%;
-      top: 0;
-      transform: translateX(-50%);
-      margin: 0 auto;
-      filter: drop-shadow(0 25px 50px black);
-      border-radius: .5rem;
-      user-select: none;
-    }
+        html {
+            min-height: 100vh;
+            background-color: burlywood;
+            background-image:
+                repeating-linear-gradient(-45deg,
+                    transparent,
+                    transparent 20px,
+                    var(--bg-color) 0,
+                    var(--bg-color) 40px),
+                repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 20px,
+                    var(--base-red) 0,
+                    var(--base-red) 40px);
+            background-blend-mode: multiply;
+            background-repeat: repeat-x;
+            background-position: 0 90%;
+        }
 
-    #balloon_game:before {
-      content: '';
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      left: 0;
-      top: 0;
-      /*   background: red; */
-      mix-blend-mode: overlay;
-      animation: lightning 20s linear infinite;
-    }
+        body {
+            margin: 0;
+            padding: 0;
+        }
 
-    @keyframes lightning {
-      0.5% {
-        background: rgba(255, 255, 255, 0)
-      }
+        #the-lp {
+            background: var(--paper-bg), Burlywood;
+            padding: 40px;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 980px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 0;
+            border-radius: 5px;
+            box-shadow: 0px 0px 30px rgba(0, 0, 0, 1);
+        }
 
-      1% {
-        background: rgba(255, 255, 255, 1)
-      }
+        #lp-content {
+            width: 100%;
+            min-width: 320px;
+            max-width: 500px;
+            height: 100%;
+            min-height: 568px;
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+            box-sizing: border-box;
+            /*   background:beige; */
+        }
 
-      1.5% {
-        background: rgba(255, 255, 255, 0)
-      }
+        #play_me {
+            /*   background:var(--base-red); */
+            position: relative;
+            top: 10px;
+            left: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+            z-index: 999;
+            /*   display:none; */
+        }
 
-      2% {
-        background: rgba(255, 255, 255, 0)
-      }
+        #play_me h1 {
+            font-family: 'Mali', sans-serif;
+            font-size: 48px;
+            font-weight: 500;
+            color: var(--base-red);
+            margin: 0;
+            text-shadow: 3px 3px rgba(0, 0, 0, .13);
+        }
 
-      2.5% {
-        background: rgba(255, 255, 255, 1)
-      }
+        #play_me span {
+            width: 100%;
+            max-width: 400px;
+            display: block;
+            font-weight: 500;
+            font-size: 20px;
+            color: white;
+            margin: 15px auto;
+            color: var(--base-red);
+        }
 
-      3% {
-        background: rgba(255, 255, 255, 0)
-      }
+        #lp-the-game {
+            width: 100%;
+            max-width: 320px;
+            height: 100%;
+            min-height: 568px;
+            position: relative;
+            margin: 0 30px 0 0;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            text-align: center;
+            user-select: none;
+            display: inline-block;
+            vertical-align: middle;
+            background-image: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=3c57f00a-94fb-5bc4-aad0-3824be837de8&637360346397280285'), linear-gradient(to top, white, var(--bg-color));
+            background-repeat: no-repeat;
+            box-shadow: 10px 10px 10px rgba(0, 0, 0, .13);
+            border-radius: 5px;
+        }
 
-      10% {
-        background: rgba(255, 255, 255, 0)
-      }
+        #snow {
+            min-width: 100%;
+            min-height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+        }
 
-      10.5% {
-        background: rgba(255, 255, 255, 1)
-      }
+        .snowflake {
+            position: absolute;
+            background: white;
+            top: -100px;
+            border-radius: 50%;
+            animation: snow 15s linear infinite;
+            pointer-events: none;
+        }
 
-      11% {
-        background: rgba(255, 255, 255, 0)
-      }
-    }
+        @keyframes snow {
+            100% {
+                top: 90%;
+                opacity: 0;
+            }
+        }
 
-    #balloon_game:after {
-      content: '';
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      left: 0;
-      top: 0;
-      background:
-        url('https://i.gifer.com/2ii5.gif');
-      background-position: 50% 50%;
-      background-size: 105% 105%;
-      background-repeat: no-repeat;
-      pointer-events: none;
-      z-index: 9;
-      opacity: .15;
-      transform: skewX(-10deg);
-    }
+        p {
+            color: white;
+            line-height: 100%;
+        }
 
-    #balloon_game p {
-      width: 100%;
-      max-width: 300px;
-      background: rgba(240, 230, 140, .5);
-      padding: 1rem;
-      border-radius: 2rem;
-      color: white;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-transform: uppercase;
-      box-sizing: border-box;
-      border: 3px solid white;
-      backdrop-filter: blur(5px);
-      transition: 1s;
-    }
+        #score {
+            font-size: 12px;
+            color: var(--bg-color);
+            background: rgba(255, 255, 255, .75);
+            padding: 10px;
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+        }
 
-    .game_on {
-      opacity: 0;
-      top: 35% !important;
-      pointer-events: none !important;
-    }
+        #score span {
+            font-size: 24px;
+            line-height: 80%;
+        }
 
-    #dart {
-      width: 50px;
-      height: 50px;
-      background:
-        radial-gradient(circle, white 10px, transparent 10px),
-        linear-gradient(to bottom right, transparent 47%, white 47%, white 53%, transparent 53%),
-        linear-gradient(to bottom left, transparent 47%, white 47%, white 53%, transparent 53%);
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
+        #high_score {
+            font-size: 14px;
+            color: var(--bg-color);
+            background: rgba(255, 255, 255, .25);
+            padding: 10px;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+        }
 
-    #explode_balloon {
-      width: 50px;
-      height: 50px;
-      position: absolute;
-      /*   background: red; */
-      display: grid;
-      place-items: center;
-      pointer-events: none;
-    }
+        #high_score span {
+            font-weight: 700;
+        }
 
-    .particle {
-      width: 50%;
-      height: 50%;
-      position: absolute;
-      border-radius: 50%;
-    }
+        #dialog {
+            width: 100%;
+            max-width: 125px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            position: absolute;
+            right: 62.5%;
+            top: 0px;
+            user-select: none;
+            transform: translateY(-125%);
+            font-size: 14px;
+        }
 
-    #score {
-      font-size: 72px;
-      font-family: system-ui;
-      opacity: .25;
-      text-align: center;
-      user-select: none;
-      color: white;
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      line-height: 100%;
-    }
+        .offDialog {
+            transition: 1s;
+            opacity: 0;
+        }
 
-    .throw {
-      animation: throw .25s linear forwards;
-    }
+        #dialog:after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            bottom: 0;
+            right: 25px;
+            background: white;
+            transform-origin: left bottom;
+            transform: rotate(45deg);
+        }
 
-    @keyframes throw {
-      0% {
-        opacity: 1;
-        transform: rotate(0deg) scale(1);
-      }
+        #lp-santa {
+            width: 100%;
+            max-width: 320px;
+            height: 100%;
+            max-height: 107px;
+            background: url('https://contentservice.mc.reyrey.net/image_v1.0.0/?id=d483e64d-4886-5bdc-9b78-e84ab51b6f99&637360507984807363');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+            position: absolute;
+            left: 50%;
+            top: 33%;
+            transform: translate(0%, -50%);
+            z-index: 999;
+            animation: bob 2s linear infinite;
+        }
 
-      100% {
-        opacity: 0;
-        transform: rotate(360deg) scale(.01);
-      }
-    }
+        @keyframes bob {
+            50% {
+                transform: translate(0%, -60%);
+            }
+        }
 
-    .balloon {
-      border-radius: 50%;
-      background-image:
-        radial-gradient(circle at 40% 33%, beige 10%, transparent 13%),
-        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, .75) 25%, red 26% 40%, transparent 41%);
-    }
+        .dust {
+            width: 5px;
+            height: 5px;
+            border-radius: 5px;
+            position: absolute;
+        }
 
-    .balloon:before,
-    .balloon:after {
-      content: '';
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      background:
-        linear-gradient(to top, black, #222);
-    }
+        .dust:after {
+            content: '';
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 5px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            animation: dust1 1.2s linear infinite;
+        }
 
-    .balloon:before {
-      left: -95%;
-      transform-origin: 100% 50%;
-      clip-path: polygon(100% 35%, 80% 15%, 85% 0, 40% 10%, 10% 45%, 0 100%, 20% 80%, 30% 90%, 45% 65%, 55% 80%, 70% 45%, 100% 50%);
-      animation: flap 1s linear infinite;
-    }
+        @keyframes dust1 {
+            50% {
+                opacity: .75
+            }
 
-    .balloon:after {
-      content: '';
-      left: 95%;
-      transform-origin: 0% 50%;
-      clip-path: polygon(0% 35%, 20% 15%, 15% 0, 60% 10%, 90% 45%, 100% 100%, 80% 80%, 70% 90%, 55% 65%, 45% 80%, 30% 45%, 0% 50%);
-      animation: flap2 1s linear infinite;
-    }
+            100% {
+                left: -100px;
+                width: 30px;
+                opacity: 0;
+            }
+        }
 
-    @keyframes flap {
-      50% {
-        transform: rotate(-55deg);
-      }
-    }
+        .dust:nth-child(2) {
+            top: 97%;
+            left: 15px;
+        }
 
-    @keyframes flap2 {
-      50% {
-        transform: rotate(55deg);
-      }
-    }
+        .dust:nth-child(2):after {
+            animation-delay: .8s;
+        }
 
-    .float {
-      animation: float 10s linear forwards;
-    }
+        .dust:nth-child(3) {
+            top: 95%;
+            left: 57%;
+        }
 
-    @keyframes float {
-      100% {
-        top: -150px;
-      }
-    }
-  </style>
+        .dust:nth-child(3):after {
+            animation-delay: .4s;
+        }
+
+        .dust:nth-child(4) {
+            top: 95%;
+            left: 95%;
+        }
+
+        .casa {
+            position: absolute;
+            bottom: 10vh;
+            left: calc(100% + 50px);
+            background-color: silver;
+            background-image: linear-gradient(335deg, #b00 23px, transparent 23px),
+                linear-gradient(155deg, #d00 23px, transparent 23px),
+                linear-gradient(335deg, #b00 23px, transparent 23px),
+                linear-gradient(155deg, #d00 23px, transparent 23px);
+            background-size: 58px 58px;
+            background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px;
+            z-index: 9;
+            animation: casaSlide 10s linear forwards;
+        }
+
+        .casa:after {
+            content: '';
+            width: 130%;
+            height: 30px;
+            position: absolute;
+            left: -15%;
+            top: 0;
+            background: inherit;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 10px 10px rgba(0, 0, 0, .25), 0 -15px white;
+        }
+
+        @keyframes casaSlide {
+            100% {
+                left: -105px;
+            }
+        }
+
+        .casa .present {
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: none;
+        }
+
+        .hitbox {
+            width: 100%;
+            height: 10px;
+            background: red;
+            position: absolute;
+            top: -12.5px;
+            left: 0;
+        }
+
+        .present_hitbox {
+            width: 100%;
+            height: 10px;
+            /*   background:red; */
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        .present {
+            width: 45px;
+            height: 45px;
+            position: absolute;
+            background: linear-gradient(to right, transparent 45%, Firebrick 45%, Firebrick 55%, transparent 55%), linear-gradient(to bottom, var(--base-red) 45%, Firebrick 45%, Firebrick 55%, var(--base-red) 55%);
+            z-index: 9999;
+            transform: scale(.1);
+            margin-left: 0px;
+            margin-top: -15px;
+            animation: present 6s linear forwards;
+        }
+
+        @keyframes present {
+            5% {
+                transform: scale(1) translate(-150%, -150%) rotate(-360deg);
+            }
+
+            100% {
+                top: calc(100% + 150px);
+                transform: scale(1) translate(-300%, 0%) rotate(-360deg);
+            }
+        }
+
+        .present:after {
+            content: '';
+            width: 150%;
+            height: 120%;
+            /*   border-radius:50%; */
+            position: absolute;
+            top: 0%;
+            left: -25%;
+            background: white;
+            clip-path: polygon(50% 0%, 80% 20%, 100% 50%, 0% 50%, 20% 20%);
+            animation: float .3s linear .4s forwards;
+            opacity: 0;
+            transform: translate(0%, 0%) scaleY(.1);
+            z-index: -1;
+        }
+
+        .present:before {
+            content: '';
+            width: 80%;
+            height: 80%;
+            position: absolute;
+            top: 0%;
+            left: 5px;
+            box-shadow: inset -2px -2px 0 rgba(255, 255, 255, .5);
+            transform: translate(0%, 0%) scale(.1) rotate(45deg);
+            clip-path: polygon(100% 0%, 100% 100%, 0% 100%);
+            z-index: -1;
+            animation: strings .3s linear .4s forwards;
+            opacity: 0;
+        }
+
+        @keyframes float {
+            100% {
+                transform: translate(0, -100%) scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes strings {
+            100% {
+                transform: translate(0, -125%) scale(1) rotate(45deg);
+                opacity: 1;
+            }
+        }
+
+        #tap_me {
+            width: 100px;
+            height: 100px;
+            color: var(--base-red);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 99999;
+            padding-top: 20px 20px 20px 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .5);
+            font-size: 20px;
+            line-height: 100%;
+            font-family: 'Mali', sans-serif;
+            cursor: pointer;
+        }
+
+        #tap_me:after {
+            content: 'Tap \a to \a Play';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #tap_me:hover {
+            background: rgba(255, 255, 255, .75);
+        }
+
+       
+        #lp-cta {
+            width: 100%;
+            max-width: 250px;
+            height: 40px;
+            cursor: pointer;
+            display: block;
+            padding: 10px;
+            box-sizing: border-box;
+            background: white;
+            text-align: center;
+            color: var(--base-red);
+            font-size: 18px;
+            text-decoration: none;
+            z-index: 1;
+            transition: 1s;
+            margin: 20px auto;
+            border-radius: 5px;
+        }
+
+        #lp-cta:hover {
+            text-decoration: underline;
+        }
+
+        /* end offer section */
+
+        @media screen and (max-width:950px) {
+            #the-lp {
+                position: relative;
+                transform: none;
+                left: 0;
+                top: 0;
+                padding: 40px 0;
+                background: none;
+                box-shadow: none;
+            }
+
+
+            #lp-the-game {
+                margin-right: 0;
+                margin-bottom: 50px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-  <div id='balloon_game'>
-    <p>start game</p>
-    <div id='dart'></div>
-    <div id='explode_balloon'></div>
-    <div id='score'>0</div>
-  </div>
+    <div id='the-lp'>
+        <div id='lp-the-game'>
+            <div id='lp-santa'>
+                <div id='dialog'>Merry Christmas!</div>
+                <div class='dust'></div>
+                <div class='dust'></div>
+                <div class='dust'></div>
+            </div>
+            <div id='snow'></div>
+            <div id='score'>GIFTS<br><span>0</span></div>
+            <div id='high_score'>HS<br> <span>0</span></div>
+            <div id='tap_me'></div>
+        </div>
+    </div>
 
-  <script>
-    const bg = document.querySelector('#balloon_game'),
-      dart = document.querySelector('#dart'),
-      explode = document.querySelector('#explode_balloon'),
-      score_box = document.querySelector('#score')
-    var size = 50
-    var score = 0
-    var particles = 25
-    var balloon_count = 0
 
-    for (var i = 0; i < particles; i++) {
-      var p = document.createElement('div')
-      p.className = 'particle'
-      explode.appendChild(p)
-    }
-    var ps = document.querySelectorAll('.particle')
+    <script>
+        console.clear()
+        setTimeout(function () {
+            var santa = document.querySelector('#lp-santa')
+            var game_box = document.querySelector('#lp-the-game')
+            var height_max = window.innerHeight * .25
+            var width_max = 150
+            var gift_count = 0
+            var score = 0
+            var nhs;
+            var dialog = document.querySelector('#dialog')
+            var quotes = ['Well done!', 'Excellent!', 'Perfect!', 'Joy!', 'Ho. Ho. ho.', 'Merry Christmas!']
 
-    function blowItUp(e) {
-      var color = e.style.background
-      ps.forEach(function (elm) {
-        elm.style.transition = '.275s'
-        elm.style.background = 'red'
-        var x = Math.random() < .5 ? -1 : 1;
-        var y = Math.random() < .5 ? -1 : 1;
-        elm.style.transform = 'translate(' + Math.random() * 100 * x + 'px,' + Math.random() * 100 * y + 'px)'
-        elm.style.opacity = '0'
+            var gb_deets = game_box.getBoundingClientRect()
+            var offset = gb_deets.left
+
+            function createCasa() {
+                var casa = document.createElement('div')
+                casa.className = 'casa'
+                casa.style.width = 75 + 'px'
+                casa.style.height = 50 + (Math.random() * 200) + 'px'
+                casa.style.bottom = 0
+                casa.style.filter = 'hue-rotate(' + Math.random() * 90 + 'deg)'
+                var d = 8
+                casa.style.animationDuration = d + 's'
+
+                var hitbox = document.createElement('div')
+                hitbox.className = 'hitbox'
+                game_box.appendChild(casa).appendChild(hitbox)
+                setTimeout(createCasa, (d * .75) * 1000)
+            }
+
+
+            function dropPresent() {
+                document.querySelector('#tap_me').style.display = 'none'
+                var santa_loc = santa.getBoundingClientRect()
+                var present = document.createElement('div')
+                present.className = 'present'
+                present.style.filter = 'hue-rotate(' + Math.random() * 360 + 'deg)'
+                present.style.left = santa_loc.left - offset + 'px'
+                present.style.top = santa_loc.top - gb_deets.top + 'px'
+                console.log(santa_loc.left)
+
+                var hitbox = document.createElement('div')
+                hitbox.className = 'present_hitbox'
+
+                if (!document.querySelector('.present') || document.querySelectorAll('.present').length < 1) {
+                    game_box.appendChild(present).appendChild(hitbox)
+                }
+            }
+
+            function check_present_collision() {
+                if (document.querySelector('.casa')) {
+                    var presents = document.querySelectorAll('.present_hitbox')
+                    var chimney = document.querySelector('.hitbox')
+                    var chimney_deets = chimney.getBoundingClientRect()
+                    if (chimney_deets.left <= -100 + offset) {
+                        if (!chimney.classList.contains('dead')) {
+                            score = 0
+                            nhs = true
+                            document.querySelector('#score span').innerHTML = score
+                            chimney.parentElement.remove()
+                        } else {
+                            chimney.parentElement.remove()
+                        }
+                    }
+                    presents.forEach(function (elm) {
+                        var elm_deets = elm.getBoundingClientRect()
+                        var ouch = !(elm_deets.right < chimney_deets.left ||
+                            elm_deets.left > chimney_deets.right ||
+                            elm_deets.bottom < chimney_deets.top ||
+                            elm_deets.top > chimney_deets.bottom)
+                        if (ouch) {
+                            elm.parentElement.remove()
+                            chimney.parentElement.style.filter = 'grayscale(1)'
+                            chimney.classList.toggle('dead')
+                            chimney.style.top = '150%'
+                            score++
+                            document.querySelector('#score span').innerHTML = score
+
+                            var newQ = quotes[Math.floor(Math.random() * quotes.length)]
+                            dialog.innerHTML = newQ
+                            dialog.classList.toggle('offDialog')
+                            setTimeout(function () {
+                                dialog.classList.toggle('offDialog')
+                            }, 2500)
+
+                            if (localStorage.getItem('santa-drop-score') < score) {
+                                localStorage.setItem('santa-drop-score', score)
+                                nhs = false
+                                document.querySelector('#high_score span').innerHTML = score
+                            }
+                        }
+
+                        if (elm_deets.top >= gb_deets.height + gb_deets.top + 100) {
+                            elm.parentElement.remove()
+                            dialog.innerHTML = "That's too bad. :("
+                            dialog.classList.toggle('offDialog')
+                            setTimeout(function () {
+                                dialog.classList.toggle('offDialog')
+                            }, 2500)
+                        }
+                    })
+                }
+                setTimeout(check_present_collision, 1000 / 60)
+            }
+
+            setTimeout(function () {
+                createCasa()
+                check_present_collision()
+            }, 1000)
+
+            game_box.addEventListener('click', dropPresent)
+            window.addEventListener('keypress', function (e) {
+                if (e.keyCode == 32) {
+                    dropPresent()
+                }
+            })
+        }, 500)
+
+        function addSnowFlake() {
+            var f = document.createElement('div')
+            f.className = 'snowflake'
+            var size = (Math.random() * 10) + 5;
+            f.style.width = size + 'px'
+            f.style.height = size + 'px'
+            f.style.left = Math.random() * 320 + 'px'
+            f.style.animationDelay = Math.floor(Math.random() * 10) + 's'
+            document.querySelector('#snow').appendChild(f)
+        }
 
         setTimeout(function () {
-          elm.style.transition = ''
-          elm.style.transform = ''
-          elm.style.background = ''
-          elm.style.opacity = ''
-        }, 300)
-      })
+            for (var i = 0; i < 8; i++) {
+                addSnowFlake()
+            }
+        }, 1000)
 
-      score = score + Number(e.dataset.points)
-      score_box.innerHTML = score
-      e.remove()
-    }
-
-    var b_locations = [0]
-    function addBalloon() {
-      var b = document.createElement('div')
-      b.className = 'balloon'
-      b.style.backgroundColor = 'beige'
-      b.style.width = size + 'px'
-      b.style.height = size + 'px'
-      b.style.position = 'absolute'
-      b.style.filter = 'hue-rotate(' + Math.random() * 360 + 'deg)'
-      var new_loc = Math.ceil(Math.random() * 19) * 5
-      if (new_loc != b_locations[b_locations.length - 1]) {
-        b_locations.push(new_loc)
-      } else {
-        var new_loc = Math.ceil(Math.random() * 19) * 5
-        b_locations.push(new_loc)
-      }
-      b.style.left = b_locations[b_locations.length - 1] + '%'
-      b.style.top = '100%'
-      var small = Math.random() < .5 ? true : false
-      if (small) {
-        b.dataset.points = 100
-        b.style.transform = 'scale(.75)'
-        b.style.animationDuration = '10s'
-      } else {
-        b.dataset.points = 25
-        b.style.transform = 'scale(1.5)'
-        b.style.animationDuration = '6s'
-      }
-      b.onanimationend = function () {
-        this.remove()
-        if (!document.querySelector('.balloon')) {
-          setTimeout(function () {
-            bg.querySelector('p').classList.remove('game_on')
-          }, 1000)
+        if (!localStorage.getItem('santa-drop-score')) {
+            localStorage.setItem('santa-drop-score', 0)
+        } else {
+            document.querySelector('#high_score span').innerHTML = localStorage.getItem('santa-drop-score')
         }
-      }
 
-      b.setAttribute('onclick', 'blowItUp(this)')
-      bg.appendChild(b)
-      document.querySelectorAll('.balloon')[document.querySelectorAll('.balloon').length - 1].classList.add('float')
+        setTimeout(function () {
+            dialog.classList.toggle('offDialog')
+        }, 5000)
 
-      balloon_count++
-      // console.log(balloon_count)
-    }
-
-    bg.querySelector('p').addEventListener('click', () => {
-      if (!document.querySelector('.balloon')) {
-        score = 0
-        score_box.innerHTML = score
-        bg.querySelector('p').classList.add('game_on')
-
-        var let_them_float = setInterval(function () {
-          addBalloon()
-          if (score > 5) {
-            addBalloon()
-          }
-          if (score >= 500) {
-            addBalloon()
-          }
-        }, 500)
-        setTimeout(() => {
-          clearInterval(let_them_float)
-
-        }, 10000);
-      }
-    });
-
-    // clearInterval(let_them_float)
-    var bg_loc = bg.getBoundingClientRect()
-
-    window.addEventListener('click', function (e) {
-      dart.classList.toggle('throw')
-      setTimeout(function () {
-        dart.classList.toggle('throw')
-      }, 250)
-      var x = e.clientX - bg_loc.left - 25
-      var y = e.clientY - bg_loc.top - 25
-      dart.style.left = x + 'px'
-      dart.style.top = y + 'px'
-      explode.style.left = x + 'px'
-      explode.style.top = y + 'px'
-    })
-  </script>
+    </script>
 </body>
 
 </html>
