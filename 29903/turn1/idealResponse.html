@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alien Fighter</title>
+    <style>
+        html {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            font-family: system-ui;
+            font-size: 12px;
+            background: #444;
+            color: #aaa;
+        }
+
+        #game_console {
+            width: 1200px;
+            max-width: 100%;
+            aspect-ratio: 16 / 9;
+            position: relative;
+            background:
+                url('https://i.pinimg.com/736x/6b/0d/2b/6b0d2b5f44164f19434d8c93806b4b6f.jpg');
+            background-blend-mode: overlay;
+            background-size: 110% 110%;
+            background-position: 0% 100%;
+            image-rendering: pixelated;
+            overflow: hidden;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, .5);
+        }
+
+        #player {
+            width: 100px;
+            aspect-ratio: 1 / 2;
+            position: absolute;
+            background-repeat: repeat-x;
+            background-size: 400% 100%;
+            image-rendering: pixelated;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        #player:before {
+            content: '';
+            width: 100%;
+            height: 10%;
+            background: black;
+            position: absolute;
+            top: 90%;
+            left: 0;
+            border-radius: 50%;
+            z-index: -1;
+            opacity: .5;
+            filter: blur(3px);
+        }
+
+        #player_hit_box {
+            width: 25px;
+            aspect-ratio: 1 / 1;
+            /*   background: red; */
+            border-radius: 50%;
+            position: absolute;
+            left: 100%;
+            top: 40%;
+            transform: translateX(-50%);
+        }
+
+        .player_idle {
+            background: var(--player-idle);
+            animation: idle 1s steps(3) infinite;
+        }
+
+        @keyframes idle {
+            100% {
+                background-position: -300% 0;
+            }
+        }
+
+        .player_run {
+            background: var(--player-run);
+            animation: idle 1s steps(3) infinite;
+        }
+
+        .player_jump_kick {
+            background: var(--player-jump-kick);
+            background-position: -200% 0;
+            animation: none !important;
+        }
+
+        .player_kick {
+            background: var(--player-kick);
+            background-size: 100% 100% !important;
+            animation: none !important;
+        }
+
+        .player_punch {
+            background: var(--player-punch);
+            background-size: 100% 100% !important;
+            animation: none !important;
+        }
+
+        .enemy {
+            width: 150px;
+            aspect-ratio: 1 / 1;
+            background: var(--alien);
+            background-size: 100% 100%;
+            image-rendering: pixelated;
+            position: absolute;
+            left: 50%;
+            top: 60%;
+            z-index: 50;
+        }
+
+        .enemy:before {
+            content: '';
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 100% 100%, transparent 45%, #420 50%);
+            position: absolute;
+            top: -113%;
+            left: 0;
+            transform: rotate(45deg);
+            border-radius: 100% 0 0 0;
+            border-right: 2px solid #420;
+            border-bottom: 2px solid #420;
+            animation: fade 4s linear forwards;
+        }
+
+        @keyframes fade {
+            95% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .boxShadow {
+            transform: scale(3);
+            opacity: 0;
+            animation: fadein 3s linear forwards;
+        }
+
+        @keyframes fadein {
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .shakeIt {
+            animation: shakeit .1s linear infinite;
+        }
+
+        @keyframes shakeit {
+            25% {
+                transform: rotate(1deg);
+            }
+
+            75% {
+                transform: rotate(-1deg);
+            }
+        }
+
+        .particle {
+            width: 50%;
+            height: 50%;
+            position: absolute;
+            border-radius: 50%;
+            left: 100%;
+            top: 50%;
+        }
+
+        :root {
+            --player-idle: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAB+0lEQVR4nO1YAXKEIAzEGb4Ij4RHWvACRgwQjccdbTPTsSIbN5tF9LT646Eb19bifLmYW4ofEjUBVlMM+FdB3CKk+C1Hcf6WBlACbOQDYYWLgDFOEVJ8zoHjXQ0gHYDJeziWCVshxA9tQClABis4JikXzyIhxWfcqAaQDkhFbOQNQL2nppIhwA9vQHUJSEKKH9mAkwCt28C129sZFy8R8Cr2JEAUrCZ2VDRYKW0vZCFp/d0tQtqAFn80nJcBFmCNYBf+sVCBjYiQzavdSclWi/XkWkwE4rQF8Gncqb6AggYc+HvE3zmD8Wp1O/+DAxwwcAFk4zkArX0x2sBG1RieCOQnr8GTVE3AagHcBrT4G0Pzp98EY5K8j5yLXUCPcrwpYIUAG6/6+Dv8sQBLtNca9UZPTlu8UdSKv0vgQfwt/qUDgrPCGsM3Pe4ircKlAj7RgMv8yW3QmHKUHRIBn8Bf5k88A9y+XRzcZ1kJfVzJ+D005xiDv8q/EMCt1BcEP+bDt34Qgdiex/Bnr37Tfz2+LYBP4JsxAZ7hgN8dSIBi/WzqRbtE2yQVWzacE//vgE8T+HSAADX7KDhiG1ExL/7sgCMYBfNFZDK8zhd7H1gpP3l1XrzuTcDRujYrXvcmVG5CbkUz4nVvAjf5rHjdmwAh/SX3a/G6N4EZ0+J/AG1/kwupP5GDAAAAAElFTkSuQmCC');
+            --player-run: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAC1ElEQVR4nOVYW5KtIAzEKrcIizSL5BoECSFBEC/nY/pjalTS6Tx4nd38ceyNb549by/4ZziW+NcS4C17ARfZUAATHMv8SwkIhudgQwnsmIgZjqX+xQ6ghkCMRzDDsdI/T8CduWSY+miD8Qq+4FjuX+wASw1ttAaQhqqY4VjpnybA85Z5gRmOn/hvbYMVIumb7egTjv/hPyWg2DLoHGJ4nHsvOT7xb0xe/Ho5ig5IxskQF400b6JADw8VaHEk2Cx2I8O8ads2/aLdceS5vqVSM//cd0rALSAEQMsRbRO5c1AlAUnx++bAiBxob66XaC9x3QFE8dQertX7MflZ0MXDNSDPYbMO5KMdgOSeGh34YBmDhvMb9jEXT4M3pqySJt4K39DszG87CQApuEpDNS5CXwQh/iFbCBZYEoDvUJzmy50UB3RwxTGYJAxi5PSTNGCiJHukpucBo5wDtlDIuIo4Nn9a2SffikTEbjQuqVC4aABSd2jJr4UILRixZdr2UTirz+q655+mq8M+JOGcm4XvUXvsRKirH9FzGzzK7SM8uCffD/aBo+ci48Nwe7z2X9nfkDmGDkKvcO9rKEpMgrh21PZd8MEPuDIJgUP2v2dDDZg5VTzD4auFC5K9UXmqXRfYSxuCGvg9oD8JO/1++XbXwNH75ySKmGnV08u3SUi2nDeiOglWsAep4ogAw6qPCIJaOwnx2/oowle+xLWgxIdrgND+SUiGGDy5oHhR9PD1UAgebh3yXaAQ8cU0OB0KJ2oJW/H/1eY9YylI9d3tP+DuYNn2vgswJ4KIVvuy6keH8LTCyyAHqiKo7qlX/CbQCB6hTAFSfaV1VJQOpw5PMyAd19TQuwasDiR2Tlfy+dgA0gXNhVtJgBs8fAyN78LIT1t87IgUtQMmBHzWLSOB9LY8R3MKvBTwGXrbeHQsRTMBKwRoWJV8NQE/rv5IAqeSrSVgmYBf4x8+q4Bl0hSYKwAAAABJRU5ErkJggg==');
+            --player-punch: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAgCAYAAAAIXrg4AAABEUlEQVR4nMWWDQ6DIAyFIfGKcEjfIVlFzQqWn0qXNdkWHbyPV1tkcz+ObWJMqq69JSAF+gJ9wnUDJ3Aa0gNI4i4oITMpKsS10QVIojh/TFLUBZkA3orOAOrSzAEjQBbnq19xIjoIpAjI4td/qQVFVQDNZxAuBeB5L6sHGREjEoc8AMdkj+/8hk5J7gycbjSuG+8WF4DDFNHqjwFiFVVaa1sF0EmPVSfD7fyCIqrEh4Aict73G2IBIDGQWNjbQ9YAQpwuqACi1W667kLdBxaA5Fy1Yu5Cmaa/OGDB6h4xvXkWDYCu1jWAxI8oruxan10sAri4GNoDmPxGG4ho3s0PwMxkjYsaMLSsPVlo+0C1VR/xAbz1UodGEsBAAAAAAElFTkSuQmCC');
+            --player-kick: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAgCAYAAAAIXrg4AAABIElEQVR4nM2Wiw6DIAxFIfEX60fSj2QVRCpWystkN9nIrLuHPjBu5mNtStwXv+1KgAf6QvrAeQEjsAvyBpDMDQxAtBLdzEf0CpBMMS5LSlQFLQHMmGqAcjSDRsojAYI53z0IcSYV+MgAyBFRNL9i3sWI3VEdWbEHcDonULrmaN3TBR5sBRyny2IGAEvBpdXFNGz07y+RJLwd6WZz/wDQH60RpgjOzPitlIswbVcB02NFzMDSJj0UHc7Nd3F30kHBbJz0VqIAuSqfzBpPH7+tqQeqMJemnK0agOq8xywOA3D3KDM1lYY3ZuBKw6rpAOCExClZ9rjOTQ7qN9cAS/QvgLHyNAAek7MWwF9ZPgHMmjcBZt7qVMDs7jXA0NT0AJboB/fcT4mufHpWAAAAAElFTkSuQmCC');
+            --player-jump-kick: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAYAAADtwH1UAAAC10lEQVR4nN1ZW5KEIAzEqr2iHJIc0iW8BgIyiono9MdOabGJdkPS4J/6bWzkepnyFB38TcwtTc62khvgcz5KhNsEWAPh4AmQJsfFB583f4bHiXCLAEi+MfYvgFrgHnLy+JDleBruLUGrF0GYnCRwjB+XmxX/catgZg8QJSeK4OKvIQlA5z/mYIoAd5DzPKrbuE8AJDiQPZOckPsR5QdxiwDofLRtvtiHae0n4xCXyYk95g2roCcAv0+3qwDdkNZtarAkoUu6mi/0eicC9pZY3vC+UTw5FBM/ewKw+/S0CsK8bJGTEtsLO3gk3xZJ1pkIKWEadClHCpFjlJ+WAKI+XYdgWUtIQEF88vHiYVz8VRkbA3O5/Qfm1V4Nhhys/DRXgJRPz+NS8nMsPum1kocipJeoyb6Sg5MfKoD0JmYB8GVif4D/GY2P9X1TUNhbTabr8tHj7Luw89NcATM2McAx6z1crymet3gFQ4Zr2kyLWK2bnPzslqD3wmxY/XurjIwPv7ooIz0OOPmpBDiQ+OostWXIbO231TxnNKsp38Nd6JhD1augHNrTjpufSoDooVvg8ukVUmF1BpLvoAx0fpXFbJedIzObm59cgMJD49Po4NNBsfl0hSWimmKQz0pGEexKCCLQWN3YUG+yECL8FCug66EVj0+/BeXMH0GTOAl+2jthQQ9dAWhNbs7YE9DFFzeRqcLITy7AGQ89SFCj/Djs1epxfGumAxDhh66ALx6a+RgXjlu/E6jOaRjBzk/Thh730GdAracvNTsN7xIkOxQ3P9VRROGhUzNLmxUeC1o6E+6PI5IfW9j56X+QWU2WyNBEj/mqNA0M/EQBPmUgqrru7xbHoN98xiHGT1oBVTPERM0kQzaR2sLXrR4pfooSVDiqKniyile+ir0aEvwcPozLZvBw/eeIMRvc/CQBSGnY6Hb+6uz9hdmvBPiJApw6rBrAK2d7BjF+/gEtVnoNQ37oXwAAAABJRU5ErkJggg==');
+            --alien: url('https://freesvg.org/storage/img/thumb/Alienigena.png');
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            z-index: 100;
+        }
+
+        #timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: white;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="background-color: black; color: white;">Arrows to move / S - Punch / D - Kick / S+D - Jump Kick</div>
+
+    <div id='game_console'>
+        <div id="score">Score: 0</div>
+        <div id="timer">Time: 60</div>
+
+
+        <div id='player' class='player_idle'>
+            <div id='player_hit_box'></div>
+        </div>
+    </div>
+    <script>
+        const gc = document.querySelector('#game_console')
+        const gc_loc = gc.getBoundingClientRect()
+        const player = document.querySelector('#player')
+        const player_loc = player.getBoundingClientRect()
+        const pl_hit_box = document.querySelector('#player_hit_box')
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = true;
+        
+        var k = {},
+            x = 100,
+            y = Math.round(gc_loc.height * .55),
+            move_speed = 10,
+            attack = false,
+            particles = 15;
+
+        for (var i = 0; i < particles; i++) {
+            var p = document.createElement('div')
+            p.className = 'particle'
+            pl_hit_box.appendChild(p)
+        }
+
+        function updateScore() {
+            score += 1;
+            document.getElementById('score').innerText = 'Score: ' + score;
+        }
+
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                if (timeLeft > 0 && gameActive) {
+                    timeLeft--;
+                    document.getElementById('timer').innerText = 'Time: ' + timeLeft;
+                } else {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            alert('Time is up! Your final score is: ' + score);
+        }
+
+        startTimer();
+
+        var ps = document.querySelectorAll('.particle')
+
+        function blowItUp(e) {
+            ps.forEach(function (elm) {
+                elm.style.transition = '.275s'
+                elm.style.background = 'white'
+                var x = Math.random() < .5 ? -1 : 1;
+                var y = Math.random() < .5 ? -1 : 1;
+                elm.style.transform = 'translate(' + Math.random() * 100 * x + 'px,' + Math.random() * 100 * y + 'px)'
+                elm.style.opacity = '0'
+
+                setTimeout(function () {
+                    elm.style.transition = ''
+                    elm.style.transform = ''
+                    elm.style.background = ''
+                    elm.style.opacity = ''
+                }, 300)
+            })
+        }
+
+        function addBox() {
+            var b = document.createElement('div')
+            b.className = 'enemy'
+            b.dataset.hp = '5'
+            var xx = (Math.random() * 55) + 15
+            b.style.left = xx + '%'
+            b.style.top = '-200px'
+            b.style.transition = '4s'
+            gc.appendChild(b)
+
+            setTimeout(function () {
+                var yy = (Math.random() * 25) + 50
+                document.querySelector('.enemy').style.top = yy + '%'
+
+                var s = document.createElement('div')
+                s.className = 'boxShadow'
+                s.style.width = '150px'
+                s.style.height = '25px'
+                s.style.position = 'absolute'
+                s.style.left = xx + '%'
+                s.style.top = yy + 19 + '%'
+                s.style.borderRadius = '25%'
+                s.style.background = 'rgba(0,0,0,.45)'
+                s.style.filter = 'blur(2px)'
+                gc.appendChild(s)
+            }, 100)
+        }
+
+        function shakeIt() {
+            document.querySelector('.enemy').classList.add('shakeIt')
+            setTimeout(function () {
+                document.querySelector('.enemy').classList.remove('shakeIt')
+            }, 150)
+        }
+
+        function updatePlayer() {
+            var pl_hb = pl_hit_box.getBoundingClientRect(),
+                pl_spot = document.elementFromPoint(pl_hb.x + (pl_hb.width * .5), pl_hb.y + (pl_hb.height * .5)),
+                pl_spot_loc = pl_spot.getBoundingClientRect(),
+                pl_loc = player.getBoundingClientRect()
+
+
+            if ((k[68] || k[83]) && !attack) {
+
+                if (k[68] && k[83]) {
+                    attack = true
+                    player.classList.add('player_jump_kick')
+                    setTimeout(function () {
+                        player.classList.remove('player_jump_kick')
+                        attack = false
+                    }, 550)
+                } else {
+                    // d 68
+                    if (k[68]) {
+                        attack = true
+                        player.classList.add('player_kick')
+                        setTimeout(function () {
+                            player.classList.remove('player_kick')
+                            attack = false
+                        }, 250)
+                    }
+
+                    // s 83
+                    if (k[83]) {
+                        attack = true
+                        player.classList.add('player_punch')
+                        setTimeout(function () {
+                            player.classList.remove('player_punch')
+                            attack = false
+                        }, 250)
+                    }
+                }
+
+                if (attack && pl_spot.classList.contains('enemy') && Math.abs(pl_loc.bottom - pl_spot_loc.bottom) < 50) {
+                    var hp = Number(pl_spot.dataset.hp)
+                    if (player.classList.contains('player_jump_kick')) {
+                        hp = hp - 3
+                    } else {
+                        hp--
+                    }
+                    pl_spot.dataset.hp = hp
+                    shakeIt()
+                    blowItUp()
+
+                    if (hp <= 0) {
+                        pl_spot.remove()
+                        document.querySelector('.boxShadow').remove()
+                        updateScore()
+                    }
+                }
+            } else {
+                if (!attack) {
+                    if (k[37] && x > 0) {
+                        x = x - move_speed
+                        player.style.transform = 'scaleX(-1)'
+                    }
+                    if (k[39] && x < gc_loc.width - player_loc.width) {
+                        x = x + move_speed
+                        player.style.transform = 'scaleX(1)'
+                    }
+
+                    if (k[38] && y > (gc_loc.height * .65) - player_loc.height + move_speed) { y = y - move_speed }
+                    if (k[40] && y < gc_loc.height - player_loc.height - move_speed) { y = y + move_speed }
+
+                    if (k[37] || k[38] || k[39] || k[40]) {
+                        player.classList.add('player_run')
+                    } else {
+                        player.classList.remove('player_run')
+                    }
+
+                    player.style.left = x + 'px'
+                    player.style.top = y + 'px'
+                }
+            }
+
+            if (!document.querySelector('.enemy')) {
+                addBox()
+            }
+
+            // set player zIndex relative to box enemy
+            var pl_y = parseInt(player.style.top) / 675 * 100
+            var e_y = parseInt(document.querySelector('.enemy').style.top)
+            if (pl_y + 6 < e_y) {
+                player.style.zIndex = '49'
+            } else {
+                player.style.zIndex = '100'
+            }
+
+            // set bg x based on player location
+            var bg_x = (parseInt(player.style.left) / 1200 * 10)
+
+            if (gameActive) {
+                // Existing game logic
+                setTimeout(updatePlayer, 1000 / 30);
+            }
+
+        }
+        updatePlayer()
+
+        window.addEventListener('keydown', function (e) {
+            k[e.which] = true;
+        })
+        window.addEventListener('keyup', function (e) {
+            k[e.which] = false;
+        })
+
+        window.focus()
+
+    </script>
+</body>
+
+</html>

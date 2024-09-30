@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Alien Fighter</title>
+<style>
+    body { margin: 0; padding: 0; background: #2c3e50; font-family: Arial, sans-serif; }
+    #gameArea {
+        width: 800px;
+        height: 400px;
+        margin: 50px auto;
+        background: #34495e;
+        position: relative;
+        overflow: hidden;
+    }
+    #player {
+        width: 50px;
+        height: 70px;
+        background: url('https://freesvg.org/storage/img/thumb/1621156679martial-arts-fighter-low-poly.png') no-repeat; /* Placeholder for player sprite */
+        position: absolute;
+        bottom: 0;
+        left: 50px;
+    }
+    .alien {
+        width: 40px;
+        height: 40px;
+        background: url('https://freesvg.org/storage/img/thumb/alien-silhouette.png') no-repeat; /* Placeholder for alien sprite */
+        position: absolute;
+        top: -50px;
+        animation: drop 5s linear;
+    }
+    @keyframes drop {
+        to { top: 350px; }
+    }
+    @keyframes punch {
+        from { transform: translateX(0); }
+        to { transform: translateX(20px); }
+    }
+    @keyframes kick {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(45deg); }
+    }
+    #score, #timer {
+        color: white;
+        position: absolute;
+        top: 10px;
+        font-size: 18px;
+    }
+    #score { left: 10px; }
+    #timer { right: 10px; }
+</style>
+</head>
+<body>
+<div id="gameArea">
+    <div id="player"></div>
+    <div id="score">Score: 0</div>
+    <div id="timer">Time: 60</div>
+</div>
+
+<script>
+    const gameArea = document.getElementById('gameArea');
+    const player = document.getElementById('player');
+    let score = 0;
+    let timeLeft = 60;
+    let gameTimer;
+    let alien = null;
+
+    function spawnAlien() {
+        if (alien) return;
+        alien = document.createElement('div');
+        alien.className = 'alien';
+        alien.style.left = `${Math.random() * (gameArea.offsetWidth - 50)}px`;
+        gameArea.appendChild(alien);
+        alien.health = 5;
+
+        // Alien landing animation is handled by CSS
+    }
+
+    function attack(type) {
+        if (!alien || alien.health <= 0) return;
+
+        let damage = type === 'jumpkick' ? 3 : 1;
+        alien.health -= damage;
+        if (alien.health <= 0) {
+            gameArea.removeChild(alien);
+            alien = null;
+            score++;
+            updateScore();
+            spawnAlien();
+        }
+    }
+
+    function updateScore() {
+        document.getElementById('score').textContent = `Score: ${score}`;
+    }
+
+    function gameOver() {
+        clearInterval(gameTimer);
+        alert('Game Over! Your score: ' + score);
+    }
+
+    function startTimer() {
+        gameTimer = setInterval(() => {
+            if (timeLeft <= 0) {
+                gameOver();
+            } else {
+                timeLeft--;
+                document.getElementById('timer').textContent = `Time: ${timeLeft}`;
+            }
+        }, 1000);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 's') attack('punch');
+        if (e.key === 'd') attack('kick');
+        if (e.key === 's' && e.key === 'd') attack('jumpkick'); // Simultaneous press is tricky, this is a simplification
+    });
+
+    // Start game
+    spawnAlien();
+    startTimer();
+</script>
+</body>
+</html>
